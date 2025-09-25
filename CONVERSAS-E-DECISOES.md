@@ -90,7 +90,7 @@
 ---
 
 ### 12. MIGRACAO PARA ONEDRIVE
-**Usuario**: "vou precisar que mova C:\DevOps pra um o local C:\Users\Paulo\Documents\OneDrive\Projetos\DevOps"
+**Usuario**: "vou precisar que mova C:\DevOps pra um o local <CAMINHO-DO-PROJETO>"
 
 **Acao**: Migracao completa de toda estrutura para OneDrive
 **Resultado**: Backup automatico na nuvem e sincronizacao
@@ -340,7 +340,7 @@ cd "C:\DevOps"  # ou onde copiou o projeto
 6. **KEDA 2.17+**: Event-driven autoscaling integrado
 
 ### Organizacionais:
-1. **C:\Users\Paulo\Documents\OneDrive\Projetos\DevOps\**: Pasta principal (migrada para OneDrive)
+1. **<CAMINHO-DO-PROJETO>**: Pasta principal (migrada para OneDrive)
 2. **minikube**: Nome simples (sem -env)
 3. **Separacao por funcao**: init, maintenance, monitoring
 4. **Sem acentos**: Evitar problemas encoding
@@ -470,52 +470,52 @@ cd "C:\DevOps"  # ou onde copiou o projeto
 ## ESTADO FINAL DOS ARQUIVOS
 
 ### Scripts Windows Funcionais:
-- ✅ C:\Users\Paulo\Documents\OneDrive\Projetos\DevOps\minikube\scripts\windows\init\init-minikube-fixed.ps1
-- ✅ C:\Users\Paulo\Documents\OneDrive\Projetos\DevOps\minikube\scripts\windows\init\install-keda.ps1
-- ✅ C:\Users\Paulo\Documents\OneDrive\Projetos\DevOps\minikube\scripts\windows\maintenance\*.ps1
-- ✅ C:\Users\Paulo\Documents\OneDrive\Projetos\DevOps\minikube\scripts\windows\monitoring\*.ps1
-- ✅ C:\Users\Paulo\Documents\OneDrive\Projetos\DevOps\minikube\scripts\windows\keda\*.ps1
+- ✅ <CAMINHO-DO-PROJETO>\minikube\scripts\windows\init\init-minikube-fixed.ps1
+- ✅ <CAMINHO-DO-PROJETO>\minikube\scripts\windows\init\install-keda.ps1
+- ✅ <CAMINHO-DO-PROJETO>\minikube\scripts\windows\maintenance\*.ps1
+- ✅ <CAMINHO-DO-PROJETO>\minikube\scripts\windows\monitoring\*.ps1
+- ✅ <CAMINHO-DO-PROJETO>\minikube\scripts\windows\keda\*.ps1
 
 ### Scripts Linux (Desenvolvimento):
-- 🚧 C:\Users\Paulo\Documents\OneDrive\Projetos\DevOps\temp\linux-scripts\init\init-minikube-fixed.sh
-- 🚧 C:\Users\Paulo\Documents\OneDrive\Projetos\DevOps\temp\linux-scripts\keda\*.sh
-- 🚧 C:\Users\Paulo\Documents\OneDrive\Projetos\DevOps\temp\linux-scripts\maintenance\*.sh
-- 🚧 C:\Users\Paulo\Documents\OneDrive\Projetos\DevOps\temp\linux-scripts\monitoring\*.sh
-- 🚧 C:\Users\Paulo\Documents\OneDrive\Projetos\DevOps\temp\linux-scripts\autostart\*.sh
-- 🚧 C:\Users\Paulo\Documents\OneDrive\Projetos\DevOps\temp\linux-scripts\linux-test-structure.sh
-- 🚧 C:\Users\Paulo\Documents\OneDrive\Projetos\DevOps\temp\linux-scripts\README.md
+- 🚧 <CAMINHO-DO-PROJETO>\temp\linux-scripts\init\init-minikube-fixed.sh
+- 🚧 <CAMINHO-DO-PROJETO>\temp\linux-scripts\keda\*.sh
+- 🚧 <CAMINHO-DO-PROJETO>\temp\linux-scripts\maintenance\*.sh
+- 🚧 <CAMINHO-DO-PROJETO>\temp\linux-scripts\monitoring\*.sh
+- 🚧 <CAMINHO-DO-PROJETO>\temp\linux-scripts\autostart\*.sh
+- 🚧 <CAMINHO-DO-PROJETO>\temp\linux-scripts\linux-test-structure.sh
+- 🚧 <CAMINHO-DO-PROJETO>\temp\linux-scripts\README.md
 
 ### Configuracoes Validadas:
-- ✅ C:\Users\Paulo\Documents\OneDrive\Projetos\DevOps\minikube\configs\*.yaml
-- ✅ C:\Users\Paulo\Documents\OneDrive\Projetos\DevOps\minikube\configs\keda\examples\*.yaml
+- ✅ <CAMINHO-DO-PROJETO>\minikube\configs\*.yaml
+- ✅ <CAMINHO-DO-PROJETO>\minikube\configs\keda\examples\*.yaml
 
 ### Documentacao Completa:
-- ✅ C:\Users\Paulo\Documents\OneDrive\Projetos\DevOps\minikube\docs\README.md
-- ✅ C:\Users\Paulo\Documents\OneDrive\Projetos\DevOps\minikube\docs\KEDA.md
-- ✅ C:\Users\Paulo\Documents\OneDrive\Projetos\DevOps\CHECKLIST-ATUALIZACOES-ESTRUTURA.md
+- ✅ <CAMINHO-DO-PROJETO>\minikube\docs\README.md
+- ✅ <CAMINHO-DO-PROJETO>\minikube\docs\KEDA.md
+- ✅ <CAMINHO-DO-PROJETO>\CHECKLIST-ATUALIZACOES-ESTRUTURA.md
 
 ### Arquivos de Teste:
-- ✅ C:\Users\Paulo\Documents\OneDrive\Projetos\DevOps\minikube\windows-test-structure.ps1
+- ✅ <CAMINHO-DO-PROJETO>\minikube\windows-test-structure.ps1
 
 ### Autostart Options:
-- ✅ C:\Users\Paulo\Documents\OneDrive\Projetos\DevOps\minikube\scripts\windows\autostart\minikube-autostart.bat
-- ✅ C:\Users\Paulo\Documents\OneDrive\Projetos\DevOps\minikube\scripts\windows\autostart\minikube-autostart-with-keda.bat
-- ✅ C:\Users\Paulo\Documents\OneDrive\Projetos\DevOps\minikube\scripts\windows\monitoring\*.ps1
-- ✅ C:\Users\Paulo\Documents\OneDrive\Projetos\DevOps\minikube\scripts\windows\autostart\*.bat
+- ✅ <CAMINHO-DO-PROJETO>\minikube\scripts\windows\autostart\minikube-autostart.bat
+- ✅ <CAMINHO-DO-PROJETO>\minikube\scripts\windows\autostart\minikube-autostart-with-keda.bat
+- ✅ <CAMINHO-DO-PROJETO>\minikube\scripts\windows\monitoring\*.ps1
+- ✅ <CAMINHO-DO-PROJETO>\minikube\scripts\windows\autostart\*.bat
 
 ### Preparacao Linux:
-- ✅ C:\Users\Paulo\Documents\OneDrive\Projetos\DevOps\minikube\scripts\linux\README.md (placeholder)
+- ✅ <CAMINHO-DO-PROJETO>\minikube\scripts\linux\README.md (placeholder)
 
 ### Configuracoes:
-- ✅ C:\Users\Paulo\Documents\OneDrive\Projetos\DevOps\minikube\configs\*.yaml
+- ✅ <CAMINHO-DO-PROJETO>\minikube\configs\*.yaml
 
 ### Documentacao:
-- ✅ C:\Users\Paulo\Documents\OneDrive\Projetos\DevOps\minikube\docs\README.md
-- ✅ C:\Users\Paulo\Documents\OneDrive\Projetos\DevOps\HISTORICO-PROJETO-MINIKUBE.md
-- ✅ C:\Users\Paulo\Documents\OneDrive\Projetos\DevOps\CONVERSAS-E-DECISOES.md
+- ✅ <CAMINHO-DO-PROJETO>\minikube\docs\README.md
+- ✅ <CAMINHO-DO-PROJETO>\HISTORICO-PROJETO-MINIKUBE.md
+- ✅ <CAMINHO-DO-PROJETO>\CONVERSAS-E-DECISOES.md
 
 ### Autostart (organizados na estrutura multiplataforma):
-- ✅ C:\Users\Paulo\Documents\OneDrive\Projetos\DevOps\minikube\scripts\windows\autostart\minikube-autostart.bat
+- ✅ <CAMINHO-DO-PROJETO>\minikube\scripts\windows\autostart\minikube-autostart.bat
 - ✅ Windows Startup\minikube-autostart.bat (referencia ativa)
 - ✅ Desktop\Iniciar Minikube.lnk (atalho do desktop)
 
@@ -525,7 +525,7 @@ cd "C:\DevOps"  # ou onde copiou o projeto
 **Usuario**: "nos scripts do windows tem alguma maneira de deixar o path dinamico, caso eu mude a raiz da pasta principal devops, por exemplo se ela estivesse no C:\DevOps"
 
 **Contexto**: Necessidade de portabilidade total - projeto funcionando em qualquer localização do sistema
-**Problema**: Scripts com paths hardcoded (C:\Users\Paulo\Documents\OneDrive\Projetos\DevOps\) limitando flexibilidade
+**Problema**: Scripts com paths hardcoded (<CAMINHO-DO-PROJETO>) limitando flexibilidade
 
 **Solução Implementada**:
 - ✅ **Get-ProjectRoot.ps1**: Biblioteca central com detecção automática de raiz do projeto
@@ -548,7 +548,7 @@ cd "C:\DevOps"  # ou onde copiou o projeto
 - 📚 **Documentação**: PATHS-DINAMICOS.md criado com guia técnico completo
 
 **Localizações Validadas**:
-- ✅ C:\Users\Paulo\Documents\OneDrive\Projetos\DevOps\ (atual)
+- ✅ <CAMINHO-DO-PROJETO> (atual)
 - ✅ C:\DevOps\ (simulado)
 - ✅ Qualquer localização com estrutura correta
 

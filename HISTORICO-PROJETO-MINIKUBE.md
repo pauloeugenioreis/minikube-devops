@@ -145,84 +145,38 @@
 ## ARQUITETURA FINAL
 
 ### Estrutura de Diretorios:
-```
-C:\Users\Paulo\Documents\OneDrive\Projetos\DevOps\
-├── temp\                        # Area de desenvolvimento (scripts experimentais)
-│   ├── keda-setup\             # Desenvolvimento KEDA (concluido)
 │   ├── scripts-teste\          # Scripts em desenvolvimento
 │   ├── configs-teste\          # Configuracoes em teste
-│   └── validacoes\             # Testes e validacoes
-└── minikube\                   # Estrutura FINAL (codigo consolidado)
-    ├── scripts\
-    │   ├── windows\            # Scripts Windows (PowerShell)
     │   │   ├── init\           # Inicializacao
     │   │   │   ├── init-minikube-fixed.ps1
-    │   │   │   └── install-keda.ps1
-    │   │   ├── keda\           # Scripts KEDA especificos
-    │   │   │   ├── install-helm-fixed.ps1
-    │   │   │   ├── install-keda.ps1
     │   │   │   └── test-keda.ps1
     │   │   ├── maintenance\    # Manutencao  
-    │   │   │   ├── fix-dashboard.ps1
-    │   │   │   ├── quick-status.ps1
-    │   │   │   └── fix-kubectl-final.ps1
-    │   │   ├── monitoring\     # Monitoramento
     │   │   │   ├── open-dashboard.ps1
     │   │   │   └── change-dashboard-port.ps1
-    │   │   └── autostart\      # Scripts de autostart
-    │   │       ├── minikube-autostart.bat
-    │   │       └── minikube-autostart-with-keda.bat
-    │   └── linux\              # Scripts Linux (Bash) - FUTURO
-    │       └── README.md       # Planejamento futuro
-    ├── configs\                # Configuracoes Kubernetes
     │   ├── keda\               # Configuracoes KEDA
     │   │   └── examples\       # Exemplos ScaledObjects
-    │   │       ├── cpu-scaling-example.yaml
-    │   │       ├── memory-scaling-example.yaml
     │   │       └── rabbitmq-scaling-example.yaml
     │   ├── persistent-volumes.yaml
-    │   ├── rabbitmq.yaml
-    │   └── mongodb.yaml
     ├── docs\                   # Documentacao
     │   ├── README.md           # Documentacao principal
-    │   └── KEDA.md            # Documentacao KEDA
-    └── windows-test-structure.ps1   # Teste estrutura Windows
 ```
 
-### Processo de Desenvolvimento:
-1. **Desenvolvimento**: Scripts experimentais criados em `temp/`
 2. **Testes**: Validacao completa na area temporaria
 3. **Integracao**: Apenas codigo 100% funcional vai para `minikube/`
-4. **Manutencao**: Estrutura principal sempre estavel e profissional
-
 ### Componentes Tecnicos:
 - **Minikube**: v1.37.0 com driver Docker
-- **kubectl**: v1.34.0 (compativel)
-- **Docker Desktop**: v4.46.0 com verificacao automatica
 - **RabbitMQ**: 3.12-management, portas 15672/5672
 - **MongoDB**: 7.0, porta 27017, 1Gi memoria
-- **Dashboard**: Kubernetes Dashboard porta 53954
-- **KEDA**: 2.17+ com event-driven autoscaling
 
 ---
 
-## SCRIPTS PRINCIPAIS
-
 ### init-minikube-fixed.ps1
-**Localizacao**: `C:\Users\Paulo\Documents\OneDrive\Projetos\DevOps\minikube\scripts\windows\init\`
-**Funcoes**:
 - Verificacao e inicializacao do Docker
 - Verificacao de compatibilidade kubectl
-- Deploy de volumes persistentes
-- Deploy RabbitMQ e MongoDB
 - Configuracao Dashboard
 - Instalacao opcional KEDA (-InstallKeda)
-- Verificacao de saude completa
-
 ### install-keda.ps1
 **Localizacao**: `C:\Users\Paulo\Documents\OneDrive\Projetos\DevOps\minikube\scripts\windows\init\`
-**Funcoes**:
-- Verificacao Minikube ativo
 - Instalacao Helm (se necessario)
 - Deploy KEDA via Helm
 - Validacao instalacao

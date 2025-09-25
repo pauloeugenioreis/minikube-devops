@@ -146,7 +146,7 @@ kubectl apply -f "$CONFIGS_DIR/rabbitmq.yaml"
 ## 🔧 COMPATIBILIDADE
 
 ### ✅ Localizações Testadas
-- `C:\Users\Paulo\Documents\OneDrive\Projetos\DevOps\` ✓
+- `<CAMINHO-DO-PROJETO>` ✓
 - `C:\DevOps\` ✓ (simulado)
 - `D:\Projetos\DevOps\` ✓ (compatível)
 - Qualquer localização com estrutura correta ✓
@@ -170,7 +170,7 @@ kubectl apply -f "$CONFIGS_DIR/rabbitmq.yaml"
 
 ### Exemplo de Migração:
 ```
-ANTES: C:\Users\Paulo\Documents\OneDrive\Projetos\DevOps\
+ANTES: <CAMINHO-DO-PROJETO>
 DEPOIS: C:\DevOps\
 
 🎯 Resultado: Scripts funcionam automaticamente!
@@ -195,7 +195,7 @@ DEPOIS: C:\DevOps\
 
 ### Antes (Hardcoded):
 ```powershell
-$configPath = "C:\Users\Paulo\Documents\OneDrive\Projetos\DevOps\minikube\configs\rabbitmq.yaml"
+$configPath = "<CAMINHO-DO-PROJETO>\minikube\configs\rabbitmq.yaml"
 ```
 
 ### Depois (Dinâmico):

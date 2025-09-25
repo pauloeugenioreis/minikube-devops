@@ -37,7 +37,7 @@
 - 📚 Atualizar 4 arquivos de documentação
 - 🔄 Validação completa sempreional com RabbitMQ e MongoDB
 - **Status**: ✅ CONCLUÍDO + OTIMIZADO - estrutura limpa e scripts Linux prontos
-- **Local**: C:\Users\Paulo\Documents\OneDrive\Projetos\DevOps\minikube\CONTINUAR CONVERSA EM NOVA MÁQUINA
+- **Local**: <CAMINHO-DO-PROJETO>\minikube\CONTINUAR CONVERSA EM NOVA MÁQUINA
 
 ## 🎯 Para GitHub Copilot na Nova Máquina:
 
@@ -50,7 +50,7 @@ Olá! Sou o Paulo e preciso continuar nosso projeto Minikube de onde paramos. Aq
 ## 📋 PROJETO ATUAL:
 - **Objetivo**: Ambiente Minikube profissional com RabbitMQ e MongoDB
 - **Status**: ✅ CONCLUÍDO - mas posso precisar de expansões/modificações
-- **Local**: C:\Users\Paulo\Documents\OneDrive\Projetos\DevOps\minikube\
+- **Local**: <CAMINHO-DO-PROJETO>\minikube\
 
 ## 📚 DOCUMENTAÇÃO DISPONÍVEL:
 Por favor, LEIA estes arquivos para entender todo o contexto:

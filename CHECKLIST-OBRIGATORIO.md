@@ -36,6 +36,14 @@ Este checklist DEVE ser seguido SEMPRE que criar, modificar ou expandir qualquer
 - [ ] **Init scripts**: Integrar novos serviços com parâmetros opcionais
 - [ ] **Fresh Machine**: Atualizar setup se necessário
 
+### 6. ☁️ VERSIONAMENTO GIT/GITHUB (OBRIGATÓRIO)
+- [ ] **git add .**
+- [ ] **git commit -m "Descrição da alteração"**
+- [ ] **git push**
+- [ ] **Confirme que o repositório remoto está atualizado**
+
+> Sempre que qualquer alteração for feita, execute o versionamento para garantir histórico, backup e rastreabilidade no GitHub.
+
 ---
 
 ## 🎯 QUANDO APLICAR ESTE CHECKLIST

@@ -35,7 +35,7 @@
 - Padrão sem caracteres especiais
 
 ### Fase 6: Migração OneDrive
-- Mudança para C:\Users\Paulo\Documents\OneDrive\Projetos\DevOps\
+- Mudança para <CAMINHO-DO-PROJETO>\
 - Backup automático na nuvem
 
 ### Fase 7: Estrutura Multiplataforma
@@ -180,7 +180,7 @@
 ---
 ### Inicialização:
 ```powershell
-C:\Users\Paulo\Documents\OneDrive\Projetos\DevOps\minikube\scripts\windows\init\init-minikube-fixed.ps1 -InstallKeda
+<CAMINHO-DO-PROJETO>\minikube\scripts\windows\init\init-minikube-fixed.ps1 -InstallKeda
 ```
 
 ### Setup para Maquina Nova (Offline):
@@ -193,7 +193,7 @@ C:\Users\Paulo\Documents\OneDrive\Projetos\DevOps\minikube\scripts\windows\init\
 # Instalar KEDA
 
 # Testar KEDA
-C:\Users\Paulo\Documents\OneDrive\Projetos\DevOps\minikube\scripts\windows\keda\test-keda.ps1
+<CAMINHO-DO-PROJETO>\minikube\scripts\windows\keda\test-keda.ps1
 ```
 
 ### Acessos:
