@@ -33,8 +33,8 @@ DevOps/
 │   ├── docs/              # Documentação detalhada  | Documentation
 │   ├── scripts/           # Scripts Windows e Linux | Scripts
 │   └── windows-test-structure.ps1 # Teste de estrutura | Structure test
-├── CHECKLIST-OBRIGATORIO.md # Checklist obrigatório | Mandatory checklist
-├── CONVERSAS-E-DECISOES.md   # Histórico de decisões | Decisions history
+├── MANDATORY-CHECKLIST.md # Mandatory checklist
+├── DECISIONS-HISTORY.md   # Decisions history
 └── ...
 ```
 
@@ -45,8 +45,8 @@ DevOps/
    ```
    git clone https://github.com/pauloeugenioreis/minikube-devops.git
    ```
-2. **Siga o `CHECKLIST-OBRIGATORIO.md` para qualquer alteração**
-   **Follow `CHECKLIST-OBRIGATORIO.md` for any change**
+2. **Siga o `MANDATORY-CHECKLIST.md` para qualquer alteração**
+  **Follow `MANDATORY-CHECKLIST.md` for any change**
 3. **Inicialize o ambiente | Initialize the environment:**
    - Windows: execute os scripts em | run scripts in `minikube/scripts/windows/init/`
    - Linux: utilize os scripts em | use scripts in `minikube/scripts/linux/`
@@ -91,21 +91,13 @@ DevOps/
 ---
 
 ## 🇧🇷 Documentação | 🇺🇸 Documentation
-- [CHECKLIST-OBRIGATORIO.md](CHECKLIST-OBRIGATORIO.md): Checklist obrigatório | Mandatory checklist
+- [MANDATORY-CHECKLIST.md](MANDATORY-CHECKLIST.md): Checklist obrigatório | Mandatory checklist
 - [minikube/docs/README.md](minikube/docs/README.md): Documentação detalhada | Detailed documentation
-- [CONVERSAS-E-DECISOES.md](CONVERSAS-E-DECISOES.md): Histórico de decisões | Decisions history
+- [DECISIONS-HISTORY.md](DECISIONS-HISTORY.md): Histórico de decisões | Decisions history
 
 ---
 
-## 🇧🇷 Versionamento | 🇺🇸 Versioning
-- Todo o projeto é versionado no GitHub | All project is versioned on GitHub
-- Sempre use | Always use:
-  ```
-  git add .
-  git commit -m "mensagem | message"
-  git push
-  ```
-  após qualquer alteração | after any change
+
 
 ---
 
