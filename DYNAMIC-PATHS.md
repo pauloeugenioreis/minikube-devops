@@ -76,11 +76,12 @@ minikube\windows-test-structure.ps1
 # Importar funções
 . ".\scripts\windows\Get-ProjectRoot.ps1"
 
-# Obter paths do projeto
-$paths = Get-ProjectPaths
+# Obter o caminho para o chart do RabbitMQ
+$projectPaths = Get-ProjectPaths
+$rabbitmqChartPath = Join-Path $projectPaths.Minikube "charts\rabbitmq"
 
-# Usar paths dinâmicos
-kubectl apply -f $paths.Configs.RabbitMQ
+# Usar o path dinâmico com Helm
+helm upgrade --install rabbitmq $rabbitmqChartPath
 ```
 
 ### Exemplo 2: Detecção Manual

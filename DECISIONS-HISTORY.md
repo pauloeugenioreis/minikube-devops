@@ -527,7 +527,7 @@ cd "C:\DevOps"  # ou onde copiou o projeto
 **Contexto**: Necessidade de portabilidade total - projeto funcionando em qualquer localização do sistema
 **Problema**: Scripts com paths hardcoded (<CAMINHO-DO-PROJETO>) limitando flexibilidade
 
-**Solução Implementada**:
+**Solucao Implementada**:
 - ✅ **Get-ProjectRoot.ps1**: Biblioteca central com detecção automática de raiz do projeto
 - ✅ **Detecção por Marcadores**: Busca por CONVERSAS-E-DECISOES.md, HISTORICO-PROJETO-MINIKUBE.md, estrutura minikube/
 - ✅ **Scripts .bat Dinamizados**: minikube-autostart.bat e minikube-autostart-with-keda.bat usando %~dp0
@@ -541,7 +541,7 @@ cd "C:\DevOps"  # ou onde copiou o projeto
 - `Get-ProjectPaths`: Retorna objeto com todos os paths importantes
 - `Test-ProjectRoot`: Valida se detecção está funcionando
 
-**Resultado**: 
+**Resultado**:
 - 🎯 **Portabilidade 100%**: Projeto funciona em C:\DevOps, C:\Projetos\DevOps, D:\MeusProjetos\DevOps, etc.
 - 🔧 **Zero Configuração**: Detecção totalmente automática
 - 🛡️ **Robustez**: Sistema de fallback para garantir funcionamento
@@ -599,7 +599,7 @@ cd "C:\DevOps"  # ou onde copiou o projeto
 **Contexto**: Necessidade de setup zero-to-running para máquinas completamente novas
 **Problema**: Scripts existentes validam dependências mas não instalam automaticamente
 
-**Solução Implementada**:
+**Solucao Implementada**:
 
 **Setup-Fresh-Machine.ps1**:
 - ✅ **Instalação Automática**: Docker Desktop, Minikube, kubectl, Helm
@@ -655,7 +655,7 @@ cd "C:\DevOps"  # ou onde copiou o projeto
 **Contexto**: Necessidade de garantir que procedimentos fundamentais nunca sejam esquecidos
 **Problema**: Esquecimento da regra arquitetural (temp/ → validação → migração → documentação)
 
-**Solução Implementada**:
+**Solucao Implementada**:
 - ✅ **CHECKLIST-OBRIGATORIO.md**: Documento de prioridade máxima
 - ✅ **Procedimentos Obrigatórios**: Lista de verificação para qualquer mudança
 - ✅ **Ordem de Execução**: Sequência obrigatória para desenvolvimento
@@ -788,3 +788,23 @@ cd "C:\DevOps"  # ou onde copiou o projeto
 
 *Arquivo criado em 21/09/2025 para preservar contexto completo da conversa*
 *Ultima atualizacao: 22/09/2025 - Remoção Completa Azure + Ambiente Genérico*
+
+---
+
+### 24. MIGRAÇÃO PARA HELM
+**Usuario**: "você pode implementar o item 2. Empacotamento com Helm?"
+
+**Contexto**: Sugestão de melhoria para migrar os deployments de RabbitMQ e MongoDB de arquivos YAML estáticos para pacotes Helm dinâmicos e versionáveis.
+**Implementacao**:
+- Criação de Helm Charts para RabbitMQ e MongoDB na pasta `minikube/charts/`.
+- Cada chart contém `Chart.yaml`, `values.yaml` e templates para os recursos Kubernetes (Deployment, Service, PV, PVC, etc.).
+- O script de inicialização `init-minikube-fixed.ps1` foi modificado para usar `helm upgrade --install` em vez de `kubectl apply`. Os arquivos YAML antigos foram movidos para `minikube/configs_backup/` para manter um histórico, mas não são mais utilizados.
+- Os arquivos YAML antigos foram movidos para `minikube/configs_backup/`.
+
+**Resultado**:
+- ✅ **Gerenciamento Simplificado**: Configurações centralizadas nos arquivos `values.yaml`.
+- ✅ **Modularidade**: Aplicações empacotadas de forma independente e reutilizável.
+- ✅ **Versionamento**: A versão dos charts e das aplicações agora é controlada pelo `Chart.yaml`.
+- ✅ **Estrutura Limpa**: A pasta `configs` foi limpa, e a lógica de deploy agora é padrão de mercado.
+
+**Data**: 25/09/2025

@@ -1,6 +1,9 @@
 # Script para Aplicar Configurações Completas do RabbitMQ
 # Implementa OPÇÃO 1 + Job de Configuração
 
+# Forcar a codificacao UTF-8 para exibir icones corretamente
+$PSDefaultParameterValues['*:Encoding'] = 'utf8'
+
 param(
     [switch]$SkipBackup,
     [switch]$ForceApply

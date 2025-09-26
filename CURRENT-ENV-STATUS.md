@@ -1,19 +1,21 @@
-# Status do Ambiente - 22 Setembro 2025
+# Status do Ambiente - 25 Setembro 2025
 
 ## ✅ Ambiente Funcionando Perfeitamente
 
 ### Componentes Ativos
 - **Minikube**: Operacional
-- **RabbitMQ**: Running (38h uptime)
-- **MongoDB**: Running (35h uptime) 
+- **RabbitMQ**: Running (Gerenciado via Helm)
+- **MongoDB**: Running (Gerenciado via Helm)
 - **Memory App**: Running (19h uptime)
 - **CronJob Service**: Ativo e executando (37h uptime)
+- **KEDA**: Operacional
+- **Dashboard**: Acessível
 
 ### Portas Configuradas (Conforme Documentação)
 - **RabbitMQ Management**: 15672
 - **RabbitMQ AMQP**: 5672
 - **MongoDB**: 27017
-- **Dashboard Kubernetes**: 53954
+- **Dashboard Kubernetes**: 4666
 
 ### CronJob Status
 - **Nome**: cronjob-service
@@ -52,5 +54,5 @@ kubectl logs -n cronjob-service -l job-name=cronjob-service-XXXXXX
 ## ✅ Ambiente 100% Operacional
 Todos os procedimentos foram executados com sucesso. O ambiente está estável e funcional.
 
-**Data**: 22 de Setembro de 2025  
+**Data**: 25 de Setembro de 2025  
 **Status**: OPERACIONAL ✅CURRENT-ENV-STATUS.md

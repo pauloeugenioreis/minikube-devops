@@ -3,6 +3,9 @@
 # Instala automaticamente: Docker Desktop, Minikube, kubectl, Helm
 # Configurado para usar paths dinamicos e ambiente completo Minikube DevOps
 
+# Forcar a codificacao UTF-8 para exibir icones corretamente
+$PSDefaultParameterValues['*:Encoding'] = 'utf8'
+
 param(
     [switch]$SkipDockerInstall,
     [switch]$SkipMinikubeInstall,

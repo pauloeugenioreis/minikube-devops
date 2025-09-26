@@ -65,6 +65,9 @@ bash minikube/scripts/linux/monitoring/open-dashboard.sh
 │   └── validacoes\             # Scripts de teste e verificacao
 ├── Bootstrap-DevOps.ps1         # Bootstrap completo para maquina nova (RAIZ)
 └── minikube\                   # Estrutura FINAL (codigo consolidado)
+    ├── charts\                 # NOVOS Helm Charts
+    │   ├── mongodb\            # Chart do MongoDB
+    │   └── rabbitmq\           # Chart do RabbitMQ
     ├── scripts\
     │   ├── windows\            # Scripts Windows (PowerShell)
     │   │   ├── Setup-Fresh-Machine.ps1
@@ -107,15 +110,12 @@ bash minikube/scripts/linux/monitoring/open-dashboard.sh
     │       │   └── placeholder.sh
     │       └── linux-test-structure.sh
     ├── configs\
-    │   ├── keda\
-    │   │   └── examples\
-    │   │       ├── cpu-scaling-example.yaml
-    │   │       ├── memory-scaling-example.yaml
-    │   │       └── rabbitmq-scaling-example.yaml
-    │   ├── persistent-volumes.yaml
-    │   ├── rabbitmq.yaml
-    │   ├── rabbitmq-management-ingress.yaml
-    │   └── mongodb.yaml
+    │   ├── configs_backup\     # Backup dos YAMLs antigos
+    │   └── keda\
+    │       └── examples\
+    │           ├── cpu-scaling-example.yaml
+    │           ├── memory-scaling-example.yaml
+    │           └── rabbitmq-scaling-example.yaml
     ├── docs\
     │   ├── fresh-machine\
     │   │   └── SETUP.md
@@ -123,6 +123,23 @@ bash minikube/scripts/linux/monitoring/open-dashboard.sh
     │   └── README.md
     └── windows-test-structure.ps1
 ```
+
+## Gerenciamento de Aplicações com Helm
+
+A partir da Fase 18, as aplicações base (RabbitMQ e MongoDB) não são mais instaladas via `kubectl apply` com arquivos YAML estáticos. Agora, elas são gerenciadas como pacotes pelo **Helm**.
+
+- **Onde estão os Charts?**
+  - A configuração de cada serviço se encontra em `minikube/charts/`.
+  - `minikube/charts/rabbitmq/`
+  - `minikube/charts/mongodb/`
+
+- **Como customizar?**
+  - Para alterar configurações (versão, portas, senhas, limites de recursos), edite o arquivo `values.yaml` dentro da pasta do respectivo chart.
+
+- **Como funciona?**
+  - O script `init-minikube-fixed.ps1` agora executa `helm upgrade --install` para garantir que os serviços sejam instalados ou atualizados para a versão definida nos charts, de forma automática.
+
+Essa abordagem torna o gerenciamento dos serviços muito mais robusto, versionável e fácil de manter.
 
 ## Processo de Desenvolvimento
 

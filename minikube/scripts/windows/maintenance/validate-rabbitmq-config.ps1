@@ -1,6 +1,9 @@
 # Script de Validacao Completa do RabbitMQ
 # Testa todas as configuracoes aplicadas
 
+# Forcar a codificacao UTF-8 para exibir icones corretamente
+$PSDefaultParameterValues['*:Encoding'] = 'utf8'
+
 param(
     [switch]$Detailed,
     [switch]$TestConnections

@@ -54,7 +54,7 @@
 
 ### Fase 8: Regra Arquitetural de Desenvolvimento
 - **Requisito**: "caso vc tenha que criar scripts de testes que ainda não estejam totalmente consolidados e funcionais, crie eles na pasta temp que acabei de criar, não quero nossa estrura da pasta minikube bagunçada, somente depois de tudo certom é que você vai atualizar a pasta, entedido?"
-- **Implementacao**: Processo de desenvolvimento em duas fases
+- **Implementação**: Processo de desenvolvimento em duas fases
 - **Resultado**: Workflow temp/ → minikube/ para manter estrutura principal sempre estavel
 
 ### Fase 9: Expansao Multiplataforma - Scripts Linux
@@ -573,3 +573,15 @@ kubectl get jobs -n namespace                     # Jobs gerados
 *Projeto completo - Minikube DevOps Environment*
 *Para consulta e referencia futura*
 *Última atualização: 22/09/2025 - Remoção Azure + Ambiente Genérico Completo*
+
+---
+
+### Fase 18: Migração para Helm
+- **Requisito**: Evoluir a arquitetura do projeto para usar Helm, conforme sugestão de melhoria.
+- **Implementação**: Os deployments de RabbitMQ e MongoDB foram convertidos de arquivos YAML estáticos para Helm Charts parametrizáveis.
+- **Tecnologia**: Helm, PowerShell.
+- **Resultado**: 
+  - ✅ Gerenciamento de configuração simplificado através de arquivos `values.yaml`.
+  - ✅ Implantação modular e versionada.
+  - ✅ Estrutura do projeto mais limpa e alinhada com as práticas de mercado do Kubernetes.
+- **Documentação**: `DECISIONS-HISTORY.md` e `docs/README.md` atualizados para refletir a nova abordagem.

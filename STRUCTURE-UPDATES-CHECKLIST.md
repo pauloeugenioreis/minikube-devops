@@ -84,9 +84,9 @@ minikube/
 2. **docs/README.md** → Atualizar documentação
 3. **autostart files** → Criar versões se necessário
 4. **init script** → Integrar instalação
+5. **values.yaml** → Garantir que as configurações padrão são seguras e funcionais
 
 ### Fase 5: Teste Final
-- ✅ Executar `windows-test-structure.ps1`
 - ✅ Testar inicialização completa
 - ✅ Validar documentação
 - ✅ Confirmar exemplos funcionais
@@ -94,19 +94,12 @@ minikube/
 ## 🎯 EXEMPLO: INTEGRAÇÃO KEDA (REALIZADA)
 
 ### ✅ Arquivos Adicionados:
-- `configs/keda/examples/` (3 arquivos YAML)
-- `scripts/windows/keda/` (4 scripts PowerShell)
-- `scripts/windows/init/install-keda.ps1`
-- `docs/KEDA.md`
+- `charts/rabbitmq/` e `charts/mongodb/` (Migração para Helm)
 
 ### ✅ Arquivos Atualizados:
-- `docs/README.md` → Seção KEDA, estrutura, comandos
-- `scripts/windows/init/init-minikube-fixed.ps1` → Parâmetro `-InstallKeda`
-- `windows-test-structure.ps1` → Testes KEDA
-- `scripts/windows/autostart/minikube-autostart-with-keda.bat` → Versão com KEDA
+- `scripts/windows/autostart/minikube-autostart.bat` → Usa o init script que já inclui KEDA
 
 ### ✅ Resultado:
-- 100% integrado à estrutura principal
 - Documentação completa
 - Testes funcionais
 - Opções de autostart disponíveis
@@ -118,10 +111,10 @@ minikube/
 2. **Caminhos absolutos** vs relativos
 3. **Compatibilidade** com versões anteriores
 4. **Permissões** de execução PowerShell
-5. **Dependencies** entre serviços
+5. **Dependências** entre serviços (ex: um chart que depende de outro)
+6. **Valores padrão** no `values.yaml`
 
 ### Nunca Fazer:
-- ❌ Modificar estrutura principal sem testar em temp/
 - ❌ Quebrar compatibilidade com scripts existentes
 - ❌ Esquecer de atualizar documentação
 - ❌ Deixar testes quebrados

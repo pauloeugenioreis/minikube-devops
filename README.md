@@ -13,6 +13,7 @@ Professional environment for local DevOps automation, development and testing us
 - **Scripts PowerShell e Bash** para inicialização, manutenção, monitoramento e troubleshooting
 - **Estrutura profissional**: separação entre desenvolvimento (`temp/`) e produção (`minikube/`)
 - **Versionamento obrigatório**: integração contínua com GitHub
+- **Gerenciamento com Helm**: Aplicações empacotadas como charts para fácil gerenciamento e versionamento.
 
 ## 🇺🇸 Overview
 - **Full automation** of local Kubernetes environment setup with Minikube
@@ -21,6 +22,7 @@ Professional environment for local DevOps automation, development and testing us
 - **PowerShell and Bash scripts** for initialization, maintenance, monitoring and troubleshooting
 - **Professional structure**: separation between development (`temp/`) and production (`minikube/`)
 - **Mandatory versioning**: continuous integration with GitHub
+- **Helm Management**: Applications are packaged as charts for easy management and versioning.
 
 ---
 
@@ -29,7 +31,7 @@ Professional environment for local DevOps automation, development and testing us
 DevOps/
 ├── temp/                  # Área de desenvolvimento | Development area
 ├── minikube/              # Estrutura principal     | Main structure
-│   ├── configs/           # Configurações Kubernetes (YAML)
+│   ├── charts/            # Helm charts para aplicações | Helm charts for applications
 │   ├── docs/              # Documentação detalhada  | Documentation
 │   ├── scripts/           # Scripts Windows e Linux | Scripts
 │   └── windows-test-structure.ps1 # Teste de estrutura | Structure test
@@ -77,7 +79,7 @@ DevOps/
 ### 🐧 Linux
 - Inicialização completa (Linux) | Full initialization (Linux):
   ```bash
-  bash minikube/scripts/linux/init-minikube.sh
+  bash minikube/scripts/linux/init/init-minikube-fixed.sh
   ```
 - Teste de estrutura | Structure test:
   ```bash

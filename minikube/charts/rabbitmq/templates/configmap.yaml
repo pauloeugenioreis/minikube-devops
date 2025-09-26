@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rabbitmq-config
+data:
+  rabbitmq.conf: |
+{{ .Values.config | indent 4 }}
+  enabled_plugins: |
+{{ .Values.enabled_plugins | indent 4 }}

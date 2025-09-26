@@ -7,6 +7,9 @@ param(
     [switch]$SkipRabbitMQConfig
 )
 
+# Forcar a codificacao UTF-8 para exibir icones corretamente
+$PSDefaultParameterValues['*:Encoding'] = 'utf8'
+
 # Importar funcoes de deteccao de paths
 $getProjectRootScript = Join-Path (Split-Path $PSScriptRoot -Parent) "Get-ProjectRoot.ps1"
 if (Test-Path $getProjectRootScript) {
@@ -215,38 +218,29 @@ if ($LASTEXITCODE -ne 0) {
     exit 1
 }
 
-# Aplicar configuracoes do RabbitMQ e MongoDB
-Write-Host "Aplicando configuracoes dos servicos..." -ForegroundColor Yellow
+# Aplicar configuracoes do RabbitMQ e MongoDB com Helm
+Write-Host "Aplicando configuracoes dos servicos com Helm..." -ForegroundColor Yellow
 
-$configFiles = @(
-    "persistent-volumes.yaml",
-    "rabbitmq.yaml", 
-    "mongodb.yaml"
-)
+# Definir caminhos para os charts
+$rabbitmqChartPath = Join-Path $projectPaths.Root "minikube\charts\rabbitmq"
+$mongodbChartPath = Join-Path $projectPaths.Root "minikube\charts\mongodb"
 
-# Definir caminho para configs usando deteccao automatica
-if ($projectPaths) {
-    $configsPath = $projectPaths.Configs.Root
-    Write-Host "Usando pasta de configs detectada: $configsPath" -ForegroundColor Green
+# Instalar RabbitMQ
+Write-Host "   Instalando/Atualizando RabbitMQ chart..." -ForegroundColor White
+helm upgrade --install rabbitmq $rabbitmqChartPath
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "   Erro ao instalar/atualizar RabbitMQ chart" -ForegroundColor Red
 } else {
-    # Fallback para metodo antigo (relativo ao script)
-    $configsPath = Join-Path (Split-Path (Split-Path (Split-Path $PSScriptRoot -Parent) -Parent) -Parent) "configs"
-    Write-Host "Usando pasta de configs relativa: $configsPath" -ForegroundColor Yellow
+    Write-Host "   RabbitMQ chart aplicado com sucesso" -ForegroundColor Green
 }
 
-foreach ($file in $configFiles) {
-    $filePath = Join-Path $configsPath $file
-    if (Test-Path $filePath) {
-        Write-Host "   Aplicando $file..." -ForegroundColor White
-        kubectl apply -f $filePath
-        if ($LASTEXITCODE -eq 0) {
-            Write-Host "   $file aplicado com sucesso" -ForegroundColor Green
-        } else {
-            Write-Host "   Erro ao aplicar $file" -ForegroundColor Red
-        }
-    } else {
-        Write-Host "   Arquivo $file nao encontrado" -ForegroundColor Yellow
-    }
+# Instalar MongoDB
+Write-Host "   Instalando/Atualizando MongoDB chart..." -ForegroundColor White
+helm upgrade --install mongodb $mongodbChartPath
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "   Erro ao instalar/atualizar MongoDB chart" -ForegroundColor Red
+} else {
+    Write-Host "   MongoDB chart aplicado com sucesso" -ForegroundColor Green
 }
 
 # Aguardar pods ficarem prontos
@@ -480,6 +474,8 @@ if ($validation.Issues.Count -gt 0) {
 }
 
 Write-Host ""
+
+Start-Sleep -Seconds 10 # Adicionando espera para estabilização dos port-forwards
 
 $rabbitTest = Test-NetConnection -ComputerName localhost -Port 15672 -InformationLevel Quiet
 $mongoTest = Test-NetConnection -ComputerName localhost -Port 27017 -InformationLevel Quiet

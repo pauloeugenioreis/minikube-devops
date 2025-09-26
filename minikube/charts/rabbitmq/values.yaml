@@ -1,0 +1,62 @@
+# Default values for rabbitmq chart.
+replicaCount: 1
+
+image:
+  repository: rabbitmq
+  tag: "3.12-management"
+
+service:
+  type: NodePort
+  ports:
+    amqp:
+      port: 5672
+      nodePort: 30672
+    management:
+      port: 15672
+      nodePort: 31672
+
+ingress:
+  enabled: true
+  host: rabbitmq.local
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+
+persistence:
+  enabled: true
+  size: 1Gi
+  storageClassName: standard
+  hostPath: /mnt/data/rabbitmq
+
+credentials:
+  username: guest
+  password: guest
+  erlangCookie: "SWQOKODSQALRPCLNMEQG"
+
+config: |
+  default_user = {{ .Values.credentials.username }}
+  default_pass = {{ .Values.credentials.password }}
+  default_vhost = /
+  default_permissions.configure = .*
+  default_permissions.read = .*
+  default_permissions.write = .*
+  loopback_users = none
+  vm_memory_high_watermark.relative = 0.6
+  disk_free_limit.relative = 1.0
+  listeners.tcp.default = 5672
+  management.tcp.port = 15672
+  log.console = true
+  log.console.level = info
+  log.file = false
+  cluster_formation.peer_discovery_backend = classic_config
+  heartbeat = 60
+
+enabled_plugins: |
+  [rabbitmq_management,rabbitmq_prometheus,rabbitmq_management_agent].
+
+resources:
+  requests:
+    memory: "256Mi"
+    cpu: "200m"
+  limits:
+    memory: "512Mi"
+    cpu: "500m"

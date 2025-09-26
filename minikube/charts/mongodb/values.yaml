@@ -1,0 +1,30 @@
+# Default values for mongodb chart.
+replicaCount: 1
+
+image:
+  repository: mongo
+  tag: "7.0"
+
+service:
+  type: NodePort
+  port: 27017
+  nodePort: 30017
+
+persistence:
+  enabled: true
+  size: 2Gi
+  storageClassName: standard
+  hostPath: /mnt/data/mongodb
+
+credentials:
+  username: admin
+  password: admin
+  database: admin
+
+resources:
+  requests:
+    memory: "512Mi"
+    cpu: "200m"
+  limits:
+    memory: "1Gi"
+    cpu: "1000m"
