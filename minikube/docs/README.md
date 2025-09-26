@@ -35,7 +35,7 @@ Esse script:
 bash minikube/scripts/linux/keda/install-keda.sh
 
 # Validar estrutura do ambiente
-bash minikube/scripts/linux/linux-test-structure.sh
+bash minikube/linux-test-structure.sh
 
 # Abrir dashboard manualmente
 bash minikube/scripts/linux/monitoring/open-dashboard.sh
