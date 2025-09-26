@@ -83,7 +83,7 @@ DevOps/
   ```
 - Teste de estrutura | Structure test:
   ```bash
-  bash minikube/scripts/linux/linux-test-structure.sh
+  bash minikube/linux-test-structure.sh
   ```
 - Verificar status | Check status:
   ```bash
