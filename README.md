@@ -92,17 +92,6 @@ DevOps/
 
 ---
 
-## 🇧🇷 Documentação | 🇺🇸 Documentation
-- [MANDATORY-CHECKLIST.md](MANDATORY-CHECKLIST.md): Checklist obrigatório | Mandatory checklist
-- [minikube/docs/README.md](minikube/docs/README.md): Documentação detalhada | Detailed documentation
-- [DECISIONS-HISTORY.md](DECISIONS-HISTORY.md): Histórico de decisões | Decisions history
-
----
-
-
-
----
-
 ## 🇧🇷 Licença | 🇺🇸 License
 Este projeto é aberto e pode ser utilizado por qualquer pessoa, para fins pessoais ou profissionais.
 This project is open and can be used by anyone, for personal or professional purposes.
