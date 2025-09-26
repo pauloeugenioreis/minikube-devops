@@ -124,14 +124,21 @@ if (Test-Path $chartsPath) {
 }
 
 # --- Teste Específico para Estrutura Linux ---
-Write-Host "`nTestando estrutura Linux (preparacao)..." -ForegroundColor Yellow
-if (Test-Path (Join-Path $basePath "scripts\linux\README.md")) {
-    Write-Host "✅ Placeholder Linux encontrado" -ForegroundColor Green
-    $global:successCount++
-} else {
-    Write-Host "❌ Placeholder Linux NAO encontrado" -ForegroundColor Red
-    $global:failureCount++
+$linuxChecks = @(
+    @{ Category = "Scripts de Inicialização (Linux)"; Directory = "scripts\linux\init"; Files = @("init-minikube-fixed.sh", "apply-rabbitmq-config.sh") },
+    @{ Category = "Scripts de Manutenção (Linux)"; Directory = "scripts\linux\maintenance"; Files = @("fix-dashboard.sh", "validate-rabbitmq-config.sh") },
+    @{ Category = "Scripts de Monitoramento (Linux)"; Directory = "scripts\linux\monitoring"; Files = @("open-dashboard.sh", "change-dashboard-port.sh") },
+    @{ Category = "Scripts KEDA (Linux)"; Directory = "scripts\linux\keda"; Files = @("install-helm-fixed.sh", "install-keda.sh", "test-keda.sh") },
+    @{ Category = "Scripts Autostart (Linux)"; Directory = "scripts\linux\autostart"; Files = @("minikube-autostart.sh", "minikube-autostart-with-keda.sh") },
+    @{ Category = "Script de Teste de Estrutura (Linux)"; Directory = ""; Files = @("linux-test-structure.sh") }
+)
+
+Write-Host "`nTestando estrutura de Scripts Linux..." -ForegroundColor Yellow
+
+foreach ($check in $linuxChecks) {
+    Test-Files -Category $check.Category -Directory $check.Directory -Files $check.Files
 }
+
 
 Write-Host "`n=====================================" -ForegroundColor Cyan
 if ($global:failureCount -eq 0) {
