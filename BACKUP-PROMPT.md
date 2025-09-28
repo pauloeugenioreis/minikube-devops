@@ -288,3 +288,10 @@ Este backup permite que qualquer IA futura:
 *Backup atualizado em 22/09/2025 - Remoção Azure + Ambiente Genérico Completo*
 *Projeto: Ambiente Minikube Profissional + Fresh Setup + Sistema de Qualidade + Troubleshooting + Processo Corretivo + Ambiente Genérico*
 *Status: ✅ COMPLETO - AMBIENTE GENÉRICO 100% FUNCIONAL + CHECKLIST OBRIGATÓRIO RESPEITADO*
+
+### Fase 19: Robustez Metrics Server e Ajustes Multiplataforma (28/09/2025)
+- Pré-carregamento das imagens `registry.k8s.io/metrics-server/metrics-server:v0.8.0` e digest oficial nos scripts Linux/Windows + patch automático do deployment -> zero `ImagePullBackOff`.
+- Reescrita do `wait_for_resource` e validação final priorizando `http://rabbitmq.local`, com fallback para `localhost:15672` quando necessário.
+- Remoção do legado `apply-rabbitmq-config.sh` e atualização dos READMEs/testes para refletir a arquitetura baseada em Helm.
+- Detecção robusta da versão do `kubectl` (JSON/saída padrão) em todos os scripts, substituindo o flag `--short`.
+- Resultado: inicialização limpa (autostart Linux/Windows), logs completos e documentação sincronizada.

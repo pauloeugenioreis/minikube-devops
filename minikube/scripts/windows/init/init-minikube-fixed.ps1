@@ -10,6 +10,55 @@ param(
 # Forcar a codificacao UTF-8 para exibir icones corretamente
 $PSDefaultParameterValues['*:Encoding'] = 'utf8'
 
+$metricsServerImages = @(
+    "registry.k8s.io/metrics-server/metrics-server:v0.8.0"
+    "registry.k8s.io/metrics-server/metrics-server@sha256:89258156d0e9af60403eafd44da9676fd66f600c7934d468ccc17e42b199aee2"
+)
+
+function Ensure-MetricsServerImage {
+    if (-not (Test-Command "docker")) {
+        Write-Host "   ⚠️ Docker indisponível para pré-carregar imagens do metrics-server" -ForegroundColor Yellow
+        return
+    }
+
+    foreach ($image in $metricsServerImages) {
+        $imageExists = $false
+        try {
+            docker image inspect $image 2>$null | Out-Null
+            $imageExists = $LASTEXITCODE -eq 0
+        } catch {
+            $imageExists = $false
+        }
+
+        if (-not $imageExists) {
+            Write-Host "   Baixando imagem $image..." -ForegroundColor White
+            docker pull $image 2>$null | Out-Null
+            if ($LASTEXITCODE -ne 0) {
+                Write-Host "   ⚠️ Falha ao baixar $image. O addon tentará buscar diretamente." -ForegroundColor Yellow
+                continue
+            }
+        }
+
+        Write-Host "   Carregando $image no Minikube..." -ForegroundColor White
+        & minikube image load $image 2>$null | Out-Null
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "   ⚠️ Não foi possível carregar $image no Minikube. Verifique manualmente." -ForegroundColor Yellow
+        } else {
+            Write-Host "   ✅ $image disponível para o metrics-server." -ForegroundColor Green
+        }
+    }
+}
+
+function Patch-MetricsServerImage {
+    Write-Host "   Ajustando deployment do metrics-server para usar imagem com tag..." -ForegroundColor White
+    kubectl patch deployment metrics-server -n kube-system `
+        --type=json `
+        -p '[{"op":"replace","path":"/spec/template/spec/containers/0/image","value":"registry.k8s.io/metrics-server/metrics-server:v0.8.0"}]' 2>$null | Out-Null
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "   ⚠️ Não foi possível ajustar a imagem do metrics-server. Verifique manualmente." -ForegroundColor Yellow
+    }
+}
+
 # Importar funcoes de deteccao de paths
 $getProjectRootScript = Join-Path (Split-Path $PSScriptRoot -Parent) "Get-ProjectRoot.ps1"
 if (Test-Path $getProjectRootScript) {
@@ -131,16 +180,6 @@ function Get-K8sClientVersion {
         [string[]]$Arguments = @()
     )
 
-    $shortArgs = @('version','--client','--short')
-    try {
-        $output = & $Executable @Arguments @shortArgs 2>$null
-        if ($LASTEXITCODE -eq 0 -and $output) {
-            $clean = ($output -join " `n") -replace 'Client Version:\s*', ''
-            $clean = $clean.Trim()
-            if ($clean) { return $clean }
-        }
-    } catch { }
-
     $jsonArgs = @('version','--client','--output=json')
     try {
         $jsonOutput = & $Executable @Arguments @jsonArgs 2>$null
@@ -148,6 +187,15 @@ function Get-K8sClientVersion {
             $parsed = $jsonOutput | ConvertFrom-Json -ErrorAction Stop
             if ($parsed.clientVersion.gitVersion) { return $parsed.clientVersion.gitVersion }
             if ($parsed.gitVersion) { return $parsed.gitVersion }
+        }
+    } catch { }
+
+    $plainArgs = @('version','--client')
+    try {
+        $plainOutput = & $Executable @Arguments @plainArgs 2>$null
+        if ($LASTEXITCODE -eq 0 -and $plainOutput) {
+            $match = ($plainOutput -join " `n") -match 'Client Version:\s*(?<ver>\S+)'
+            if ($match) { return $Matches['ver'] }
         }
     } catch { }
 
@@ -359,14 +407,16 @@ Ensure-MinikubeRunning
 # Habilitar addons essenciais (sempre)
 if (-not $SkipAddons) {
     Write-Host "Habilitando addons essenciais..." -ForegroundColor Yellow
-    
+
+    Ensure-MetricsServerImage
+
     $addons = @(
         "storage-provisioner",
         "metrics-server", 
         "default-storageclass",
         "dashboard"
     )
-    
+
     foreach ($addon in $addons) {
         Write-Host "   Habilitando $addon..." -ForegroundColor White
         minikube addons enable $addon
@@ -376,6 +426,8 @@ if (-not $SkipAddons) {
             Write-Host "   Erro ao habilitar $addon" -ForegroundColor Yellow
         }
     }
+
+    Patch-MetricsServerImage
 }
 
 # Aguardar cluster estar pronto

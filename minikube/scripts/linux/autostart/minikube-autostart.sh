@@ -1,21 +1,21 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # =====================================================
-# Autostart do Minikube (Linux) - Ambiente completo com KEDA
+# Autostart Linux (sempre instala KEDA)
 # =====================================================
-
-set -e
+set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 INIT_SCRIPT="$SCRIPT_DIR/../init/init-minikube-fixed.sh"
 
-if [ ! -f "$INIT_SCRIPT" ]; then
-    echo "Erro: init-minikube-fixed.sh nao encontrado em $INIT_SCRIPT"
+if [[ ! -f "$INIT_SCRIPT" ]]; then
+    echo "init-minikube-fixed.sh não encontrado em $INIT_SCRIPT" >&2
     exit 1
 fi
 
 echo "====================================================="
-echo "AUTOSTART MINIKUBE (LINUX)"
-echo "Chamando script de inicializacao completo com KEDA"
+echo "AUTOSTART MINIKUBE + KEDA (LINUX)"
 echo "====================================================="
+echo "Encaminhando execução para: $INIT_SCRIPT"
 
-exec bash "$INIT_SCRIPT" --install-keda "$@"
+echo ""
+exec bash "$INIT_SCRIPT" "$@" --install-keda

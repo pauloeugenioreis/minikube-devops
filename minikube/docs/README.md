@@ -26,7 +26,7 @@ Esse script:
 - Valida e instala dependências (Docker, Minikube, kubectl)
 - Inicia Docker e Minikube
 - Aplica configurações, ingress, port-forwards
-- Instala e valida KEDA
+- Instala e valida KEDA (via Helm local quando necessário)
 - Mostra acessos úteis (RabbitMQ, MongoDB, Dashboard)
 
 ### Comandos úteis (Linux)
@@ -46,7 +46,7 @@ bash minikube/scripts/linux/monitoring/open-dashboard.sh
 - Necessário: entrada no /etc/hosts apontando para o IP do Minikube (feito automaticamente pelo script)
 
 ### Acesso ao Dashboard
-- URL: http://localhost:53954
+- URL: http://localhost:4666
 - Port-forward configurado automaticamente
 
 ### Observações
@@ -87,15 +87,12 @@ bash minikube/scripts/linux/monitoring/open-dashboard.sh
     │   │   │   ├── open-dashboard.ps1
     │   │   │   └── change-dashboard-port.ps1
     │   │   └── autostart\
-    │   │       ├── minikube-autostart.bat
     │   │       └── minikube-autostart.bat
     │   └── linux\              # Scripts Linux (Bash)
     │       ├── autostart\
-    │       │   ├── minikube-autostart.sh
     │       │   └── minikube-autostart.sh
     │       ├── init\
-    │       │   ├── init-minikube-fixed.sh
-    │       │   └── apply-rabbitmq-config.sh
+    │       │   └── init-minikube-fixed.sh
     │       ├── keda\
     │       │   ├── install-helm-fixed.sh
     │       │   ├── install-keda.sh

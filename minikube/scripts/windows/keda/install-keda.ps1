@@ -17,6 +17,38 @@ function Test-Command($cmdname) {
     return [bool](Get-Command -Name $cmdname -ErrorAction SilentlyContinue)
 }
 
+function Get-KubectlVersionString {
+    try {
+        $json = kubectl version --client --output=json 2>$null | ConvertFrom-Json -ErrorAction Stop
+        if ($json.clientVersion.gitVersion) { return $json.clientVersion.gitVersion }
+        if ($json.gitVersion) { return $json.gitVersion }
+    } catch { }
+
+    try {
+        $plain = kubectl version --client 2>$null
+        if ($plain) {
+            $match = ($plain -join " `n") -match 'Client Version:\s*(?<ver>\S+)'
+            if ($match) { return $Matches['ver'] }
+        }
+    } catch { }
+
+    return "desconhecido"
+}
+
+function Set-KedaImagePolicy {
+    param(
+        [string[]]$Deployments = @('keda-operator', 'keda-admission-webhooks', 'keda-operator-metrics-apiserver')
+    )
+
+    Write-Host "   Ajustando imagePullPolicy dos componentes KEDA..." -ForegroundColor White
+    foreach ($deploy in $Deployments) {
+        kubectl patch deployment $deploy -n keda --type=json -p '[{"op":"replace","path":"/spec/template/spec/containers/0/imagePullPolicy","value":"IfNotPresent"}]' 2>$null | Out-Null
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "   ⚠️ Não foi possível ajustar imagePullPolicy de $deploy" -ForegroundColor Yellow
+        }
+    }
+}
+
 # Funcao para verificar se Minikube esta rodando
 function Test-MinikubeRunning {
     try {
@@ -46,7 +78,7 @@ if (-not (Test-Command "minikube")) {
     exit 1
 }
 
-Write-Host "   ✅ kubectl: $(kubectl version --client --short 2>$null)" -ForegroundColor Green
+Write-Host "   ✅ kubectl: $(Get-KubectlVersionString)" -ForegroundColor Green
 Write-Host "   ✅ helm: $(helm version --short 2>$null)" -ForegroundColor Green
 Write-Host "   ✅ minikube: $(minikube version --short 2>$null)" -ForegroundColor Green
 
@@ -116,6 +148,7 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 Write-Host "   ✅ KEDA instalado com sucesso!" -ForegroundColor Green
+Set-KedaImagePolicy
 
 Write-Host "`n6. Aguardando pods do KEDA ficarem prontos..." -ForegroundColor Yellow
 Write-Host "   Isso pode levar 1-2 minutos..." -ForegroundColor Cyan

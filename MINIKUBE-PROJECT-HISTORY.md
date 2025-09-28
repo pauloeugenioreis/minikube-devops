@@ -461,3 +461,14 @@ kubectl get jobs -n namespace                     # Jobs gerados
   - ✅ Implantação modular e versionada.
   - ✅ Estrutura do projeto mais limpa e alinhada com as práticas de mercado do Kubernetes.
 - **Documentação**: `DECISIONS-HISTORY.md` e `docs/README.md` atualizados para refletir a nova abordagem.
+
+### Fase 19: Robustez Metrics Server e Ajustes Multiplataforma (28/09/2025)
+- **Requisito**: Resolver falhas recorrentes do addon `metrics-server` (pods em ImagePullBackOff), expor versões corretas do `kubectl` e alinhar scripts/documentação à arquitetura Helm.
+- **Implementação**:
+  - Pré-carregamento das imagens `registry.k8s.io/metrics-server/metrics-server:v0.8.0` e do digest oficial via Docker + `minikube image load` (Linux/Windows), seguido de patch automático do deployment para usar somente a tag.
+  - Esperas resilientes para RabbitMQ/MongoDB nos scripts Bash e validação final priorizando o ingress `http://rabbitmq.local` com fallback para `localhost:15672` apenas quando necessário.
+  - Remoção do `apply-rabbitmq-config.sh` (fluxo legado) e atualização das documentações/validações para refletir a arquitetura baseada em Helm.
+  - Detecção robusta da versão do `kubectl` (JSON ou saída padrão) em todos os scripts, substituindo o flag `--short` depreciado.
+- **Tecnologia**: Bash, PowerShell, Docker Image Load, Helm, Kubernetes Ingress.
+- **Resultado**: Ambiente inicializa com todos os pods saudáveis; logs exibem dados completos (kubectl, ingress, versões); documentação e testes em sintonia com o fluxo atual.
+- **Documentação**: DECISIONS-HISTORY.md, CONTINUITY-PROMPT.md, BACKUP-PROMPT.md, READMEs Linux/Geral.

@@ -12,6 +12,13 @@ CYAN='\033[0;36m'
 WHITE='\033[1;37m'
 NC='\033[0m' # No Color
 
+# Deployments KEDA para ajustes pós-instalação
+KEDA_DEPLOYMENTS=(
+    "keda-operator"
+    "keda-admission-webhooks"
+    "keda-operator-metrics-apiserver"
+)
+
 # Parametros
 SKIP_HELM=false
 UNINSTALL=false
@@ -50,6 +57,41 @@ command_exists() {
     command -v "$1" >/dev/null 2>&1
 }
 
+# Ajusta imagePullPolicy dos deployments KEDA para IfNotPresent
+patch_keda_image_policy() {
+    echo -e "${WHITE}   Ajustando imagePullPolicy dos componentes KEDA...${NC}"
+    for deploy in "${KEDA_DEPLOYMENTS[@]}"; do
+        if ! kubectl patch deployment "$deploy" -n keda --type='json' \
+            -p='[{"op":"replace","path":"/spec/template/spec/containers/0/imagePullPolicy","value":"IfNotPresent"}]' >/dev/null 2>&1; then
+            echo -e "${YELLOW}   ⚠️ Não foi possível ajustar imagePullPolicy de ${deploy}.${NC}"
+        fi
+    done
+}
+
+# Funcao para capturar versao do kubectl
+get_kubectl_version() {
+    local output
+    if output=$(kubectl version --client --output=json 2>/dev/null); then
+        local version
+        version=$(echo "$output" | sed -n 's/.*"gitVersion"[[:space:]]*:[[:space:]]*"\([^"\\]*\)".*/\1/p')
+        if [[ -n "$version" ]]; then
+            echo "$version"
+            return 0
+        fi
+    fi
+
+    if output=$(kubectl version --client 2>/dev/null); then
+        local version
+        version=$(echo "$output" | awk -F': ' '/Client Version/ {print $2}')
+        if [[ -n "$version" ]]; then
+            echo "$version"
+            return 0
+        fi
+    fi
+
+    return 1
+}
+
 # Funcao para verificar se Minikube esta rodando
 test_minikube_running() {
     minikube status 2>/dev/null | grep -q "Running"
@@ -75,7 +117,7 @@ if ! command_exists minikube; then
     exit 1
 fi
 
-echo -e "${GREEN}   ✅ kubectl: $(kubectl version --client --short 2>/dev/null)${NC}"
+echo -e "${GREEN}   ✅ kubectl: $(get_kubectl_version || echo "desconhecido")${NC}"
 echo -e "${GREEN}   ✅ helm: $(helm version --short 2>/dev/null)${NC}"
 echo -e "${GREEN}   ✅ minikube: $(minikube version --short 2>/dev/null)${NC}"
 
@@ -150,6 +192,7 @@ echo -e "${CYAN}   Isso pode levar alguns minutos...${NC}"
 helm upgrade --install keda kedacore/keda --namespace keda --create-namespace
 if [ $? -eq 0 ]; then
     echo -e "${GREEN}   ✅ KEDA instalado com sucesso!${NC}"
+    patch_keda_image_policy
 else
     echo -e "${RED}   ❌ Erro na instalacao do KEDA${NC}"
     exit 1

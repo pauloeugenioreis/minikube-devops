@@ -670,3 +670,21 @@ cd "C:\DevOps"  # ou onde copiou o projeto
 - Os scripts de teste de ambos os sistemas operacionais foram atualizados para refletir e validar a nova localização.
 **Resultado**: O projeto agora possui testes de validação de estrutura para ambos os ambientes (Windows e Linux), garantindo consistência e facilitando a manutenção.
 **Data**: 25/09/2025
+
+### 26. ROBUSTEZ METRICS-SERVER E AJUSTES DE INICIALIZAÇÃO
+**Usuario**: "estamos com dois metrics-server" / "como faço pra dar acesso ao registry.k8s.io ?" / "ainda com problema metrics-server" / "não está mostrando a versão do kubectl"
+
+**Contexto**: O addon `metrics-server` criava pods em `ImagePullBackOff` quando a imagem `registry.k8s.io/metrics-server/metrics-server:v0.8.0` não era baixada em tempo hábil; além disso, os scripts exibiam `kubectl: desconhecido`, mantinham referências a scripts legados e validavam apenas `localhost` para o RabbitMQ.
+
+**Implementação**:
+- Pré-carregamento (Linux/Windows) das imagens do metrics-server (tag e digest oficial) via Docker + `minikube image load`, seguido de patch automático do deployment para usar somente a tag.
+- Reescrita do `wait_for_resource` no Bash para aguardar RabbitMQ/MongoDB até ficarem `Ready`, e validação final priorizando `http://rabbitmq.local` com fallback para `localhost:15672` apenas quando necessário.
+- Remoção do script `apply-rabbitmq-config.sh` (fluxo substituído pelos charts Helm) e atualização dos readmes/documentação associados.
+- Detecção robusta da versão do `kubectl` (JSON ou saída padrão) em todos os scripts Linux/Windows, eliminando o flag `--short`.
+
+**Resultado**:
+- ✅ `metrics-server` opera com uma única réplica saudável, independentemente de limitações temporárias de rede.
+- ✅ Logs do init/autostart exibem versões reais do `kubectl`, ingress padrão do RabbitMQ e nenhuma referência a scripts obsoletos.
+- ✅ Documentação e validadores ajustados à arquitetura atual baseada em Helm.
+
+**Data**: 28/09/2025

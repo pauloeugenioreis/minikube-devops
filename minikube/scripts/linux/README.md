@@ -7,11 +7,9 @@ Este diretório contém todos os scripts necessários para provisionar, validar,
 ```
 minikube/scripts/linux/
 ├── autostart/
-│   ├── minikube-autostart.sh
 │   └── minikube-autostart.sh
 ├── init/
-│   ├── init-minikube-fixed.sh
-│   └── apply-rabbitmq-config.sh
+│   └── init-minikube-fixed.sh
 ├── keda/
 │   ├── install-helm-fixed.sh
 │   ├── install-keda.sh
@@ -31,27 +29,15 @@ minikube/scripts/linux/
 
 ### autostart/
 - **minikube-autostart.sh**
-  - Inicialização automatizada do ambiente Minikube.
-  - Valida e instala dependências (Docker, Minikube, kubectl).
-  - Inicia Docker e Minikube, aplica configs, ingress, port-forwards.
-  - Mostra acessos úteis (RabbitMQ, MongoDB, Dashboard).
-  - Uso:
-    ```bash
-    bash autostart/minikube-autostart.sh
-    ```
-
-- **minikube-autostart.sh**
-  - Versão all-in-one: inclui instalação e validação do KEDA.
-  - Ideal para ambientes que precisam de autoscaling.
+  - Encaminha para `init/init-minikube-fixed.sh` garantindo `--install-keda`.
+  - Ideal para inicializações automatizadas (systemd, cron, login).
+  - Caso deseje pular o KEDA execute o script `init/init-minikube-fixed.sh` manualmente com `--skip-keda`.
 
 ### init/
 - **init-minikube-fixed.sh**
-  - Inicialização completa do cluster.
-  - Aplica YAMLs principais (volumes, MongoDB, RabbitMQ), ingress, port-forwards.
-  - Valida pods e mostra status.
-
-- **apply-rabbitmq-config.sh**
-  - Aplica configurações extras no RabbitMQ via `kubectl exec` (ex: policies, users).
+  - Inicialização completa do cluster usando os charts Helm locais (`minikube/charts`).
+  - Habilita addons essenciais, cria port-forwards (Dashboard em `4666`).
+  - Suporta `--install-keda`, `--skip-keda`, `--skip-addons` e `--skip-rabbitmq-config`.
 
 ### keda/
 - **install-keda.sh**
@@ -81,7 +67,7 @@ minikube/scripts/linux/
 
 ### monitoring/
 - **open-dashboard.sh**
-  - Abre o dashboard do Kubernetes via port-forward.
+  - Garante port-forward estável em `http://localhost:4666` e abre o navegador via `xdg-open` quando disponível.
 
 - **change-dashboard-port.sh**
   - Altera a porta do dashboard para evitar conflitos.
