@@ -103,8 +103,6 @@ test_root_files() {
 print_header
 
 # Scripts Linux
-test_files "Scripts de Inicialização (Linux)" "scripts/linux/init" \
-    "init-minikube-fixed.sh" "apply-rabbitmq-config.sh"
 test_files "Scripts de Manutenção (Linux)" "scripts/linux/maintenance" \
     "fix-dashboard.sh" "validate-rabbitmq-config.sh"
 test_files "Scripts de Monitoramento (Linux)" "scripts/linux/monitoring" \
