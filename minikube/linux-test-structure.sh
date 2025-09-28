@@ -109,7 +109,7 @@ test_files "Scripts de Inicialização (Linux)" "scripts/linux/init" "init-minik
 test_files "Scripts de Manutenção (Linux)" "scripts/linux/maintenance" "fix-dashboard.sh" "validate-rabbitmq-config.sh"
 test_files "Scripts de Monitoramento (Linux)" "scripts/linux/monitoring" "open-dashboard.sh" "change-dashboard-port.sh"
 test_files "Scripts KEDA (Linux)" "scripts/linux/keda" "install-helm-fixed.sh" "install-keda.sh" "test-keda.sh"
-test_files "Scripts Autostart (Linux)" "scripts/linux/autostart" "minikube-autostart.sh" "minikube-autostart-with-keda.sh" 
+test_files "Scripts Autostart (Linux)" "scripts/linux/autostart" "minikube-autostart.sh" 
 test_files "Script de Teste de Estrutura (Linux)" "" "linux-test-structure.sh"
 
 # Estrutura Comum
@@ -154,7 +154,7 @@ echo -e "${CYAN}Total de verificações: $total_checks | Sucessos: $success_coun
 print_status
 
 echo -e "\n${YELLOW}PROXIMOS PASSOS:${NC}"
-echo -e "1. ${GREEN}Inicializar (com KEDA):${NC} bash $MINIKUBE_PATH/scripts/linux/autostart/minikube-autostart-with-keda.sh"
+echo -e "1. ${GREEN}Inicializar (com KEDA):${NC} bash $MINIKUBE_PATH/scripts/linux/autostart/minikube-autostart.sh"
 echo -e "2. ${GREEN}Verificar status:${NC}      bash $MINIKUBE_PATH/scripts/linux/maintenance/quick-status.sh"
 echo -e "3. ${GREEN}Abrir Dashboard:${NC}       bash $MINIKUBE_PATH/scripts/linux/monitoring/open-dashboard.sh"
 echo -e "4. ${GREEN}Consultar Docs:${NC}        cat $MINIKUBE_PATH/docs/README.md"

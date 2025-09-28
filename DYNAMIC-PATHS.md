@@ -52,7 +52,6 @@ minikube\scripts\windows\Get-ProjectRoot.ps1
 #### Scripts .bat (Autostart)
 ```
 minikube\scripts\windows\autostart\minikube-autostart.bat
-minikube\scripts\windows\autostart\minikube-autostart-with-keda.bat
 ```
 **Mudança**: Usam `%~dp0` para detectar localização relativa
 

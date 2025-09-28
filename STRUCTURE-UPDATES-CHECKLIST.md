@@ -9,10 +9,10 @@ Sempre que adicionar novos serviços, componentes ou fazer mudanças na estrutur
 - ✅ Verificar caminhos dos arquivos
 - ✅ Testar execução sem erros
 
-### 2. **minikube-autostart.bat**
-- ✅ Criar versões com novos serviços se necessário
-- ✅ Exemplo: `minikube-autostart-with-keda.bat`
-- ✅ Manter versão original para compatibilidade
+- **Autostart**: Script unico com KEDA disponivel
+- ?o. Atualizar script com novos serviAos quando necessario
+- ?o. Garantir que argumentos padrao habilitem KEDA
+- ?o. Documentar localizacao/uso do script
 
 ### 3. **docs/README.md**
 - ✅ Atualizar estrutura de diretórios
@@ -82,7 +82,7 @@ minikube/
 ### Fase 4: Atualização de Arquivos
 1. **windows-test-structure.ps1** → Adicionar testes
 2. **docs/README.md** → Atualizar documentação
-3. **autostart files** → Criar versões se necessário
+- **Autostart**: Script unico com KEDA disponivel
 4. **init script** → Integrar instalação
 5. **values.yaml** → Garantir que as configurações padrão são seguras e funcionais
 
@@ -97,12 +97,12 @@ minikube/
 - `charts/rabbitmq/` e `charts/mongodb/` (Migração para Helm)
 
 ### ✅ Arquivos Atualizados:
-- `scripts/windows/autostart/minikube-autostart.bat` → Usa o init script que já inclui KEDA
+- **Autostart**: Script unico com KEDA disponivel
 
 ### ✅ Resultado:
 - Documentação completa
 - Testes funcionais
-- Opções de autostart disponíveis
+- **Autostart**: Script unico com KEDA disponivel
 
 ## 🚨 PONTOS DE ATENÇÃO
 
@@ -148,7 +148,7 @@ minikube/
 - **RabbitMQ**: ✅ Funcional
 - **MongoDB**: ✅ Funcional  
 - **Dashboard**: ✅ Funcional
-- **Autostart**: ✅ Versões com/sem KEDA disponíveis
+- **Autostart**: Script unico com KEDA disponivel
 - **Documentação**: ✅ Completa e atualizada
 - **Testes**: ✅ Funcionais
 

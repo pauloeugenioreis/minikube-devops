@@ -23,12 +23,35 @@ if (Test-Path $getProjectRootScript) {
 }
 
 # Configurar logging
-$logFile = Join-Path $env:TEMP "minikube-autostart-$(Get-Date -Format 'yyyyMMdd').log"
+try {
+    $windowsDir = Split-Path $PSScriptRoot -Parent
+    $scriptsDir = Split-Path $windowsDir -Parent
+    $minikubeRoot = Split-Path $scriptsDir -Parent
+    $logDir = Join-Path $minikubeRoot 'log'
+} catch {
+    $logDir = $null
+}
+
+if (-not $logDir -or [string]::IsNullOrWhiteSpace($logDir)) {
+    $logDir = Join-Path $env:TEMP 'minikube-log'
+}
+
+if (-not (Test-Path $logDir)) {
+    New-Item -ItemType Directory -Path $logDir -Force | Out-Null
+}
+
+$logFile = Join-Path $logDir ("minikube-autostart-{0}.log" -f (Get-Date -Format 'yyyyMMdd'))
 function Write-Log {
-    param([string]$Message, [string]$Level = "INFO")
+    param(
+        [string]$Message,
+        [string]$Level = "INFO",
+        [switch]$NoConsole
+    )
     $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
     $logEntry = "[$timestamp] [$Level] $Message"
-    Write-Host $Message
+    if (-not $NoConsole) {
+        Write-Host $Message
+    }
     Add-Content -Path $logFile -Value $logEntry
 }
 
@@ -42,10 +65,6 @@ if ($env:PATH -notlike "*$userBinPath*") {
     $env:PATH = "$userBinPath;$env:PATH"
 }
 
-Write-Host "=====================================================" -ForegroundColor Cyan
-Write-Host "Inicializando Ambiente Minikube Completo" -ForegroundColor Green
-Write-Host "Versoes: kubectl $(kubectl version --client --short 2>$null), minikube $(minikube version --short 2>$null)" -ForegroundColor Green
-Write-Host "=====================================================" -ForegroundColor Cyan
 
 # Funcao para verificar se um comando existe
 function Test-Command($cmdname) {
@@ -62,17 +81,17 @@ function Test-DockerRunning {
     }
 }
 
+
 # Funcao para iniciar Docker Desktop
 function Start-DockerDesktop {
     Write-Host "   Iniciando Docker Desktop..." -ForegroundColor Yellow
-    
-    # Tentar encontrar Docker Desktop
+
     $dockerPaths = @(
-        "$env:ProgramFiles\Docker\Docker\Docker Desktop.exe",
-        "${env:ProgramFiles(x86)}\Docker\Docker\Docker Desktop.exe",
-        "$env:LOCALAPPDATA\Programs\Docker\Docker\Docker Desktop.exe"
+        "$env:ProgramFiles\\Docker\\Docker\\Docker Desktop.exe",
+        "${env:ProgramFiles(x86)}\\Docker\\Docker\\Docker Desktop.exe",
+        "$env:LOCALAPPDATA\\Programs\\Docker\\Docker\\Docker Desktop.exe"
     )
-    
+
     $dockerExe = $null
     foreach ($path in $dockerPaths) {
         if (Test-Path $path) {
@@ -80,34 +99,190 @@ function Start-DockerDesktop {
             break
         }
     }
-    
-    if ($dockerExe) {
-        Start-Process -FilePath $dockerExe -WindowStyle Hidden
-        Write-Host "   Docker Desktop iniciado. Aguardando ficar pronto..." -ForegroundColor Yellow
-        
-        # Aguardar Docker ficar pronto (maximo 120 segundos)
-        $timeout = 120
-        $elapsed = 0
-        while (-not (Test-DockerRunning) -and $elapsed -lt $timeout) {
-            Start-Sleep -Seconds 5
-            $elapsed += 5
-            Write-Host "   Aguardando Docker... ($elapsed/$timeout segundos)" -ForegroundColor Yellow
-        }
-        
-        if (Test-DockerRunning) {
-            Write-Host "   Docker Desktop pronto!" -ForegroundColor Green
-            return $true
-        } else {
-            Write-Host "   Timeout: Docker nao ficou pronto em $timeout segundos" -ForegroundColor Red
-            return $false
-        }
-    } else {
+
+    if (-not $dockerExe) {
         Write-Host "   Docker Desktop nao encontrado! Instale o Docker Desktop primeiro." -ForegroundColor Red
         return $false
     }
+
+    Start-Process -FilePath $dockerExe -WindowStyle Hidden
+    Write-Host "   Docker Desktop iniciado. Aguardando ficar pronto..." -ForegroundColor Yellow
+
+    $timeout = 120
+    $elapsed = 0
+    while (-not (Test-DockerRunning) -and $elapsed -lt $timeout) {
+        Start-Sleep -Seconds 5
+        $elapsed += 5
+        Write-Host "   Aguardando Docker... ($elapsed/$timeout segundos)" -ForegroundColor Yellow
+    }
+
+    if (Test-DockerRunning) {
+        Write-Host "   Docker Desktop pronto!" -ForegroundColor Green
+        return $true
+    }
+
+    Write-Host "   Timeout: Docker nao ficou pronto em $timeout segundos" -ForegroundColor Red
+    return $false
 }
 
-# Verificar dependencias
+function Get-K8sClientVersion {
+    param(
+        [Parameter(Mandatory)] [string]$Executable,
+        [string[]]$Arguments = @()
+    )
+
+    $shortArgs = @('version','--client','--short')
+    try {
+        $output = & $Executable @Arguments @shortArgs 2>$null
+        if ($LASTEXITCODE -eq 0 -and $output) {
+            $clean = ($output -join " `n") -replace 'Client Version:\s*', ''
+            $clean = $clean.Trim()
+            if ($clean) { return $clean }
+        }
+    } catch { }
+
+    $jsonArgs = @('version','--client','--output=json')
+    try {
+        $jsonOutput = & $Executable @Arguments @jsonArgs 2>$null
+        if ($LASTEXITCODE -eq 0 -and $jsonOutput) {
+            $parsed = $jsonOutput | ConvertFrom-Json -ErrorAction Stop
+            if ($parsed.clientVersion.gitVersion) { return $parsed.clientVersion.gitVersion }
+            if ($parsed.gitVersion) { return $parsed.gitVersion }
+        }
+    } catch { }
+
+    return $null
+}
+
+function Get-MinikubeVersion {
+    try {
+        $short = & minikube version --short 2>$null
+        if ($LASTEXITCODE -eq 0 -and $short) {
+            $value = ($short -join " `n").Trim()
+            if ($value) { return $value }
+        }
+    } catch { }
+
+    try {
+        $full = & minikube version 2>$null
+        if ($LASTEXITCODE -eq 0 -and $full) {
+            $value = ($full -join " `n").Trim()
+            if ($value) { return $value }
+        }
+    } catch { }
+
+    return $null
+}
+
+Write-Host "=====================================================" -ForegroundColor Cyan
+Write-Host "Inicializando Ambiente Minikube Completo" -ForegroundColor Green
+$kubectlVersionDisplay = Get-K8sClientVersion -Executable 'kubectl'
+if (-not $kubectlVersionDisplay) { $kubectlVersionDisplay = "desconhecido" }
+$minikubeVersionDisplay = Get-MinikubeVersion
+if (-not $minikubeVersionDisplay) { $minikubeVersionDisplay = "desconhecido" }
+Write-Host ("Versoes: kubectl {0}, minikube {1}" -f $kubectlVersionDisplay, $minikubeVersionDisplay) -ForegroundColor Green
+Write-Host "=====================================================" -ForegroundColor Cyan
+
+
+function Invoke-MinikubeStart {
+    Write-Log -Message "Executando 'minikube start --driver=docker'..." -Level "INFO" -NoConsole
+    Write-Host "Executando 'minikube start --driver=docker' (isso pode levar alguns minutos)..." -ForegroundColor Yellow
+
+    $exitCode = 0
+    try {
+        $output = & minikube start --driver=docker 2>&1
+        foreach ($line in $output) {
+            if ($null -ne $line) {
+                Write-Log -Message $line -Level "INFO" -NoConsole
+                $line
+            }
+        }
+        $exitCode = $LASTEXITCODE
+    } catch {
+        Write-Log -Message "Falha ao executar 'minikube start': $($_.Exception.Message)" -Level "ERROR"
+        $exitCode = 1
+    }
+
+    if ($exitCode -eq 0) {
+        Write-Host "Minikube iniciado com sucesso." -ForegroundColor Green
+        return $true
+    }
+
+    Write-Host "Falha ao iniciar Minikube (codigo $exitCode)." -ForegroundColor Yellow
+    return $false
+}
+
+function Ensure-MinikubeRunning {
+    Write-Host "Verificando estado do Minikube..." -ForegroundColor Yellow
+
+    $statusOutput = & minikube status --output=json 2>&1
+    $statusCode = $LASTEXITCODE
+
+    if ($statusOutput) {
+        foreach ($line in $statusOutput) {
+            if ($null -ne $line) {
+                Write-Log -Message $line -Level "INFO" -NoConsole
+            }
+        }
+    }
+
+    $statusText = ($statusOutput -join "`n").Trim()
+    $statusJson = $null
+    $isRunning = $false
+
+    if ($statusCode -eq 0 -and $statusText -and $statusText.StartsWith("{")) {
+        try {
+            $statusJson = $statusText | ConvertFrom-Json -ErrorAction Stop
+        } catch {
+            Write-Log -Message "Falha ao interpretar retorno de 'minikube status': $($_.Exception.Message)" -Level "WARN" -NoConsole
+        }
+    }
+
+    if ($statusJson) {
+        Write-Host ("Status atual: Host={0}, Kubelet={1}, APIServer={2}" -f $statusJson.Host, $statusJson.Kubelet, $statusJson.APIServer) -ForegroundColor White
+        if ($statusJson.Host -eq "Running" -and $statusJson.APIServer -eq "Running") {
+            $isRunning = $true
+        }
+    } elseif ($statusCode -eq 0 -and $statusText) {
+        Write-Host "Status do Minikube:" -ForegroundColor White
+        Write-Host $statusText -ForegroundColor Gray
+    } else {
+        if ($statusText) {
+            Write-Host $statusText -ForegroundColor Gray
+        }
+        Write-Host "Status do Minikube indisponivel (tratando como parado)." -ForegroundColor Yellow
+    }
+
+    if ($isRunning) {
+        Write-Host "Minikube ja esta rodando!" -ForegroundColor Green
+        return
+    }
+
+    Write-Host "Minikube nao esta em execucao. Tentando iniciar..." -ForegroundColor Yellow
+    if (Invoke-MinikubeStart) {
+        return
+    }
+
+    Write-Host "Tentativa inicial falhou. Tentando recuperar o ambiente automaticamente..." -ForegroundColor Yellow
+    Write-Log -Message "Executando 'minikube delete --all --purge' para recuperacao." -Level "WARN"
+    $deleteOutput = & minikube delete --all --purge 2>&1
+    if ($deleteOutput) {
+        foreach ($line in $deleteOutput) {
+            if ($null -ne $line) {
+                Write-Log -Message $line -Level "WARN"
+            }
+        }
+    }
+
+    if (Invoke-MinikubeStart) {
+        return
+    }
+
+    Write-Host "Erro ao iniciar Minikube mesmo apos tentativa de recuperacao." -ForegroundColor Red
+    Write-Host "Execute 'minikube delete --all --purge' manualmente e tente novamente." -ForegroundColor Red
+    exit 1
+}
+
 Write-Host "Verificando dependencias..." -ForegroundColor Yellow
 if (-not (Test-Command "minikube")) {
     Write-Host "Minikube nao encontrado! Instale o Minikube primeiro." -ForegroundColor Red
@@ -154,39 +329,32 @@ try {
 # Verificar compatibilidade de versoes
 Write-Host "Verificando compatibilidade kubectl/Kubernetes..." -ForegroundColor Yellow
 try {
-    $kubectlVersion = (kubectl version --client --short 2>$null) -replace 'Client Version: ', ''
-    $minikubeK8sVersion = (minikube kubectl version --client --short 2>$null) -replace 'Client Version: ', ''
-    
-    if ($kubectlVersion -ne $minikubeK8sVersion) {
-        Write-Host "AVISO: Versoes incompativeis detectadas!" -ForegroundColor Yellow
-        Write-Host "kubectl: $kubectlVersion | Kubernetes: $minikubeK8sVersion" -ForegroundColor Yellow
-        Write-Host "Executando atualizacao automatica..." -ForegroundColor Yellow
-        
-        if (Test-Path ".\update-kubectl.ps1") {
-            & ".\update-kubectl.ps1"
+    $kubectlVersion = Get-K8sClientVersion -Executable 'kubectl'
+    $minikubeK8sVersion = Get-K8sClientVersion -Executable 'minikube' -Arguments @('kubectl','--')
+
+    if ($kubectlVersion -and $minikubeK8sVersion) {
+        if ($kubectlVersion -ne $minikubeK8sVersion) {
+            Write-Host "AVISO: Versoes incompativeis detectadas!" -ForegroundColor Yellow
+            Write-Host "kubectl: $kubectlVersion | Kubernetes: $minikubeK8sVersion" -ForegroundColor Yellow
+            Write-Host "Executando atualizacao automatica..." -ForegroundColor Yellow
+            if (Test-Path ".\update-kubectl.ps1") {
+                & ".\update-kubectl.ps1"
+            } else {
+                Write-Host "Script de atualizacao nao encontrado. Use 'minikube kubectl -- version --client' se houver problemas." -ForegroundColor Yellow
+            }
         } else {
-            Write-Host "Script de atualizacao nao encontrado. Use 'minikube kubectl' se houver problemas." -ForegroundColor Yellow
+            Write-Host "[OK] Versoes compativeis: $kubectlVersion" -ForegroundColor Green
         }
     } else {
-        Write-Host "✅ Versoes compativeis: $kubectlVersion" -ForegroundColor Green
+        Write-Host "AVISO: Nao foi possivel determinar versoes do kubectl/Kubernetes." -ForegroundColor Yellow
+        Write-Host "kubectl: $kubectlVersion | Kubernetes: $minikubeK8sVersion" -ForegroundColor Yellow
     }
 } catch {
     Write-Host "AVISO: Nao foi possivel verificar compatibilidade. Continuando..." -ForegroundColor Yellow
 }
 
 # Iniciar Minikube
-Write-Host "Iniciando Minikube..." -ForegroundColor Yellow
-minikube status 2>$null
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "Iniciando Minikube pela primeira vez..." -ForegroundColor Yellow
-    minikube start --driver=docker
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host "Erro ao iniciar Minikube!" -ForegroundColor Red
-        exit 1
-    }
-} else {
-    Write-Host "Minikube ja esta rodando!" -ForegroundColor Green
-}
+Ensure-MinikubeRunning
 
 # Habilitar addons essenciais (sempre)
 if (-not $SkipAddons) {
@@ -346,7 +514,7 @@ if ($InstallKeda -and -not $SkipRabbitMQConfig) {
     # Verificar se existem ScaledObjects
     $existingScaledObjects = kubectl get scaledobjects --all-namespaces --no-headers 2>$null
     if ($existingScaledObjects) {
-        Write-Host "   ✅ ScaledObjects encontrados:" -ForegroundColor Green
+        Write-Host "   ScaledObjects encontrados:" -ForegroundColor Green
         $existingScaledObjects | ForEach-Object { 
             $parts = $_ -split '\s+'
             Write-Host "     - $($parts[1]) (namespace: $($parts[0]))" -ForegroundColor White 
@@ -398,15 +566,22 @@ function Test-FinalValidation {
     if ($InstallKeda) {
         $total++
         $allKedaPods = kubectl get pods -n keda --no-headers 2>$null
-        $kedaPods = $allKedaPods | Where-Object { $_ -match "1/1.*Running" }
-        $kedaCount = ($kedaPods | Measure-Object).Count
-        $totalKeda = ($allKedaPods | Measure-Object).Count
-        if ($kedaCount -ge 4) {
-            Write-Host "     OK KEDA pods rodando ($kedaCount/$totalKeda pods)" -ForegroundColor Green
+        $totalKeda = (@($allKedaPods) | Measure-Object).Count
+        $kedaReady = @($allKedaPods | Where-Object { $_ -match "1/1.*Running" })
+        $readyCount = ($kedaReady | Measure-Object).Count
+
+        if ($totalKeda -eq 0) {
+            Write-Host "     ERRO KEDA pods nao encontrados" -ForegroundColor Red
+            $issues += "KEDA nao possui pods implantados"
+        } elseif ($totalKeda -eq 3) {
+            Write-Host "     OK KEDA pods rodando ($readyCount/$totalKeda pods)" -ForegroundColor Green
             $success++
+        } elseif ($readyCount -ne $totalKeda) {
+            Write-Host "     ERRO KEDA pods incompletos ($readyCount/$totalKeda)" -ForegroundColor Red
+            $issues += "KEDA nao tem todos os pods rodando (esperado $totalKeda, prontos $readyCount)"
         } else {
-            Write-Host "     ERRO KEDA pods insuficientes ($kedaCount pods)" -ForegroundColor Red
-            $issues += "KEDA nao tem todos os pods necessarios"
+            Write-Host "     OK KEDA pods rodando ($readyCount/$totalKeda pods)" -ForegroundColor Green
+            $success++
         }
     }
     
@@ -475,7 +650,7 @@ if ($validation.Issues.Count -gt 0) {
 
 Write-Host ""
 
-Start-Sleep -Seconds 10 # Adicionando espera para estabilização dos port-forwards
+Start-Sleep -Seconds 10 # Adicionando espera para estabilizacao dos port-forwards
 
 $rabbitTest = Test-NetConnection -ComputerName localhost -Port 15672 -InformationLevel Quiet
 $mongoTest = Test-NetConnection -ComputerName localhost -Port 27017 -InformationLevel Quiet

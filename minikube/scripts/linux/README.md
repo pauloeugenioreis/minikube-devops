@@ -8,7 +8,7 @@ Este diretório contém todos os scripts necessários para provisionar, validar,
 minikube/scripts/linux/
 ├── autostart/
 │   ├── minikube-autostart.sh
-│   └── minikube-autostart-with-keda.sh
+│   └── minikube-autostart.sh
 ├── init/
 │   ├── init-minikube-fixed.sh
 │   └── apply-rabbitmq-config.sh
@@ -40,7 +40,7 @@ minikube/scripts/linux/
     bash autostart/minikube-autostart.sh
     ```
 
-- **minikube-autostart-with-keda.sh**
+- **minikube-autostart.sh**
   - Versão all-in-one: inclui instalação e validação do KEDA.
   - Ideal para ambientes que precisam de autoscaling.
 
@@ -115,3 +115,4 @@ bash linux-test-structure.sh
 ---
 
 Para dúvidas ou automações adicionais, consulte os comentários em cada script ou peça suporte ao responsável pelo DevOps.
+> Os logs gerados pelos scripts de inicializacao sao registrados em `minikube/log/` (com fallback para `${TMPDIR:-/tmp}/minikube-log`).

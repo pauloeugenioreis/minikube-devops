@@ -11,6 +11,22 @@ YELLOW='\033[1;33m'
 CYAN='\033[0;36m'
 WHITE='\033[1;37m'
 NC='\033[0m' # No Color
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+LINUX_SCRIPTS_DIR="$(dirname "$SCRIPT_DIR")"
+MINIKUBE_DIR="$(dirname "$LINUX_SCRIPTS_DIR")"
+PROJECT_ROOT="$(dirname "$MINIKUBE_DIR")"
+LOG_DIR="$PROJECT_ROOT/log"
+if ! mkdir -p "$LOG_DIR" 2>/dev/null; then
+    LOG_DIR="${TMPDIR:-/tmp}/minikube-log"
+    mkdir -p "$LOG_DIR" 2>/dev/null
+fi
+LOG_FILE="$LOG_DIR/minikube-autostart-$(date +%Y%m%d).log"
+if ! touch "$LOG_FILE" 2>/dev/null; then
+    LOG_FILE="${TMPDIR:-/tmp}/minikube-autostart-$(date +%Y%m%d).log"
+    touch "$LOG_FILE" 2>/dev/null || LOG_FILE="/tmp/minikube-autostart-$(date +%Y%m%d).log"
+fi
+exec > >(tee -a "$LOG_FILE")
+exec 2> >(tee -a "$LOG_FILE" >&2)
 
 # Parametros
 SKIP_ADDONS=false
@@ -45,10 +61,75 @@ USER_BIN_PATH="$HOME/bin"
 if [[ ":$PATH:" != *":$USER_BIN_PATH:"* ]]; then
     export PATH="$USER_BIN_PATH:$PATH"
 fi
+get_k8s_client_version() {
+    local executable="$1"
+    shift
+    local args=("$@")
+    local output
+
+    if output=$("$executable" "${args[@]}" version --client --short 2>/dev/null); then
+        output="${output//Client Version: /}"
+        output="$(echo "$output" | head -n1 | xargs)"
+        if [[ -n "$output" ]]; then
+            echo "$output"
+            return 0
+        fi
+    fi
+
+    if output=$("$executable" "${args[@]}" version --client --output=json 2>/dev/null); then
+        local git_version
+        git_version=$(echo "$output" | grep -o '"gitVersion"[[:space:]]*:[[:space:]]*"[^"]*"' | head -n1 | cut -d'"' -f4)
+        if [[ -n "$git_version" ]]; then
+            echo "$git_version"
+            return 0
+        fi
+    fi
+
+    if output=$("$executable" "${args[@]}" version --client 2>/dev/null); then
+        output="$(echo "$output" | head -n1 | xargs)"
+        if [[ -n "$output" ]]; then
+            echo "$output"
+            return 0
+        fi
+    fi
+
+    return 1
+}
+
+get_minikube_version() {
+    local output
+    if output=$(minikube version --short 2>/dev/null); then
+        output="$(echo "$output" | head -n1 | xargs)"
+        if [[ -n "$output" ]]; then
+            echo "$output"
+            return 0
+        fi
+    fi
+
+    if output=$(minikube version 2>/dev/null); then
+        output="$(echo "$output" | head -n1 | xargs)"
+        if [[ -n "$output" ]]; then
+            echo "$output"
+            return 0
+        fi
+    fi
+
+    return 1
+}
+
+
+KUBECTL_VERSION_DISPLAY=$(get_k8s_client_version kubectl 2>/dev/null)
+if [[ -z "$KUBECTL_VERSION_DISPLAY" ]]; then
+    KUBECTL_VERSION_DISPLAY="desconhecido"
+fi
+MINIKUBE_VERSION_DISPLAY=$(get_minikube_version 2>/dev/null)
+if [[ -z "$MINIKUBE_VERSION_DISPLAY" ]]; then
+    MINIKUBE_VERSION_DISPLAY="desconhecido"
+fi
 
 echo -e "${CYAN}=====================================================${NC}"
 echo -e "${GREEN}Inicializando Ambiente Minikube Completo${NC}"
-echo -e "${GREEN}Versoes: kubectl $(kubectl version --client --short 2>/dev/null), minikube $(minikube version --short 2>/dev/null)${NC}"
+echo -e "${GREEN}Versoes: kubectl ${KUBECTL_VERSION_DISPLAY}, minikube ${MINIKUBE_VERSION_DISPLAY}${NC}"
 echo -e "${CYAN}=====================================================${NC}"
 
 # Funcao para verificar se um comando existe
@@ -149,11 +230,19 @@ fi
 
 # Verificar compatibilidade de versoes
 echo -e "${YELLOW}Verificando compatibilidade kubectl/Kubernetes...${NC}"
-kubectl_version=$(kubectl version --client --short 2>/dev/null | sed 's/Client Version: //')
-if [ $? -eq 0 ]; then
-    echo -e "${GREEN}✅ Versoes compativeis: $kubectl_version${NC}"
+KUBECTL_VERSION_DISPLAY=$(get_k8s_client_version kubectl 2>/dev/null)
+MINIKUBE_K8S_VERSION=$(get_k8s_client_version minikube kubectl -- 2>/dev/null)
+
+if [[ -n "$KUBECTL_VERSION_DISPLAY" && -n "$MINIKUBE_K8S_VERSION" ]]; then
+    if [[ "$KUBECTL_VERSION_DISPLAY" != "$MINIKUBE_K8S_VERSION" ]]; then
+        echo -e "${YELLOW}AVISO: Versoes incompativeis detectadas!${NC}"
+        echo -e "${YELLOW}kubectl: $KUBECTL_VERSION_DISPLAY | Kubernetes: $MINIKUBE_K8S_VERSION${NC}"
+        echo -e "${YELLOW}Execute: minikube kubectl -- version --client${NC}"
+    else
+        echo -e "${GREEN}OK Versoes compativeis: $KUBECTL_VERSION_DISPLAY${NC}"
+    fi
 else
-    echo -e "${YELLOW}⚠️  Nao foi possivel verificar compatibilidade. Continuando...${NC}"
+    echo -e "${YELLOW}AVISO: Nao foi possivel verificar compatibilidade. Continuando...${NC}"
 fi
 
 # Iniciar Minikube
@@ -292,6 +381,115 @@ create_port_forward "rabbitmq-service" "15672" "15672"
 create_port_forward "rabbitmq-service" "5672" "5672"  
 create_port_forward "mongodb-service" "27017" "27017"
 
+check_tcp_port() {
+    local host="$1"
+    local port="$2"
+    timeout 3 bash -c "</dev/tcp/${host}/${port}" >/dev/null 2>&1
+}
+
+detailed_validation() {
+    local issues=()
+    local success=0
+    local total=0
+
+    echo -e "${WHITE}   Testando componentes principais...${NC}"
+
+    total=$((total + 1))
+    local rabbit_pods
+    rabbit_pods=$(kubectl get pods -l app=rabbitmq --no-headers 2>/dev/null || true)
+    if echo "$rabbit_pods" | grep -q '1/1.*Running'; then
+        echo -e "${GREEN}     OK RabbitMQ pod rodando${NC}"
+        success=$((success + 1))
+    else
+        echo -e "${RED}     ERRO RabbitMQ pod com problemas${NC}"
+        issues+=("RabbitMQ pod nao esta rodando corretamente")
+    fi
+
+    total=$((total + 1))
+    local mongo_pods
+    mongo_pods=$(kubectl get pods -l app=mongodb --no-headers 2>/dev/null || true)
+    if echo "$mongo_pods" | grep -q '1/1.*Running'; then
+        echo -e "${GREEN}     OK MongoDB pod rodando${NC}"
+        success=$((success + 1))
+    else
+        echo -e "${RED}     ERRO MongoDB pod com problemas${NC}"
+        issues+=("MongoDB pod nao esta rodando corretamente")
+    fi
+
+    if [ "$INSTALL_KEDA" = true ]; then
+        total=$((total + 1))
+        local all_keda_pods
+        all_keda_pods=$(kubectl get pods -n keda --no-headers 2>/dev/null || true)
+        local total_keda
+        total_keda=$(echo "$all_keda_pods" | grep -c '^')
+        local ready_keda
+        ready_keda=$(echo "$all_keda_pods" | grep -c '1/1.*Running')
+
+        if [ "$total_keda" -eq 0 ]; then
+            echo -e "${RED}     ERRO KEDA pods nao encontrados${NC}"
+            issues+=("KEDA nao possui pods implantados")
+        elif [ "$total_keda" -eq 3 ] && [ "$ready_keda" -eq "$total_keda" ]; then
+            echo -e "${GREEN}     OK KEDA pods rodando (${ready_keda}/${total_keda} pods)${NC}"
+            success=$((success + 1))
+        elif [ "$total_keda" -eq 3 ]; then
+            echo -e "${RED}     ERRO KEDA pods incompletos (${ready_keda}/${total_keda})${NC}"
+            issues+=("KEDA nao tem todos os pods rodando (esperado ${total_keda}, prontos ${ready_keda})")
+        elif [ "$ready_keda" -eq "$total_keda" ]; then
+            echo -e "${GREEN}     OK KEDA pods rodando (${ready_keda}/${total_keda} pods)${NC}"
+            success=$((success + 1))
+        else
+            echo -e "${RED}     ERRO KEDA pods incompletos (${ready_keda}/${total_keda})${NC}"
+            issues+=("KEDA nao tem todos os pods rodando (esperado ${total_keda}, prontos ${ready_keda})")
+        fi
+    fi
+
+    echo -e "${WHITE}   Testando conectividade...${NC}"
+
+    total=$((total + 1))
+    if check_tcp_port localhost 15672; then
+        echo -e "${GREEN}     OK RabbitMQ Management acessivel (15672)${NC}"
+        success=$((success + 1))
+    else
+        echo -e "${RED}     ERRO RabbitMQ Management inacessivel${NC}"
+        issues+=("RabbitMQ Management nao esta acessivel na porta 15672")
+    fi
+
+    total=$((total + 1))
+    if check_tcp_port localhost 27017; then
+        echo -e "${GREEN}     OK MongoDB acessivel (27017)${NC}"
+        success=$((success + 1))
+    else
+        echo -e "${RED}     ERRO MongoDB inacessivel${NC}"
+        issues+=("MongoDB nao esta acessivel na porta 27017")
+    fi
+
+    total=$((total + 1))
+    if check_tcp_port localhost 53954; then
+        echo -e "${GREEN}     OK Dashboard K8s acessivel (53954)${NC}"
+        success=$((success + 1))
+    else
+        echo -e "${YELLOW}     AVISO Dashboard K8s inacessivel (pode precisar de tempo)${NC}"
+    fi
+
+    echo ""
+    local percent="0.0"
+    if [ "$total" -gt 0 ]; then
+        percent=$(awk "BEGIN { printf \"%.1f\", ($success/$total)*100 }")
+    fi
+
+    echo -e "${WHITE}RESULTADO DA VALIDACAO:${NC}"
+    echo -e "${WHITE}Sucessos: ${success}/${total} (${percent}%)${NC}"
+
+    if [ ${#issues[@]} -gt 0 ]; then
+        echo -e "${YELLOW}AVISO Problemas encontrados:${NC}"
+        for issue in "${issues[@]}"; do
+            echo -e "  - ${YELLOW}${issue}${NC}"
+        done
+    else
+        echo -e "${GREEN}Nenhum problema encontrado.${NC}"
+    fi
+}
+
 # Configurar Dashboard
 echo -e "${WHITE}   Criando port-forward para Dashboard K8s (53954)...${NC}"
 echo -e "${WHITE}Aguardando Dashboard estar pronto...${NC}"
@@ -342,35 +540,6 @@ if [ "$INSTALL_KEDA" = true ]; then
     fi
 fi
 
-# Testar conectividade
-echo -e "${YELLOW}Testando conectividade...${NC}"
-
-# Funcao para testar URL
-test_url() {
-    local url=$1
-    local service_name=$2
-    local max_attempts=5
-    local attempt=1
-    
-    while [ $attempt -le $max_attempts ]; do
-        echo -e "${WHITE}Testando $service_name - Tentativa $attempt/$max_attempts...${NC}"
-        
-        if curl -s --max-time 5 "$url" >/dev/null 2>&1; then
-            echo -e "${GREEN}$service_name acessivel${NC}"
-            return 0
-        fi
-        
-        attempt=$((attempt + 1))
-        sleep 2
-    done
-    
-    echo -e "${YELLOW}$service_name nao respondeu apos $max_attempts tentativas${NC}"
-    return 1
-}
-
-test_url "http://rabbitmq.local" "RabbitMQ Management"
-test_url "http://localhost:53954" "Dashboard K8s"
-
 # Testar MongoDB
 echo -e "${WHITE}Testando MongoDB...${NC}"
 if kubectl exec deployment/mongodb -- mongosh mongodb://admin:admin@localhost:27017/admin --eval "db.runCommand('ping')" >/dev/null 2>&1; then
@@ -379,6 +548,7 @@ else
     echo -e "${YELLOW}MongoDB nao respondeu${NC}"
 fi
 
+detailed_validation
 echo ""
 echo -e "${CYAN}=====================================================${NC}"
 echo -e "${GREEN}AMBIENTE CONFIGURADO COM SUCESSO!${NC}"
@@ -409,3 +579,6 @@ echo ""
 echo -e "${GREEN}Dados persistentes configurados - nao serao perdidos!${NC}"
 echo ""
 echo -e "${GREEN}Ambiente pronto para uso!${NC}"
+
+
+

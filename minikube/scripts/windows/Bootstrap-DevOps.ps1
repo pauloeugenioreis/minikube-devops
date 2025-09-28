@@ -1,33 +1,33 @@
 <#
 .SYNOPSIS
-Bootstrap completo para máquina nova - Sistema offline
-Configura ambiente DevOps completo sem necessidade de repositório online
+Bootstrap completo para maquina nova - ambiente offline
+Configura ambiente DevOps completo sem necessidade de acesso a repositorio online
 
 .DESCRIPTION
-Este script é usado quando o projeto já foi transferido para a máquina
-(via USB, rede ou OneDrive) e precisa apenas configurar as dependências
+Este script e usado quando o projeto ja foi transferido para a maquina
+(via USB, rede ou OneDrive) e precisa apenas configurar dependencias
 e inicializar o ambiente.
 
 .PARAMETER ProjectPath
-Caminho customizado para o projeto (padrão: pasta atual)
+Caminho customizado para o projeto (padrao: pasta atual)
 
 .PARAMETER SkipSetup
-Pula a instalação de dependências
+Pula a instalacao de dependencias
 
 .PARAMETER SkipInit
-Pula a inicialização do ambiente
+Pula a inicializacao do ambiente
 
 .EXAMPLE
-.\Bootstrap-DevOps.ps1
-Execução completa na pasta atual
+.\\Bootstrap-DevOps.ps1
+Execucao completa na pasta atual
 
 .EXAMPLE
-.\Bootstrap-DevOps.ps1 -ProjectPath "C:\MeuProjeto\DevOps"
-Execução em caminho customizado
+.\\Bootstrap-DevOps.ps1 -ProjectPath "C:\\MeuProjeto\\DevOps"
+Execucao em caminho customizado
 
 .EXAMPLE
-.\Bootstrap-DevOps.ps1 -SkipSetup
-Apenas inicialização, sem instalar dependências
+.\\Bootstrap-DevOps.ps1 -SkipSetup
+Apenas inicializacao, sem instalar dependencias
 #>
 
 param(
@@ -38,181 +38,171 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-# Se ProjectPath não foi especificado, detectar automaticamente
-if (!$ProjectPath) {
-    # Assumir que estamos em minikube/scripts/windows/, subir 3 níveis para raiz
+if (-not $ProjectPath) {
     $ProjectPath = Split-Path (Split-Path (Split-Path $PSScriptRoot -Parent) -Parent) -Parent
 }
 
 function Write-Status {
     param([string]$Message, [string]$Color = "Cyan")
-    Write-Host "🔧 $Message" -ForegroundColor $Color
+    Write-Host "[STATUS] $Message" -ForegroundColor $Color
 }
 
 function Write-Success {
     param([string]$Message)
-    Write-Host "✅ $Message" -ForegroundColor Green
+    Write-Host "[OK] $Message" -ForegroundColor Green
 }
 
 function Write-Warning {
     param([string]$Message)
-    Write-Host "⚠️ $Message" -ForegroundColor Yellow
+    Write-Host "[WARN] $Message" -ForegroundColor Yellow
 }
 
 function Write-Error {
     param([string]$Message)
-    Write-Host "❌ $Message" -ForegroundColor Red
+    Write-Host "[ERROR] $Message" -ForegroundColor Red
 }
 
 function Test-ProjectStructure {
     param([string]$Path)
-    
+
     $requiredPaths = @(
         "minikube",
-        "minikube\scripts",
-        "minikube\scripts\windows",
+        "minikube\\scripts",
+        "minikube\\scripts\\windows",
         "temp"
     )
-    
+
     foreach ($requiredPath in $requiredPaths) {
         $fullPath = Join-Path $Path $requiredPath
-        if (!(Test-Path $fullPath)) {
+        if (-not (Test-Path $fullPath)) {
             return $false
         }
     }
+
     return $true
 }
 
 function Run-Setup {
     if ($SkipSetup) {
-        Write-Warning "Pulando instalação de dependências"
+        Write-Warning "Pulando instalacao de dependencias"
         return
     }
-    
-    $setupScript = Join-Path $ProjectPath "temp\Setup-Fresh-Machine.ps1"
-    
-    if (!(Test-Path $setupScript)) {
-        Write-Error "Script de setup não encontrado: $setupScript"
+
+    $setupScript = Join-Path $ProjectPath "minikube\scripts\windows\Setup-Fresh-Machine.ps1"
+
+    if (-not (Test-Path $setupScript)) {
+        Write-Error "Script de setup nao encontrado: $setupScript"
         throw "Setup script missing"
     }
-    
-    Write-Status "Executando instalação de dependências..."
-    
-    # Verificar se já está executando como admin
+
+    Write-Status "Executando instalacao de dependencias..."
+
     $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
     $principal = New-Object Security.Principal.WindowsPrincipal($identity)
     $isAdmin = $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
-    
+
     if ($isAdmin) {
-        # Já é admin, executar diretamente
         & $setupScript -RunInitialization
     } else {
-        # Elevar privilégios e executar
-        Write-Status "Elevando privilégios para instalação..."
+        Write-Status "Elevando privilegios para instalacao..."
         $arguments = "-NoProfile -ExecutionPolicy Bypass -File `"$setupScript`" -RunInitialization"
         Start-Process PowerShell -ArgumentList $arguments -Verb RunAs -Wait
     }
-    
-    Write-Success "Setup de dependências concluído"
+
+    Write-Success "Setup de dependencias concluido"
 }
 
 function Run-Initialization {
     if ($SkipInit) {
-        Write-Warning "Pulando inicialização do ambiente"
+        Write-Warning "Pulando inicializacao do ambiente"
         return
     }
-    
-    # Tentar carregar sistema de paths dinâmicos
-    $getProjectRootScript = Join-Path $ProjectPath "minikube\scripts\windows\Get-ProjectRoot.ps1"
-    
+
+    $getProjectRootScript = Join-Path $ProjectPath "minikube\\scripts\\windows\\Get-ProjectRoot.ps1"
+
     if (Test-Path $getProjectRootScript) {
-        Write-Status "Carregando sistema de paths dinâmicos..."
+        Write-Status "Carregando sistema de paths dinamicos..."
         . $getProjectRootScript
         $projectPaths = Get-ProjectPaths
-        
-        $initScript = $projectPaths.Scripts.Init
+        if ($projectPaths -and $projectPaths.Scripts -and $projectPaths.Scripts.Windows -and $projectPaths.Scripts.Windows.Init) {
+            $initScript = Join-Path $projectPaths.Scripts.Windows.Init "init-minikube-fixed.ps1"
+        } else {
+            $initScript = Join-Path $ProjectPath "minikube\\scripts\\windows\\init\\init-minikube-fixed.ps1"
+        }
     } else {
-        # Fallback para path fixo
-        $initScript = Join-Path $ProjectPath "minikube\scripts\windows\init\init-minikube-fixed.ps1"
+        $initScript = Join-Path $ProjectPath "minikube\\scripts\\windows\\init\\init-minikube-fixed.ps1"
     }
-    
-    if (!(Test-Path $initScript)) {
-        Write-Error "Script de inicialização não encontrado: $initScript"
+
+    if (-not (Test-Path $initScript)) {
+        Write-Error "Script de inicializacao nao encontrado: $initScript"
         return
     }
-    
-    Write-Status "Executando inicialização do ambiente..."
-    
+
+    Write-Status "Executando inicializacao do ambiente..."
+
     try {
         & $initScript -InstallKeda
         Write-Success "Ambiente inicializado com sucesso!"
     } catch {
-        Write-Error "Erro na inicialização: $($_.Exception.Message)"
+        Write-Error "Erro na inicializacao: $($_.Exception.Message)"
         throw
     }
 }
 
 function Show-FinalInstructions {
-    Write-Host "`n🎉 Bootstrap concluído com sucesso!" -ForegroundColor Green
+    Write-Host "`n==========================================" -ForegroundColor Green
+    Write-Host "Bootstrap concluido com sucesso!" -ForegroundColor Green
     Write-Host "==========================================" -ForegroundColor Green
-    
-    Write-Host "`n📊 Comandos úteis:" -ForegroundColor Cyan
-    Write-Host "Dashboard:  .\minikube\scripts\windows\monitoring\open-dashboard.ps1" -ForegroundColor Yellow
-    Write-Host "Status:     .\minikube\scripts\windows\maintenance\quick-status.ps1" -ForegroundColor Yellow
-    Write-Host "Teste:      .\minikube\windows-test-structure.ps1" -ForegroundColor Yellow
-    
-    Write-Host "`n🌐 Acessos:" -ForegroundColor Cyan
+
+    Write-Host "`nComandos uteis:" -ForegroundColor Cyan
+    Write-Host "Dashboard:  .\\minikube\\scripts\\windows\\monitoring\\open-dashboard.ps1" -ForegroundColor Yellow
+    Write-Host "Status:     .\\minikube\\scripts\\windows\\maintenance\\quick-status.ps1" -ForegroundColor Yellow
+    Write-Host "Teste:      .\\minikube\\windows-test-structure.ps1" -ForegroundColor Yellow
+
+    Write-Host "`nAcessos:" -ForegroundColor Cyan
     Write-Host "RabbitMQ:   http://localhost:15672 (guest/guest)" -ForegroundColor Yellow
     Write-Host "MongoDB:    mongodb://admin:admin@localhost:27017/admin" -ForegroundColor Yellow
     Write-Host "Dashboard:  http://localhost:53954" -ForegroundColor Yellow
-    
-    Write-Host "`n✅ Ambiente DevOps pronto para uso!" -ForegroundColor Green
+
+    Write-Host "`nAmbiente DevOps pronto para uso!" -ForegroundColor Green
 }
 
-# ================== EXECUÇÃO PRINCIPAL ==================
-
 try {
-    Write-Host "`n🚀 Bootstrap DevOps - Configuração Offline" -ForegroundColor Magenta
+    Write-Host "`nBootstrap DevOps - Configuracao Offline" -ForegroundColor Magenta
     Write-Host "=========================================" -ForegroundColor Magenta
-    
-    # Se ProjectPath não foi especificado, detectar automaticamente
-    if (!$ProjectPath) {
-        # Assumir que estamos em minikube/scripts/windows/, subir 3 níveis para raiz
+
+    if (-not $ProjectPath) {
         $ProjectPath = Split-Path (Split-Path (Split-Path $PSScriptRoot -Parent) -Parent) -Parent
     }
-    
+
     Write-Status "Verificando projeto em: $ProjectPath"
-    
-    if (!(Test-ProjectStructure $ProjectPath)) {
-        Write-Error "Estrutura de projeto não encontrada em: $ProjectPath"
+
+    if (-not (Test-ProjectStructure $ProjectPath)) {
+        Write-Error "Estrutura de projeto nao encontrada em: $ProjectPath"
         Write-Error "Certifique-se de que o projeto DevOps foi transferido corretamente"
         exit 1
     }
-    
+
     Write-Success "Estrutura de projeto validada"
-    
-    # Navegar para pasta do projeto
+
     Set-Location $ProjectPath
     Write-Status "Pasta atual: $(Get-Location)"
-    
-    # Executar setup se necessário
-    if (!$SkipSetup) {
+
+    if (-not $SkipSetup) {
         Run-Setup
     }
-    
-    # Executar inicialização se necessário
-    if (!$SkipInit) {
+
+    if (-not $SkipInit) {
         Run-Initialization
     }
-    
-    # Mostrar instruções finais
+
     Show-FinalInstructions
-    
+
 } catch {
     Write-Error "Erro durante o bootstrap: $($_.Exception.Message)"
-    Write-Host "`n📋 Verifique:" -ForegroundColor Yellow
+    Write-Host "`nVerifique:" -ForegroundColor Yellow
     Write-Host "1. Projeto foi transferido corretamente" -ForegroundColor Yellow
     Write-Host "2. Executando da pasta correta" -ForegroundColor Yellow
-    Write-Host "3. Conexão com internet para downloads" -ForegroundColor Yellow
+    Write-Host "3. Conexao com internet para downloads" -ForegroundColor Yellow
     exit 1
 }

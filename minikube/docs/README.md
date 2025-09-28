@@ -88,11 +88,11 @@ bash minikube/scripts/linux/monitoring/open-dashboard.sh
     │   │   │   └── change-dashboard-port.ps1
     │   │   └── autostart\
     │   │       ├── minikube-autostart.bat
-    │   │       └── minikube-autostart-with-keda.bat
+    │   │       └── minikube-autostart.bat
     │   └── linux\              # Scripts Linux (Bash)
     │       ├── autostart\
     │       │   ├── minikube-autostart.sh
-    │       │   └── minikube-autostart-with-keda.sh
+    │       │   └── minikube-autostart.sh
     │       ├── init\
     │       │   ├── init-minikube-fixed.sh
     │       │   └── apply-rabbitmq-config.sh
@@ -166,9 +166,6 @@ minikube/scripts/       →    Integracao final
 ## Componentes Instalados
 
 ### Minikube
-- **Versao**: v1.37.0
-- **Driver**: Docker
-- **Addons**: storage-provisioner, metrics-server, default-storageclass, dashboard
 
 ### RabbitMQ
 - **Versao**: 3.12-management
@@ -280,9 +277,8 @@ O arquivo `minikube-autostart.bat` esta disponivel em `scripts\windows\autostart
 
 O script executa automaticamente na inicializacao do sistema quando configurado.
 
-**Versões Disponíveis:**
-- `minikube-autostart.bat` - Inicialização completa com KEDA
-- `minikube-autostart-with-keda.bat` - Inicialização com KEDA (mesmo que o anterior)
+`minikube-autostart.bat` executa a inicializacao completa com KEDA por padrao.
+
 
 **Nova Funcionalidade:** A janela permanece aberta durante a execução para acompanhar o progresso e só fecha após pressionar qualquer tecla.
 

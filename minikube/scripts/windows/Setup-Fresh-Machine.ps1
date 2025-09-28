@@ -3,8 +3,6 @@
 # Instala automaticamente: Docker Desktop, Minikube, kubectl, Helm
 # Configurado para usar paths dinamicos e ambiente completo Minikube DevOps
 
-# Forcar a codificacao UTF-8 para exibir icones corretamente
-$PSDefaultParameterValues['*:Encoding'] = 'utf8'
 
 param(
     [switch]$SkipDockerInstall,
@@ -14,6 +12,10 @@ param(
     [switch]$SkipValidation,
     [switch]$RunInitialization
 )
+
+# Forcar a codificacao UTF-8 para exibir icones corretamente
+$PSDefaultParameterValues['*:Encoding'] = 'utf8'
+
 
 # Importar funcoes de deteccao de paths se disponivel
 $getProjectRootScript = Join-Path $PSScriptRoot "Get-ProjectRoot.ps1"
@@ -50,7 +52,7 @@ function Test-AdminRights {
 
 function Request-AdminRights {
     if (-not (Test-AdminRights)) {
-        Write-Host "⚠️  Este script requer privilegios de Administrador!" -ForegroundColor Yellow
+        Write-Host "  Este script requer privilegios de Administrador!" -ForegroundColor Yellow
         Write-Host "Reiniciando como Administrador..." -ForegroundColor Yellow
         
         $arguments = "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`""
@@ -79,10 +81,10 @@ function Enable-WindowsFeature($featureName, $displayName) {
     Write-Host "Habilitando $displayName..." -ForegroundColor Yellow
     try {
         Enable-WindowsOptionalFeature -FeatureName $featureName -Online -All -NoRestart -ErrorAction Stop
-        Write-Host "✅ $displayName habilitado" -ForegroundColor Green
+        Write-Host " $displayName habilitado" -ForegroundColor Green
         return $true
     } catch {
-        Write-Host "❌ Erro ao habilitar $displayName`: $($_.Exception.Message)" -ForegroundColor Red
+        Write-Host " Erro ao habilitar $displayName`: $($_.Exception.Message)" -ForegroundColor Red
         return $false
     }
 }
@@ -94,7 +96,7 @@ function Download-File($url, $outputPath) {
         $webClient.DownloadFile($url, $outputPath)
         return $true
     } catch {
-        Write-Host "❌ Erro no download: $($_.Exception.Message)" -ForegroundColor Red
+        Write-Host " Erro no download: $($_.Exception.Message)" -ForegroundColor Red
         return $false
     }
 }
@@ -116,7 +118,7 @@ function Wait-DockerReady {
     
     while ($elapsed -lt $TimeoutSeconds) {
         if (Test-DockerRunning) {
-            Write-Host "✅ Docker pronto!" -ForegroundColor Green
+            Write-Host " Docker pronto!" -ForegroundColor Green
             return $true
         }
         
@@ -124,18 +126,18 @@ function Wait-DockerReady {
         $elapsed += 5
         
         if ($elapsed % 20 -eq 0) {
-            Write-Host "⏳ Aguardando Docker... ($elapsed/$TimeoutSeconds segundos)" -ForegroundColor Yellow
+            Write-Host " Aguardando Docker... ($elapsed/$TimeoutSeconds segundos)" -ForegroundColor Yellow
         }
     }
     
-    Write-Host "❌ Timeout: Docker nao ficou pronto em $TimeoutSeconds segundos" -ForegroundColor Red
+    Write-Host " Timeout: Docker nao ficou pronto em $TimeoutSeconds segundos" -ForegroundColor Red
     return $false
 }
 
 # Verificar privilegios de administrador
 Request-AdminRights
 
-Write-Host "`n🔍 VERIFICACAO INICIAL DO SISTEMA" -ForegroundColor Yellow
+Write-Host "`n VERIFICACAO INICIAL DO SISTEMA" -ForegroundColor Yellow
 Write-Host "Verificando prerequisitos do Windows..." -ForegroundColor White
 
 # Verificar versao do Windows
@@ -143,42 +145,42 @@ $osVersion = [System.Environment]::OSVersion.Version
 Write-Host "Sistema: Windows $($osVersion.Major).$($osVersion.Minor)" -ForegroundColor White
 
 if ($osVersion.Major -lt 10) {
-    Write-Host "❌ Windows 10 ou superior necessario!" -ForegroundColor Red
+    Write-Host " Windows 10 ou superior necessario!" -ForegroundColor Red
     exit 1
 }
 
 # Verificar e habilitar Hyper-V (se necessario)
 if (-not (Test-WindowsFeature "Microsoft-Hyper-V-All")) {
-    Write-Host "⚠️  Hyper-V nao esta habilitado" -ForegroundColor Yellow
+    Write-Host "  Hyper-V nao esta habilitado" -ForegroundColor Yellow
     $enableHyperV = Read-Host "Habilitar Hyper-V? (Requer reinicializacao) [y/N]"
     if ($enableHyperV -eq 'y' -or $enableHyperV -eq 'Y') {
         if (Enable-WindowsFeature "Microsoft-Hyper-V-All" "Hyper-V") {
-            Write-Host "⚠️  REQUER REINICIALIZACAO DO SISTEMA!" -ForegroundColor Yellow
+            Write-Host "  REQUER REINICIALIZACAO DO SISTEMA!" -ForegroundColor Yellow
             Write-Host "Execute este script novamente apos reiniciar." -ForegroundColor Yellow
             Read-Host "Pressione Enter para continuar..."
             exit 0
         }
     }
 } else {
-    Write-Host "✅ Hyper-V ja esta habilitado" -ForegroundColor Green
+    Write-Host " Hyper-V ja esta habilitado" -ForegroundColor Green
 }
 
 # Verificar e habilitar WSL2
 if (-not (Test-WindowsFeature "Microsoft-Windows-Subsystem-Linux")) {
-    Write-Host "⚠️  WSL2 nao esta habilitado" -ForegroundColor Yellow
+    Write-Host "  WSL2 nao esta habilitado" -ForegroundColor Yellow
     if (Enable-WindowsFeature "Microsoft-Windows-Subsystem-Linux" "WSL2") {
         if (Enable-WindowsFeature "VirtualMachinePlatform" "Virtual Machine Platform") {
-            Write-Host "⚠️  REQUER REINICIALIZACAO DO SISTEMA!" -ForegroundColor Yellow
+            Write-Host "  REQUER REINICIALIZACAO DO SISTEMA!" -ForegroundColor Yellow
             Write-Host "Execute este script novamente apos reiniciar." -ForegroundColor Yellow
             Read-Host "Pressione Enter para continuar..."
             exit 0
         }
     }
 } else {
-    Write-Host "✅ WSL2 ja esta habilitado" -ForegroundColor Green
+    Write-Host " WSL2 ja esta habilitado" -ForegroundColor Green
 }
 
-Write-Host "`n📦 INSTALACAO DE DEPENDENCIAS" -ForegroundColor Yellow
+Write-Host "`n INSTALACAO DE DEPENDENCIAS" -ForegroundColor Yellow
 
 # Criar diretorio temporario
 $tempDir = Join-Path $env:TEMP "MinikubeDevOpsSetup"
@@ -199,15 +201,15 @@ if ($currentPath -notlike "*$userBinPath*") {
     $newPath = "$userBinPath;$currentPath"
     [Environment]::SetEnvironmentVariable("PATH", $newPath, "User")
     $env:PATH = "$userBinPath;$env:PATH"
-    Write-Host "✅ PATH atualizado para incluir $userBinPath" -ForegroundColor Green
+    Write-Host " PATH atualizado para incluir $userBinPath" -ForegroundColor Green
 }
 
-Write-Host "`n1️⃣ DOCKER DESKTOP" -ForegroundColor Cyan
+Write-Host "`n1 DOCKER DESKTOP" -ForegroundColor Cyan
 
 if ($SkipDockerInstall) {
     Write-Host "Pulando instalacao do Docker Desktop (parametro -SkipDockerInstall)" -ForegroundColor Yellow
 } elseif (Test-Command "docker") {
-    Write-Host "✅ Docker Desktop ja esta instalado" -ForegroundColor Green
+    Write-Host " Docker Desktop ja esta instalado" -ForegroundColor Green
     $dockerVersion = docker --version 2>$null
     Write-Host "Versao: $dockerVersion" -ForegroundColor White
     
@@ -232,10 +234,10 @@ if ($SkipDockerInstall) {
             Start-Process -FilePath $dockerExe -WindowStyle Hidden
             Wait-DockerReady
         } else {
-            Write-Host "❌ Nao foi possivel encontrar Docker Desktop executavel" -ForegroundColor Red
+            Write-Host " Nao foi possivel encontrar Docker Desktop executavel" -ForegroundColor Red
         }
     } else {
-        Write-Host "✅ Docker Desktop esta rodando" -ForegroundColor Green
+        Write-Host " Docker Desktop esta rodando" -ForegroundColor Green
     }
 } else {
     Write-Host "Docker Desktop nao encontrado. Instalando..." -ForegroundColor Yellow
@@ -247,13 +249,13 @@ if ($SkipDockerInstall) {
     Write-Host "Baixando Docker Desktop..." -ForegroundColor White
     if (Download-File $dockerUrl $dockerInstaller) {
         Write-Host "Executando instalador do Docker Desktop..." -ForegroundColor White
-        Write-Host "⚠️  Isto pode demorar varios minutos e pode requerer reinicializacao!" -ForegroundColor Yellow
+        Write-Host "  Isto pode demorar varios minutos e pode requerer reinicializacao!" -ForegroundColor Yellow
         
         # Executar instalador
         $process = Start-Process -FilePath $dockerInstaller -ArgumentList "install", "--quiet", "--accept-license" -Wait -PassThru
         
         if ($process.ExitCode -eq 0) {
-            Write-Host "✅ Docker Desktop instalado com sucesso!" -ForegroundColor Green
+            Write-Host " Docker Desktop instalado com sucesso!" -ForegroundColor Green
             Write-Host "Aguardando Docker inicializar..." -ForegroundColor Yellow
             Start-Sleep -Seconds 30
             
@@ -264,20 +266,20 @@ if ($SkipDockerInstall) {
                 Wait-DockerReady -TimeoutSeconds 300
             }
         } else {
-            Write-Host "❌ Erro na instalacao do Docker Desktop (Exit Code: $($process.ExitCode))" -ForegroundColor Red
+            Write-Host " Erro na instalacao do Docker Desktop (Exit Code: $($process.ExitCode))" -ForegroundColor Red
             Write-Host "Tente instalar manualmente: https://docs.docker.com/desktop/windows/install/" -ForegroundColor Yellow
         }
     } else {
-        Write-Host "❌ Falha no download do Docker Desktop" -ForegroundColor Red
+        Write-Host " Falha no download do Docker Desktop" -ForegroundColor Red
     }
 }
 
-Write-Host "`n2️⃣ MINIKUBE" -ForegroundColor Cyan
+Write-Host "`n2 MINIKUBE" -ForegroundColor Cyan
 
 if ($SkipMinikubeInstall) {
     Write-Host "Pulando instalacao do Minikube (parametro -SkipMinikubeInstall)" -ForegroundColor Yellow
 } elseif (Test-Command "minikube") {
-    Write-Host "✅ Minikube ja esta instalado" -ForegroundColor Green
+    Write-Host " Minikube ja esta instalado" -ForegroundColor Green
     $minikubeVersion = minikube version --short 2>$null
     Write-Host "Versao: $minikubeVersion" -ForegroundColor White
 } else {
@@ -289,22 +291,22 @@ if ($SkipMinikubeInstall) {
     
     Write-Host "Baixando Minikube..." -ForegroundColor White
     if (Download-File $minikubeUrl $minikubeExe) {
-        Write-Host "✅ Minikube instalado em: $minikubeExe" -ForegroundColor Green
+        Write-Host " Minikube instalado em: $minikubeExe" -ForegroundColor Green
         
         # Testar instalacao
         $minikubeVersion = & $minikubeExe version --short 2>$null
         Write-Host "Versao: $minikubeVersion" -ForegroundColor White
     } else {
-        Write-Host "❌ Falha no download do Minikube" -ForegroundColor Red
+        Write-Host " Falha no download do Minikube" -ForegroundColor Red
     }
 }
 
-Write-Host "`n3️⃣ KUBECTL" -ForegroundColor Cyan
+Write-Host "`n3 KUBECTL" -ForegroundColor Cyan
 
 if ($SkipKubectlInstall) {
     Write-Host "Pulando instalacao do kubectl (parametro -SkipKubectlInstall)" -ForegroundColor Yellow
 } elseif (Test-Command "kubectl") {
-    Write-Host "✅ kubectl ja esta instalado" -ForegroundColor Green
+    Write-Host " kubectl ja esta instalado" -ForegroundColor Green
     $kubectlVersion = kubectl version --client --short 2>$null
     Write-Host "Versao: $kubectlVersion" -ForegroundColor White
 } else {
@@ -319,25 +321,25 @@ if ($SkipKubectlInstall) {
         
         Write-Host "Baixando kubectl versao $stableVersion..." -ForegroundColor White
         if (Download-File $kubectlUrl $kubectlExe) {
-            Write-Host "✅ kubectl instalado em: $kubectlExe" -ForegroundColor Green
+            Write-Host " kubectl instalado em: $kubectlExe" -ForegroundColor Green
             
             # Testar instalacao
             $kubectlVersion = & $kubectlExe version --client --short 2>$null
             Write-Host "Versao: $kubectlVersion" -ForegroundColor White
         } else {
-            Write-Host "❌ Falha no download do kubectl" -ForegroundColor Red
+            Write-Host " Falha no download do kubectl" -ForegroundColor Red
         }
     } catch {
-        Write-Host "❌ Erro ao obter versao do kubectl: $($_.Exception.Message)" -ForegroundColor Red
+        Write-Host " Erro ao obter versao do kubectl: $($_.Exception.Message)" -ForegroundColor Red
     }
 }
 
-Write-Host "`n4️⃣ HELM" -ForegroundColor Cyan
+Write-Host "`n4 HELM" -ForegroundColor Cyan
 
 if ($SkipHelmInstall) {
     Write-Host "Pulando instalacao do Helm (parametro -SkipHelmInstall)" -ForegroundColor Yellow
 } elseif (Test-Command "helm") {
-    Write-Host "✅ Helm ja esta instalado" -ForegroundColor Green
+    Write-Host " Helm ja esta instalado" -ForegroundColor Green
     $helmVersion = helm version --short 2>$null
     Write-Host "Versao: $helmVersion" -ForegroundColor White
 } else {
@@ -367,81 +369,81 @@ if ($SkipHelmInstall) {
             
             if (Test-Path $helmSource) {
                 Copy-Item $helmSource $helmDestination -Force
-                Write-Host "✅ Helm instalado em: $helmDestination" -ForegroundColor Green
+                Write-Host " Helm instalado em: $helmDestination" -ForegroundColor Green
                 
                 # Testar instalacao
                 $helmVersionInstalled = & $helmDestination version --short 2>$null
                 Write-Host "Versao: $helmVersionInstalled" -ForegroundColor White
             } else {
-                Write-Host "❌ Arquivo helm.exe nao encontrado no pacote" -ForegroundColor Red
+                Write-Host " Arquivo helm.exe nao encontrado no pacote" -ForegroundColor Red
             }
         } else {
-            Write-Host "❌ Falha no download do Helm" -ForegroundColor Red
+            Write-Host " Falha no download do Helm" -ForegroundColor Red
         }
     } catch {
-        Write-Host "❌ Erro na instalacao do Helm: $($_.Exception.Message)" -ForegroundColor Red
+        Write-Host " Erro na instalacao do Helm: $($_.Exception.Message)" -ForegroundColor Red
     }
 }
 
 # Validacao final
 if (-not $SkipValidation) {
-    Write-Host "`n✅ VALIDACAO FINAL" -ForegroundColor Yellow
+    Write-Host "`n VALIDACAO FINAL" -ForegroundColor Yellow
     
     $validationPassed = $true
     
     # Testar Docker
     if (Test-Command "docker") {
         if (Test-DockerRunning) {
-            Write-Host "✅ Docker: Instalado e funcionando" -ForegroundColor Green
+            Write-Host " Docker: Instalado e funcionando" -ForegroundColor Green
         } else {
-            Write-Host "⚠️  Docker: Instalado mas nao esta rodando" -ForegroundColor Yellow
+            Write-Host "  Docker: Instalado mas nao esta rodando" -ForegroundColor Yellow
             $validationPassed = $false
         }
     } else {
-        Write-Host "❌ Docker: Nao instalado" -ForegroundColor Red
+        Write-Host " Docker: Nao instalado" -ForegroundColor Red
         $validationPassed = $false
     }
     
     # Testar Minikube
     if (Test-Command "minikube") {
-        Write-Host "✅ Minikube: Instalado" -ForegroundColor Green
+        Write-Host " Minikube: Instalado" -ForegroundColor Green
     } else {
-        Write-Host "❌ Minikube: Nao instalado" -ForegroundColor Red
+        Write-Host " Minikube: Nao instalado" -ForegroundColor Red
         $validationPassed = $false
     }
     
     # Testar kubectl
     if (Test-Command "kubectl") {
-        Write-Host "✅ kubectl: Instalado" -ForegroundColor Green
+        Write-Host " kubectl: Instalado" -ForegroundColor Green
     } else {
-        Write-Host "❌ kubectl: Nao instalado" -ForegroundColor Red
+        Write-Host " kubectl: Nao instalado" -ForegroundColor Red
         $validationPassed = $false
     }
     
     # Testar Helm
     if (Test-Command "helm") {
-        Write-Host "✅ Helm: Instalado" -ForegroundColor Green
+        Write-Host " Helm: Instalado" -ForegroundColor Green
     } else {
-        Write-Host "❌ Helm: Nao instalado" -ForegroundColor Red
+        Write-Host " Helm: Nao instalado" -ForegroundColor Red
         $validationPassed = $false
     }
     
     if ($validationPassed) {
-        Write-Host "`n🎉 SETUP CONCLUIDO COM SUCESSO!" -ForegroundColor Green
+        Write-Host "`n SETUP CONCLUIDO COM SUCESSO!" -ForegroundColor Green
         Write-Host "Todas as dependencias foram instaladas e validadas." -ForegroundColor White
         
         if ($RunInitialization -and $projectPaths) {
-            Write-Host "`n🚀 EXECUTANDO INICIALIZACAO AUTOMATICA" -ForegroundColor Yellow
+            Write-Host "`n EXECUTANDO INICIALIZACAO AUTOMATICA" -ForegroundColor Yellow
             $initScript = Join-Path $projectPaths.Scripts.Windows.Init "init-minikube-fixed.ps1"
             if (Test-Path $initScript) {
                 Write-Host "Executando: $initScript" -ForegroundColor White
                 & $initScript
             } else {
-                Write-Host "⚠️  Script de inicializacao nao encontrado: $initScript" -ForegroundColor Yellow
+                Write-Host "  Script de inicializacao nao encontrado: $initScript" -ForegroundColor Yellow
             }
         }
         
-        Write-Host "`n📋 PROXIMOS PASSOS:" -ForegroundColor Yellow
+        Write-Host "`n< PROXIMOS PASSOS:" -ForegroundColor Yellow
         if ($projectPaths) {
             Write-Host "1. Inicializar ambiente:" -ForegroundColor White
             Write-Host "   $($projectPaths.Scripts.Windows.Init)\init-minikube-fixed.ps1" -ForegroundColor Gray
@@ -454,7 +456,7 @@ if (-not $SkipValidation) {
         }
         
     } else {
-        Write-Host "`n❌ SETUP INCOMPLETO" -ForegroundColor Red
+        Write-Host "`n SETUP INCOMPLETO" -ForegroundColor Red
         Write-Host "Algumas dependencias nao foram instaladas corretamente." -ForegroundColor White
         Write-Host "Verifique os erros acima e tente novamente." -ForegroundColor Yellow
     }
@@ -463,7 +465,7 @@ if (-not $SkipValidation) {
 }
 
 # Limpeza
-Write-Host "`n🧹 Limpando arquivos temporarios..." -ForegroundColor Gray
+Write-Host "`n Limpando arquivos temporarios..." -ForegroundColor Gray
 if (Test-Path $tempDir) {
     Remove-Item $tempDir -Recurse -Force -ErrorAction SilentlyContinue
 }
@@ -473,3 +475,4 @@ Write-Host "SETUP FINALIZADO!" -ForegroundColor Green
 Write-Host "=====================================================" -ForegroundColor Cyan
 
 Read-Host "Pressione Enter para continuar..."
+

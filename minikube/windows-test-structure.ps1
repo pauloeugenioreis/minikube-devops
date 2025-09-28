@@ -1,4 +1,4 @@
-Ôªø# TESTE COMPLETO DA ESTRUTURA MINIKUBE + KEDA
+# TESTE COMPLETO DA ESTRUTURA MINIKUBE + KEDA
 # Validacao abrangente de todos os componentes
 
 # Forcar a codificacao UTF-8 para exibir icones corretamente
@@ -47,10 +47,10 @@ function Test-Files {
         }
 
         if (Test-Path $fullPath) {
-            Write-Host "  ‚úÖ $(Split-Path $file -Leaf) encontrado" -ForegroundColor Green
+            Write-Host "  ? $(Split-Path $file -Leaf) encontrado" -ForegroundColor Green
             $global:successCount++
         } else {
-            Write-Host "  ‚ùå $(Split-Path $file -Leaf) NAO encontrado em '$fullPath'" -ForegroundColor Red
+            Write-Host "  ? $(Split-Path $file -Leaf) NAO encontrado em '$fullPath'" -ForegroundColor Red
             $global:failureCount++
         }
     }
@@ -58,15 +58,15 @@ function Test-Files {
 
 # --- Definicao de todas as verificacoes de arquivos ---
 $fileChecks = @(
-    @{ Category = "Script de Inicializa√ß√£o"; Directory = "scripts\windows\init"; Files = @("init-minikube-fixed.ps1", "apply-rabbitmq-config.ps1", "install-keda.ps1") },
-    @{ Category = "Scripts de Manuten√ß√£o"; Directory = "scripts\windows\maintenance"; Files = @("fix-dashboard.ps1", "quick-status.ps1", "fix-kubectl-final.ps1", "validate-rabbitmq-config.ps1", "fix-dashboard-cronjob.ps1") },
+    @{ Category = "Script de InicializaÁ„o"; Directory = "scripts\windows\init"; Files = @("init-minikube-fixed.ps1", "apply-rabbitmq-config.ps1", "install-keda.ps1") },
+    @{ Category = "Scripts de ManutenÁ„o"; Directory = "scripts\windows\maintenance"; Files = @("fix-dashboard.ps1", "quick-status.ps1", "fix-kubectl-final.ps1", "validate-rabbitmq-config.ps1", "fix-dashboard-cronjob.ps1") },
     @{ Category = "Scripts de Monitoramento"; Directory = "scripts\windows\monitoring"; Files = @("open-dashboard.ps1", "change-dashboard-port.ps1") },
     @{ Category = "Scripts KEDA"; Directory = "scripts\windows\keda"; Files = @("install-helm-fixed.ps1", "install-keda.ps1", "test-keda.ps1") },
-    @{ Category = "Scripts Autostart"; Directory = "scripts\windows\autostart"; Files = @("minikube-autostart.bat", "minikube-autostart-with-keda.bat") },
-    @{ Category = "Setup de M√°quina Nova"; Directory = "scripts\windows"; Files = @("Setup-Fresh-Machine.ps1", "Bootstrap-DevOps.ps1") },
+    @{ Category = "Scripts Autostart"; Directory = "scripts\windows\autostart"; Files = @("minikube-autostart.bat") },
+    @{ Category = "Setup de M·quina Nova"; Directory = "scripts\windows"; Files = @("Setup-Fresh-Machine.ps1", "Bootstrap-DevOps.ps1") },
     @{ Category = "Configs KEDA"; Directory = "configs\keda\examples"; Files = @("cpu-scaling-example.yaml", "memory-scaling-example.yaml", "rabbitmq-scaling-example.yaml") },
-    @{ Category = "Documenta√ß√£o"; Directory = "docs"; Files = @("README.md", "KEDA.md") },
-    @{ Category = "Documenta√ß√£o Fresh Machine"; Directory = "docs\fresh-machine"; Files = @("SETUP.md", "DEMO.md", "CHECKLIST.md") },
+    @{ Category = "DocumentaÁ„o"; Directory = "docs"; Files = @("README.md", "KEDA.md") },
+    @{ Category = "DocumentaÁ„o Fresh Machine"; Directory = "docs\fresh-machine"; Files = @("SETUP.md", "DEMO.md", "CHECKLIST.md") },
     @{ Category = "Checklists na Raiz"; Directory = ""; Files = @("STRUCTURE-UPDATES-CHECKLIST.md", "MANDATORY-CHECKLIST.md", "DECISIONS-HISTORY.md", "DYNAMIC-PATHS.md", "MINIKUBE-PROJECT-HISTORY.md", "CONTINUITY-PROMPT.md", "BACKUP-PROMPT.md"); BasePath = if ($projectPaths) { $projectPaths.Root } else { $null } }
 )
 
@@ -74,62 +74,62 @@ $fileChecks = @(
 foreach ($check in $fileChecks) {
     # Pular verificacoes que dependem da raiz do projeto se ela nao foi detectada
     if ($check.BasePath -eq $null -and $check.Category -eq "Checklists na Raiz") {
-        Write-Host "`nVerifica√ß√£o de '$($check.Category)' pulada (raiz do projeto n√£o detectada)" -ForegroundColor Yellow
+        Write-Host "`nVerificaÁ„o de '$($check.Category)' pulada (raiz do projeto n„o detectada)" -ForegroundColor Yellow
         continue
     }
     Test-Files -Category $check.Category -Directory $check.Directory -Files $check.Files -BasePathOverride $check.BasePath
 }
 
-# --- Teste Espec√≠fico para Helm Charts ---
+# --- Teste EspecÌfico para Helm Charts ---
 Write-Host "`nTestando estrutura de Helm Charts..." -ForegroundColor Yellow
 $chartsPath = Join-Path $basePath "charts"
 if (Test-Path $chartsPath) {
-    Write-Host "‚úÖ Pasta de charts encontrada" -ForegroundColor Green
+    Write-Host "? Pasta de charts encontrada" -ForegroundColor Green
     $global:successCount++
 
     $chartFolders = @("rabbitmq", "mongodb")
     foreach ($chart in $chartFolders) {
         $chartPath = Join-Path $chartsPath $chart
         if (Test-Path $chartPath) {
-            Write-Host "  ‚úÖ Chart '$chart' encontrado" -ForegroundColor Green
+            Write-Host "  ? Chart '$chart' encontrado" -ForegroundColor Green
             $global:successCount++
 
             $chartFiles = @("Chart.yaml", "values.yaml")
             foreach ($file in $chartFiles) {
                 if (Test-Path (Join-Path $chartPath $file)) {
-                    Write-Host "    ‚úÖ $file encontrado" -ForegroundColor Green
+                    Write-Host "    ? $file encontrado" -ForegroundColor Green
                     $global:successCount++
                 } else {
-                    Write-Host "    ‚ùå $file NAO encontrado em '$chart'" -ForegroundColor Red
+                    Write-Host "    ? $file NAO encontrado em '$chart'" -ForegroundColor Red
                     $global:failureCount++
                 }
             }
 
             $templatesPath = Join-Path $chartPath "templates"
             if (Test-Path $templatesPath) {
-                Write-Host "    ‚úÖ Pasta 'templates' encontrada" -ForegroundColor Green
+                Write-Host "    ? Pasta 'templates' encontrada" -ForegroundColor Green
                 $global:successCount++
             } else {
-                Write-Host "    ‚ùå Pasta 'templates' NAO encontrada em '$chart'" -ForegroundColor Red
+                Write-Host "    ? Pasta 'templates' NAO encontrada em '$chart'" -ForegroundColor Red
                 $global:failureCount++
             }
         } else {
-            Write-Host "  ‚ùå Chart '$chart' NAO encontrado" -ForegroundColor Red
+            Write-Host "  ? Chart '$chart' NAO encontrado" -ForegroundColor Red
             $global:failureCount++
         }
     }
 } else {
-    Write-Host "‚ùå Pasta de charts NAO encontrada" -ForegroundColor Red
+    Write-Host "? Pasta de charts NAO encontrada" -ForegroundColor Red
     $global:failureCount++
 }
 
-# --- Teste Espec√≠fico para Estrutura Linux ---
+# --- Teste EspecÌfico para Estrutura Linux ---
 $linuxChecks = @(
-    @{ Category = "Scripts de Inicializa√ß√£o (Linux)"; Directory = "scripts\linux\init"; Files = @("init-minikube-fixed.sh", "apply-rabbitmq-config.sh") },
-    @{ Category = "Scripts de Manuten√ß√£o (Linux)"; Directory = "scripts\linux\maintenance"; Files = @("fix-dashboard.sh", "validate-rabbitmq-config.sh") },
+    @{ Category = "Scripts de InicializaÁ„o (Linux)"; Directory = "scripts\linux\init"; Files = @("init-minikube-fixed.sh", "apply-rabbitmq-config.sh") },
+    @{ Category = "Scripts de ManutenÁ„o (Linux)"; Directory = "scripts\linux\maintenance"; Files = @("fix-dashboard.sh", "validate-rabbitmq-config.sh") },
     @{ Category = "Scripts de Monitoramento (Linux)"; Directory = "scripts\linux\monitoring"; Files = @("open-dashboard.sh", "change-dashboard-port.sh") },
     @{ Category = "Scripts KEDA (Linux)"; Directory = "scripts\linux\keda"; Files = @("install-helm-fixed.sh", "install-keda.sh", "test-keda.sh") },
-    @{ Category = "Scripts Autostart (Linux)"; Directory = "scripts\linux\autostart"; Files = @("minikube-autostart.sh", "minikube-autostart-with-keda.sh") },
+    @{ Category = "Scripts Autostart (Linux)"; Directory = "scripts\linux\autostart"; Files = @("minikube-autostart.sh") },
     @{ Category = "Script de Teste de Estrutura (Linux)"; Directory = ""; Files = @("linux-test-structure.sh") }
 )
 
@@ -142,11 +142,11 @@ foreach ($check in $linuxChecks) {
 
 Write-Host "`n=====================================" -ForegroundColor Cyan
 if ($global:failureCount -eq 0) {
-    Write-Host "‚úÖ SUCESSO! ESTRUTURA COMPLETA E CONSISTENTE!" -ForegroundColor Green
+    Write-Host "? SUCESSO! ESTRUTURA COMPLETA E CONSISTENTE!" -ForegroundColor Green
 } else {
-    Write-Host "‚ùå FALHA! Foram encontrados $($global:failureCount) problemas na estrutura." -ForegroundColor Red
+    Write-Host "? FALHA! Foram encontrados $($global:failureCount) problemas na estrutura." -ForegroundColor Red
 }
-Write-Host "Total de verifica√ß√µes: $($global:successCount + $global:failureCount) | Sucessos: $($global:successCount) | Falhas: $($global:failureCount)" -ForegroundColor Cyan
+Write-Host "Total de verificaÁıes: $($global:successCount + $global:failureCount) | Sucessos: $($global:successCount) | Falhas: $($global:failureCount)" -ForegroundColor Cyan
 Write-Host "=====================================" -ForegroundColor Cyan
 
 Write-Host "`nPROXIMOS PASSOS:" -ForegroundColor Yellow

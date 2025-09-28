@@ -214,7 +214,7 @@ minikube/            # Estrutura FINAL (codigo consolidado)
 
 **Arquivos que SEMPRE verificar**:
 1. windows-test-structure.ps1 - Adicionar testes
-2. minikube-autostart.bat - Criar versoes se necessario
+2. minikube-autostart.bat - Atualizar argumentos se novos componentes forem adicionados
 3. docs/README.md - Atualizar estrutura e comandos
 4. Documentacao especifica - Criar guia completo
 5. init-minikube-fixed.ps1 - Integrar instalacao
@@ -381,7 +381,7 @@ cd "C:\DevOps"  # ou onde copiou o projeto
 **Solucao Implementada**:
 - ✅ **Get-ProjectRoot.ps1**: Biblioteca central com detecção automática de raiz do projeto
 - ✅ **Detecção por Marcadores**: Busca por CONVERSAS-E-DECISOES.md, HISTORICO-PROJETO-MINIKUBE.md, estrutura minikube/
-- ✅ **Scripts .bat Dinamizados**: minikube-autostart.bat e minikube-autostart-with-keda.bat usando %~dp0
+- ? **Scripts .bat Dinamizados**: minikube-autostart.bat usando %~dp0
 - ✅ **init-minikube-fixed.ps1**: Adaptado para importar Get-ProjectRoot.ps1 e usar paths dinâmicos
 - ✅ **windows-test-structure.ps1**: Totalmente dinamizado, todos os paths hardcoded substituídos
 - ✅ **Sistema de Fallback**: Robustez com detecção relativa caso falhe a detecção automática
@@ -418,7 +418,7 @@ cd "C:\DevOps"  # ou onde copiou o projeto
 - ✅ **keda/**: install-helm-fixed.sh, install-helm.sh, install-keda.sh, test-keda.sh
 - ✅ **maintenance/**: fix-dashboard.sh, fix-kubectl-final.sh, quick-status.sh
 - ✅ **monitoring/**: change-dashboard-port.sh, open-dashboard.sh
-- ✅ **autostart/**: minikube-autostart.sh, minikube-autostart-with-keda.sh
+- ✅ **autostart/**: minikube-autostart.sh
 - ✅ **linux-test-structure.sh**: 87 testes automatizados para validação completa
 
 **Características dos Scripts Linux**:

@@ -20,10 +20,10 @@ Este checklist DEVE ser seguido SEMPRE que criar, modificar ou expandir qualquer
 - [ ] **VALIDAR**: Todos os testes devem PASSAR
 
 ### 3. 📚 DOCUMENTAÇÃO (SEMPRE ATUALIZAR)
-- [ ] **CONVERSAS-E-DECISOES.md**: Adicionar nova entrada
-- [ ] **HISTORICO-PROJETO-MINIKUBE.md**: Atualizar evolução técnica
-- [ ] **PROMPT-CONTINUIDADE.md**: Atualizar estrutura e capacidades
-- [ ] **PROMPT-BACKUP-COMPLETO.md**: Atualizar resumo consolidado
+- [ ] **DECISIONS-HISTORY.md**: Adicionar nova entrada
+- [ ] **MINIKUBE-PROJECT-HISTORY.md**: Atualizar evolução técnica
+- [ ] **CONTINUITY-PROMPT.md**: Atualizar estrutura e capacidades
+- [ ] **BACKUP-PROMPT.md**: Atualizar resumo consolidado
 
 ### 4. 📂 ESTRUTURA DE ARQUIVOS (VERIFICAR)
 - [ ] **Autostart**: Verificar se novos serviços precisam de autostart
