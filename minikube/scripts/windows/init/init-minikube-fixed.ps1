@@ -55,7 +55,7 @@ function Patch-MetricsServerImage {
         --type=json `
         -p '[{"op":"replace","path":"/spec/template/spec/containers/0/image","value":"registry.k8s.io/metrics-server/metrics-server:v0.8.0"}]' 2>$null | Out-Null
     if ($LASTEXITCODE -ne 0) {
-        Write-Host "   ⚠️ Não foi possível ajustar a imagem do metrics-server. Verifique manualmente." -ForegroundColor Yellow
+        Write-Host "   ⚠️ Nao foi possivel ajustar a imagem do metrics-server. Verifique manualmente." -ForegroundColor Yellow
     }
 }
 

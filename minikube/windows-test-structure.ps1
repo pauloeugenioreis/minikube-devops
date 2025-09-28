@@ -58,15 +58,15 @@ function Test-Files {
 
 # --- Definicao de todas as verificacoes de arquivos ---
 $fileChecks = @(
-    @{ Category = "Script de Inicialização"; Directory = "scripts\windows\init"; Files = @("init-minikube-fixed.ps1", "apply-rabbitmq-config.ps1", "install-keda.ps1") },
-    @{ Category = "Scripts de Manutenção"; Directory = "scripts\windows\maintenance"; Files = @("fix-dashboard.ps1", "quick-status.ps1", "fix-kubectl-final.ps1", "validate-rabbitmq-config.ps1", "fix-dashboard-cronjob.ps1") },
+    @{ Category = "Script de Inicializaï¿½ï¿½o"; Directory = "scripts\windows\init"; Files = @("init-minikube-fixed.ps1", "apply-rabbitmq-config.ps1", "install-keda.ps1") },
+    @{ Category = "Scripts de Manutenï¿½ï¿½o"; Directory = "scripts\windows\maintenance"; Files = @("fix-dashboard.ps1", "quick-status.ps1", "fix-kubectl-final.ps1", "validate-rabbitmq-config.ps1", "fix-dashboard-cronjob.ps1") },
     @{ Category = "Scripts de Monitoramento"; Directory = "scripts\windows\monitoring"; Files = @("open-dashboard.ps1", "change-dashboard-port.ps1") },
     @{ Category = "Scripts KEDA"; Directory = "scripts\windows\keda"; Files = @("install-helm-fixed.ps1", "install-keda.ps1", "test-keda.ps1") },
     @{ Category = "Scripts Autostart"; Directory = "scripts\windows\autostart"; Files = @("minikube-autostart.bat") },
-    @{ Category = "Setup de Máquina Nova"; Directory = "scripts\windows"; Files = @("Setup-Fresh-Machine.ps1", "Bootstrap-DevOps.ps1") },
+    @{ Category = "Setup de Mï¿½quina Nova"; Directory = "scripts\windows"; Files = @("Setup-Fresh-Machine.ps1", "Bootstrap-DevOps.ps1") },
     @{ Category = "Configs KEDA"; Directory = "configs\keda\examples"; Files = @("cpu-scaling-example.yaml", "memory-scaling-example.yaml", "rabbitmq-scaling-example.yaml") },
-    @{ Category = "Documentação"; Directory = "docs"; Files = @("README.md", "KEDA.md") },
-    @{ Category = "Documentação Fresh Machine"; Directory = "docs\fresh-machine"; Files = @("SETUP.md", "DEMO.md", "CHECKLIST.md") },
+    @{ Category = "Documentaï¿½ï¿½o"; Directory = "docs"; Files = @("README.md", "KEDA.md") },
+    @{ Category = "Documentaï¿½ï¿½o Fresh Machine"; Directory = "docs\fresh-machine"; Files = @("SETUP.md", "DEMO.md", "CHECKLIST.md") },
     @{ Category = "Checklists na Raiz"; Directory = ""; Files = @("STRUCTURE-UPDATES-CHECKLIST.md", "MANDATORY-CHECKLIST.md", "DECISIONS-HISTORY.md", "DYNAMIC-PATHS.md", "MINIKUBE-PROJECT-HISTORY.md", "CONTINUITY-PROMPT.md", "BACKUP-PROMPT.md"); BasePath = if ($projectPaths) { $projectPaths.Root } else { $null } }
 )
 
@@ -74,13 +74,13 @@ $fileChecks = @(
 foreach ($check in $fileChecks) {
     # Pular verificacoes que dependem da raiz do projeto se ela nao foi detectada
     if ($check.BasePath -eq $null -and $check.Category -eq "Checklists na Raiz") {
-        Write-Host "`nVerificação de '$($check.Category)' pulada (raiz do projeto não detectada)" -ForegroundColor Yellow
+        Write-Host "`nVerificaï¿½ï¿½o de '$($check.Category)' pulada (raiz do projeto nï¿½o detectada)" -ForegroundColor Yellow
         continue
     }
     Test-Files -Category $check.Category -Directory $check.Directory -Files $check.Files -BasePathOverride $check.BasePath
 }
 
-# --- Teste Específico para Helm Charts ---
+# --- Teste Especï¿½fico para Helm Charts ---
 Write-Host "`nTestando estrutura de Helm Charts..." -ForegroundColor Yellow
 $chartsPath = Join-Path $basePath "charts"
 if (Test-Path $chartsPath) {
@@ -123,10 +123,10 @@ if (Test-Path $chartsPath) {
     $global:failureCount++
 }
 
-# --- Teste Específico para Estrutura Linux ---
+# --- Teste Especefico para Estrutura Linux ---
 $linuxChecks = @(
-    @{ Category = "Scripts de Inicialização (Linux)"; Directory = "scripts\linux\init"; Files = @("init-minikube-fixed.sh", "apply-rabbitmq-config.sh") },
-    @{ Category = "Scripts de Manutenção (Linux)"; Directory = "scripts\linux\maintenance"; Files = @("fix-dashboard.sh", "validate-rabbitmq-config.sh") },
+    @{ Category = "Scripts de Inicializacao (Linux)"; Directory = "scripts\linux\init"; Files = @("init-minikube-fixed.sh") },
+    @{ Category = "Scripts de Manutencao (Linux)"; Directory = "scripts\linux\maintenance"; Files = @("fix-dashboard.sh", "validate-rabbitmq-config.sh") },
     @{ Category = "Scripts de Monitoramento (Linux)"; Directory = "scripts\linux\monitoring"; Files = @("open-dashboard.sh", "change-dashboard-port.sh") },
     @{ Category = "Scripts KEDA (Linux)"; Directory = "scripts\linux\keda"; Files = @("install-helm-fixed.sh", "install-keda.sh", "test-keda.sh") },
     @{ Category = "Scripts Autostart (Linux)"; Directory = "scripts\linux\autostart"; Files = @("minikube-autostart.sh") },
@@ -146,7 +146,7 @@ if ($global:failureCount -eq 0) {
 } else {
     Write-Host "? FALHA! Foram encontrados $($global:failureCount) problemas na estrutura." -ForegroundColor Red
 }
-Write-Host "Total de verificações: $($global:successCount + $global:failureCount) | Sucessos: $($global:successCount) | Falhas: $($global:failureCount)" -ForegroundColor Cyan
+Write-Host "Total de verificaï¿½ï¿½es: $($global:successCount + $global:failureCount) | Sucessos: $($global:successCount) | Falhas: $($global:failureCount)" -ForegroundColor Cyan
 Write-Host "=====================================" -ForegroundColor Cyan
 
 Write-Host "`nPROXIMOS PASSOS:" -ForegroundColor Yellow
