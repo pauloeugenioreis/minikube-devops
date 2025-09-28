@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # =====================================================
-# Inicialização completa do Minikube - Linux
-# Mantém paridade com o fluxo do Windows (Helm + KEDA)
+# Inicializacao completa do Minikube - Linux
+# Mantem paridade com o fluxo do Windows (Helm + KEDA)
 # =====================================================
 set -euo pipefail
 
-# --- Configuração de cores ---
+# --- Configuracao de cores ---
 supports_color() {
     [[ -t 1 ]] && command -v tput >/dev/null 2>&1 && [[ $(tput colors) -ge 8 ]]
 }
@@ -26,7 +26,7 @@ else
     NC=''
 fi
 
-# --- Funções utilitárias ---
+# --- Funcoes utilitarias ---
 command_exists() {
     command -v "$1" >/dev/null 2>&1
 }
@@ -98,7 +98,7 @@ wait_for_job() {
         status=$(kubectl get job "$job_name" -n "$namespace" -o jsonpath='{.status.conditions[0].type}' 2>/dev/null || true)
         case "$status" in
             Complete)
-                echo -e "${GREEN}   Job ${job_name} concluído com sucesso.${NC}"
+                echo -e "${GREEN}   Job ${job_name} concluido com sucesso.${NC}"
                 return 0
                 ;;
             Failed)
@@ -158,7 +158,7 @@ log_versions() {
     minikube_ver=$(minikube version --short 2>/dev/null || echo "desconhecido")
     helm_ver=$(helm version --short 2>/dev/null || echo "desconhecido")
 
-    echo -e "${GREEN}Versões detectadas:${NC}"
+    echo -e "${GREEN}Versoes detectadas:${NC}"
     echo -e "${WHITE}   • kubectl:  ${kubectl_ver}${NC}"
     echo -e "${WHITE}   • minikube: ${minikube_ver}${NC}"
     echo -e "${WHITE}   • helm:     ${helm_ver}${NC}"
@@ -189,11 +189,11 @@ get_kubectl_version() {
 
 ensure_docker_running() {
     if systemctl is-active --quiet docker; then
-        echo -e "${GREEN}Docker já está em execução.${NC}"
+        echo -e "${GREEN}Docker ja esta em execucao.${NC}"
         return
     fi
 
-    echo -e "${YELLOW}Iniciando serviço Docker...${NC}"
+    echo -e "${YELLOW}Iniciando servico Docker...${NC}"
     if sudo systemctl start docker; then
         local elapsed=0
         local timeout=120
@@ -205,18 +205,18 @@ ensure_docker_running() {
         if docker info >/dev/null 2>&1; then
             echo -e "${GREEN}Docker pronto!${NC}"
         else
-            echo -e "${RED}Docker não ficou pronto no tempo esperado.${NC}"
+            echo -e "${RED}Docker nao ficou pronto no tempo esperado.${NC}"
             exit 1
         fi
     else
-        echo -e "${RED}Falha ao iniciar o serviço Docker.${NC}"
+        echo -e "${RED}Falha ao iniciar o servico Docker.${NC}"
         exit 1
     fi
 }
 
 ensure_minikube_running() {
     if minikube status >/dev/null 2>&1; then
-        echo -e "${GREEN}Minikube já está rodando.${NC}"
+        echo -e "${GREEN}Minikube ja esta rodando.${NC}"
         return
     fi
 
@@ -235,7 +235,7 @@ METRICS_SERVER_IMAGES=(
 
 ensure_metrics_server_image() {
     if ! command_exists docker; then
-        echo -e "${YELLOW}   ⚠️ Docker não disponível para pré-carregar imagens do metrics-server.${NC}"
+        echo -e "${YELLOW}   ⚠️ Docker nao disponivel para prr-carregar imagens do metrics-server.${NC}"
         return
     fi
 
@@ -243,16 +243,16 @@ ensure_metrics_server_image() {
         if ! docker image inspect "$image" >/dev/null 2>&1; then
             echo -e "${WHITE}   Baixando imagem ${image}...${NC}"
             if ! docker pull "$image"; then
-                echo -e "${YELLOW}   ⚠️ Falha ao baixar ${image}. O addon tentará puxar diretamente.${NC}"
+                echo -e "${YELLOW}   ⚠️ Falha ao baixar ${image}. O addon tentara puxar diretamente.${NC}"
                 continue
             fi
         fi
 
         echo -e "${WHITE}   Carregando ${image} no Minikube...${NC}"
         if ! minikube image load "$image" >/dev/null 2>&1; then
-            echo -e "${YELLOW}   ⚠️ Não foi possível carregar ${image} no Minikube. Verifique manualmente.${NC}"
+            echo -e "${YELLOW}   ⚠️ Nao foi possivel carregar ${image} no Minikube. Verifique manualmente.${NC}"
         else
-            echo -e "${GREEN}   ${image} disponível para o metrics-server.${NC}"
+            echo -e "${GREEN}   ${image} disponivel para o metrics-server.${NC}"
         fi
     done
 }
@@ -262,7 +262,7 @@ patch_metrics_server_image() {
     if ! kubectl patch deployment metrics-server -n kube-system \
         --type=json \
         -p='[{"op":"replace","path":"/spec/template/spec/containers/0/image","value":"registry.k8s.io/metrics-server/metrics-server:v0.8.0"}]' >/dev/null 2>&1; then
-        echo -e "${YELLOW}   ⚠️ Não foi possível ajustar a imagem do metrics-server. Verifique manualmente.${NC}"
+        echo -e "${YELLOW}   ⚠️ Nao foi possivel ajustar a imagem do metrics-server. Verifique manualmente.${NC}"
     fi
 }
 
@@ -277,24 +277,24 @@ patch_keda_image_policy() {
     for deploy in "${KEDA_DEPLOYMENTS[@]}"; do
         if ! kubectl patch deployment "$deploy" -n keda --type='json' \
             -p='[{"op":"replace","path":"/spec/template/spec/containers/0/imagePullPolicy","value":"IfNotPresent"}]' >/dev/null 2>&1; then
-            echo -e "${YELLOW}   ⚠️ Não foi possível ajustar imagePullPolicy de ${deploy}.${NC}"
+            echo -e "${YELLOW}   ⚠️ Nao foi possivel ajustar imagePullPolicy de ${deploy}.${NC}"
         fi
     done
 }
 
 
-# --- Parâmetros ---
+# --- Parametros ---
 INSTALL_KEDA=true
 SKIP_ADDONS=false
 SKIP_RABBITMQ_CONFIG=false
 
 usage() {
     cat <<USAGE
-Uso: $0 [opções]
-  --skip-addons          Não habilitar addons essenciais do Minikube
-  --skip-keda            Pular instalação/validação do KEDA
-  --install-keda         Forçar instalação do KEDA (padrão)
-  --skip-rabbitmq-config Pular job de configuração do RabbitMQ
+Uso: $0 [opcoes]
+  --skip-addons          Nao habilitar addons essenciais do Minikube
+  --skip-keda            Pular instalacao/validacao do KEDA
+  --install-keda         Forcar instalacao do KEDA (padrao)
+  --skip-rabbitmq-config Pular job de configuracao do RabbitMQ
   -h, --help             Mostrar esta ajuda
 USAGE
 }
@@ -322,7 +322,7 @@ while [[ $# -gt 0 ]]; do
             exit 0
             ;;
         *)
-            echo -e "${YELLOW}Parâmetro desconhecido: $1${NC}"
+            echo -e "${YELLOW}Parametro desconhecido: $1${NC}"
             usage
             exit 1
             ;;
@@ -332,7 +332,7 @@ done
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(find_project_root "$SCRIPT_DIR")"
 if [[ -z "$PROJECT_ROOT" ]]; then
-    echo -e "${RED}Não foi possível detectar a raiz do projeto. Verifique a estrutura.${NC}"
+    echo -e "${RED}Nao foi possivel detectar a raiz do projeto. Verifique a estrutura.${NC}"
     exit 1
 fi
 MINIKUBE_DIR="$PROJECT_ROOT/minikube"
@@ -356,7 +356,7 @@ INFO
 REQUIRED_CMDS=(minikube kubectl helm docker)
 for cmd in "${REQUIRED_CMDS[@]}"; do
     if ! command_exists "$cmd"; then
-        echo -e "${RED}Dependência ausente: $cmd${NC}"
+        echo -e "${RED}Dependencia ausente: $cmd${NC}"
         case "$cmd" in
             minikube)
                 echo -e "${YELLOW}Instale com: curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64 && sudo install minikube-linux-amd64 /usr/local/bin/minikube${NC}"
@@ -392,7 +392,7 @@ fi
 wait_for_resource "nó Minikube" "node/minikube" ""
 
 if [[ ! -d "$CHARTS_DIR/rabbitmq" || ! -d "$CHARTS_DIR/mongodb" ]]; then
-    echo -e "${RED}Charts Helm não encontrados em $CHARTS_DIR. Verifique a estrutura.${NC}"
+    echo -e "${RED}Charts Helm nao encontrados em $CHARTS_DIR. Verifique a estrutura.${NC}"
     exit 1
 fi
 
@@ -405,19 +405,19 @@ wait_for_resource "MongoDB" "pod -l app=mongodb" "default"
 echo -e "${YELLOW}Configurando port-forwards locais...${NC}"
 kill_port_forward "rabbitmq-service.*15672"
 start_port_forward "default" "service/rabbitmq-service" "15672:15672"
-check_port 15672 && echo -e "${GREEN}   RabbitMQ Management em http://localhost:15672${NC}" || echo -e "${YELLOW}   ⚠️ RabbitMQ Management não respondeu (porta 15672).${NC}"
+check_port 15672 && echo -e "${GREEN}   RabbitMQ Management em http://localhost:15672${NC}" || echo -e "${YELLOW}   ⚠️ RabbitMQ Management nao respondeu (porta 15672).${NC}"
 
 kill_port_forward "rabbitmq-service.*5672"
 start_port_forward "default" "service/rabbitmq-service" "5672:5672"
-check_port 5672 && echo -e "${GREEN}   RabbitMQ AMQP disponível em localhost:5672${NC}" || echo -e "${YELLOW}   ⚠️ RabbitMQ AMQP não respondeu (porta 5672).${NC}"
+check_port 5672 && echo -e "${GREEN}   RabbitMQ AMQP disponivel em localhost:5672${NC}" || echo -e "${YELLOW}   ⚠️ RabbitMQ AMQP nao respondeu (porta 5672).${NC}"
 
 kill_port_forward "mongodb-service.*27017"
 start_port_forward "default" "service/mongodb-service" "27017:27017"
-check_port 27017 && echo -e "${GREEN}   MongoDB disponível em mongodb://localhost:27017${NC}" || echo -e "${YELLOW}   ⚠️ MongoDB não respondeu (porta 27017).${NC}"
+check_port 27017 && echo -e "${GREEN}   MongoDB disponivel em mongodb://localhost:27017${NC}" || echo -e "${YELLOW}   ⚠️ MongoDB nao respondeu (porta 27017).${NC}"
 
 kill_port_forward "kubernetes-dashboard"
 start_port_forward "kubernetes-dashboard" "service/kubernetes-dashboard" "4666:80"
-check_port 4666 && echo -e "${GREEN}   Dashboard em http://localhost:4666${NC}" || echo -e "${YELLOW}   ⚠️ Dashboard não respondeu (porta 4666).${NC}"
+check_port 4666 && echo -e "${GREEN}   Dashboard em http://localhost:4666${NC}" || echo -e "${YELLOW}   ⚠️ Dashboard nao respondeu (porta 4666).${NC}"
 
 if [[ "$INSTALL_KEDA" == true ]]; then
     echo -e "${YELLOW}Instalando/validando KEDA...${NC}"
@@ -425,18 +425,18 @@ if [[ "$INSTALL_KEDA" == true ]]; then
         if bash "$KEDA_INSTALLER" --skip-helm; then
             patch_keda_image_policy
         else
-            echo -e "${YELLOW}   ⚠️ Verifique os logs da instalação do KEDA.${NC}"
+            echo -e "${YELLOW}   ⚠️ Verifique os logs da instalacao do KEDA.${NC}"
         fi
     else
-        echo -e "${YELLOW}   ⚠️ Script do KEDA não encontrado em $KEDA_INSTALLER.${NC}"
+        echo -e "${YELLOW}   ⚠️ Script do KEDA nao encontrado em $KEDA_INSTALLER.${NC}"
     fi
 fi
 
-echo -e "${YELLOW}Executando validações rápidas...${NC}"
+echo -e "${YELLOW}Executando validacoes rapidas...${NC}"
 if curl -s --max-time 5 http://rabbitmq.local >/dev/null; then
     echo -e "${GREEN}   RabbitMQ via Ingress respondeu (http://rabbitmq.local).${NC}"
 else
-    echo -e "${YELLOW}   ⚠️ RabbitMQ via Ingress ainda não respondeu (rabbitmq.local).${NC}"
+    echo -e "${YELLOW}   ⚠️ RabbitMQ via Ingress ainda nao respondeu (rabbitmq.local).${NC}"
     if curl -s --max-time 5 http://localhost:15672 >/dev/null; then
         echo -e "${GREEN}   RabbitMQ Management respondeu em http://localhost:15672.${NC}"
     fi
@@ -445,14 +445,14 @@ fi
 if kubectl exec deployment/mongodb -- mongosh mongodb://admin:admin@localhost:27017/admin --eval "db.runCommand('ping')" >/dev/null 2>&1; then
     echo -e "${GREEN}   MongoDB respondeu ao ping.${NC}"
 else
-    echo -e "${YELLOW}   ⚠️ MongoDB ainda não respondeu ao ping.${NC}"
+    echo -e "${YELLOW}   ⚠️ MongoDB ainda nao respondeu ao ping.${NC}"
 fi
 
 cat <<SUMMARY
 ${CYAN}=====================================================${NC}
 ${GREEN}AMBIENTE CONFIGURADO COM SUCESSO!${NC}
 ${CYAN}=====================================================${NC}
-${YELLOW}Informações de acesso:${NC}
+${YELLOW}Informacoes de acesso:${NC}
 ${WHITE}   • RabbitMQ UI:   http://rabbitmq.local  (guest/guest)${NC}
 ${WHITE}   • RabbitMQ AMQP: amqp://guest:guest@localhost:5672${NC}
 ${WHITE}   • MongoDB URI:   mongodb://admin:admin@localhost:27017/admin${NC}
