@@ -1,3 +1,7 @@
+$emoji_trash = [char]::ConvertFromUtf32(0x1F5D1)
+$emoji_chart = [char]::ConvertFromUtf32(0x1F4CA)
+$emoji_clipboard = [char]::ConvertFromUtf32(0x1F4CB)
+$emoji_scroll = [char]::ConvertFromUtf32(0x1F4DC)
 # Script de Instalacao KEDA no Minikube
 # KEDA - Kubernetes Event-driven Autoscaling
 # Criado em: 21/09/2025
@@ -11,6 +15,9 @@ $emoji_success = [char]::ConvertFromUtf32(0x2705)
 $emoji_error = [char]::ConvertFromUtf32(0x274C)
 $emoji_warning = [char]::ConvertFromUtf32(0x26A0)
 $emoji_info = [char]::ConvertFromUtf32(0x1F4A1)
+$emoji_book = [char]::ConvertFromUtf32(0x1F4DA)
+$emoji_party = [char]::ConvertFromUtf32(0x1F389)
+$emoji_wrench = [char]::ConvertFromUtf32(0x1F527)
 
 Write-Host "=====================================================" -ForegroundColor Cyan
 Write-Host "KEDA - Kubernetes Event-driven Autoscaling Setup" -ForegroundColor Green
@@ -98,7 +105,7 @@ Write-Host "   $emoji_success Minikube esta rodando" -ForegroundColor Green
 
 # Se uninstall foi solicitado
 if ($Uninstall) {
-    Write-Host "`n🗑️ Desinstalando KEDA..." -ForegroundColor Yellow
+    Write-Host "`n$emoji_trash Desinstalando KEDA..." -ForegroundColor Yellow
     
     Write-Host "   Removendo KEDA via Helm..." -ForegroundColor Yellow
     helm uninstall keda --namespace keda 2>$null
@@ -187,16 +194,16 @@ do {
 
 Write-Host "`n7. Verificando instalacao do KEDA..." -ForegroundColor Yellow
 
-Write-Host "`n   📊 Status dos Pods KEDA:" -ForegroundColor Cyan
+Write-Host "`n   $emoji_chart Status dos Pods KEDA:" -ForegroundColor Cyan
 kubectl get pods -n keda
 
-Write-Host "`n   📋 Services KEDA:" -ForegroundColor Cyan
+Write-Host "`n   $emoji_clipboard Services KEDA:" -ForegroundColor Cyan
 kubectl get svc -n keda
 
 Write-Host "`n   🔧 CRDs do KEDA:" -ForegroundColor Cyan
 kubectl get crd | grep keda
 
-Write-Host "`n   📜 Versao do KEDA:" -ForegroundColor Cyan
+Write-Host "`n   $emoji_scroll Versao do KEDA:" -ForegroundColor Cyan
 $kedaVersion = kubectl get crd/scaledobjects.keda.sh -o jsonpath='{.metadata.labels.app\.kubernetes\.io/version}' 2>$null
 if ($kedaVersion) {
     Write-Host "   Versao: $kedaVersion" -ForegroundColor Green
@@ -226,10 +233,10 @@ foreach ($component in $components.GetEnumerator()) {
 }
 
 Write-Host "`n=====================================================" -ForegroundColor Cyan
-Write-Host "🎉 INSTALACAO KEDA CONCLUIDA!" -ForegroundColor Green
+Write-Host "$emoji_party INSTALACAO KEDA CONCLUIDA!" -ForegroundColor Green
 Write-Host "=====================================================" -ForegroundColor Cyan
 
-Write-Host "`n📚 PROXIMOS PASSOS:" -ForegroundColor Yellow
+Write-Host "`n$emoji_book INFORMACOESPROXIMOS PASSOS:" -ForegroundColor Yellow
 Write-Host "   1. Teste a instalacao com:" -ForegroundColor Cyan
 Write-Host "      kubectl get scaledobjects -A" -ForegroundColor White
 Write-Host "`n   2. Crie um ScaledObject de exemplo:" -ForegroundColor Cyan
@@ -237,12 +244,12 @@ Write-Host "      kubectl apply -f exemplos/" -ForegroundColor White
 Write-Host "`n   3. Monitore os logs do KEDA:" -ForegroundColor Cyan
 Write-Host "      kubectl logs -n keda -l app.kubernetes.io/name=keda-operator" -ForegroundColor White
 
-Write-Host "`n🌐 DOCUMENTACAO:" -ForegroundColor Yellow
+Write-Host "`n$emoji_globe DOCUMENTACAO:" -ForegroundColor Yellow
 Write-Host "   - KEDA Official: https://keda.sh/" -ForegroundColor Cyan
 Write-Host "   - Scalers: https://keda.sh/docs/scalers/" -ForegroundColor Cyan
 Write-Host "   - Examples: https://github.com/kedacore/samples" -ForegroundColor Cyan
 
-Write-Host "`n🔧 COMANDOS UTEIS:" -ForegroundColor Yellow
+Write-Host "`n$emoji_wrench COMANDOS UTEIS:" -ForegroundColor Yellow
 Write-Host "   - Status: kubectl get pods -n keda" -ForegroundColor Cyan
 Write-Host "   - Logs: kubectl logs -n keda -l app.kubernetes.io/name=keda-operator" -ForegroundColor Cyan
 Write-Host "   - Uninstall: .\install-keda.ps1 -Uninstall" -ForegroundColor Cyan

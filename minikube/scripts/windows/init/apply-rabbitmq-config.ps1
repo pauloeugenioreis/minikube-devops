@@ -22,7 +22,7 @@ $projectRoot = (Resolve-Path -Path (Join-Path $scriptDir '..\..\..')).ProviderPa
 $rabbitmqChartPath = Join-Path $projectRoot 'charts\rabbitmq'
 
 Write-Host '=====================================================' -ForegroundColor Cyan
-Write-Host ("{0} APLICANDO CONFIGURACOES RABBITMQ VIA HELM" -f $emoji_success) -ForegroundColor Green
+Write-Host "$emoji_success APLICANDO CONFIGURACOES RABBITMQ VIA HELM" -ForegroundColor Green
 Write-Host '=====================================================' -ForegroundColor Cyan
 
 $ErrorActionPreference = 'Continue'
@@ -34,7 +34,7 @@ function Invoke-RabbitMQCommand {
 
     $rabbitPod = kubectl get pods -l app=rabbitmq -o jsonpath='{.items[0].metadata.name}' 2>$null
     if (-not $rabbitPod) {
-        Write-Host ("{0} Pod RabbitMQ nao encontrado!" -f $emoji_error) -ForegroundColor Red
+    Write-Host "$emoji_error Pod RabbitMQ nao encontrado!" -ForegroundColor Red
         return $null
     }
 
@@ -47,7 +47,7 @@ function Wait-ForDeployment {
         [int]$TimeoutSeconds = 300
     )
 
-    Write-Host ("{0} Aguardando deployment {1}..." -f $emoji_info, $DeploymentName) -ForegroundColor Cyan
+    Write-Host "$emoji_info Aguardando deployment $DeploymentName..." -ForegroundColor Cyan
 
     $waited = 0
     $interval = 10
@@ -58,14 +58,14 @@ function Wait-ForDeployment {
 
         $status = kubectl get deployment $DeploymentName -o jsonpath='{.status.readyReplicas}' 2>$null
         if ($status -eq '1') {
-            Write-Host ("{0} Deployment {1} esta pronto!" -f $emoji_success, $DeploymentName) -ForegroundColor Green
+            Write-Host "$emoji_success Deployment $DeploymentName esta pronto!" -ForegroundColor Green
             return $true
         }
 
-        Write-Host ("{0} Aguardando... ({1}/{2} segundos)" -f $emoji_warning, $waited, $TimeoutSeconds) -ForegroundColor Yellow
+    Write-Host "$emoji_warning Aguardando... ($waited/$TimeoutSeconds segundos)" -ForegroundColor Yellow
 
         if ($waited -ge $TimeoutSeconds) {
-            Write-Host ("{0} Timeout aguardando deployment {1}" -f $emoji_error, $DeploymentName) -ForegroundColor Red
+            Write-Host "$emoji_error Timeout aguardando deployment $DeploymentName" -ForegroundColor Red
             return $false
         }
     } while ($true)
@@ -73,12 +73,12 @@ function Wait-ForDeployment {
 
 try {
     if (-not (Test-Path -Path $rabbitmqChartPath)) {
-        Write-Host ("{0} Chart do RabbitMQ nao encontrado em: {1}" -f $emoji_error, $rabbitmqChartPath) -ForegroundColor Red
+    Write-Host "$emoji_error Chart do RabbitMQ nao encontrado em: $rabbitmqChartPath" -ForegroundColor Red
         exit 1
     }
 
     if (-not (Get-Command helm -ErrorAction SilentlyContinue)) {
-        Write-Host ("{0} Helm nao esta instalado ou nao esta no PATH." -f $emoji_error) -ForegroundColor Red
+    Write-Host "$emoji_error Helm nao esta instalado ou nao esta no PATH." -ForegroundColor Red
         Write-Host '    Execute scripts\windows\keda\install-helm.ps1 ou instale manualmente.' -ForegroundColor Yellow
         exit 1
     }
@@ -86,10 +86,10 @@ try {
     Write-Host '1. Verificando namespace...' -ForegroundColor Cyan
     $namespace = kubectl get namespace default -o name 2>$null
     if (-not $namespace) {
-        Write-Host ("{0} Namespace default nao encontrado!" -f $emoji_error) -ForegroundColor Red
+    Write-Host "$emoji_error Namespace default nao encontrado!" -ForegroundColor Red
         exit 1
     }
-    Write-Host ("{0} Namespace default OK" -f $emoji_success) -ForegroundColor Green
+    Write-Host "$emoji_success Namespace default OK" -ForegroundColor Green
 
     if (-not $SkipBackup) {
         Write-Host '2. Fazendo backup dos recursos existentes...' -ForegroundColor Cyan
@@ -103,7 +103,7 @@ try {
         kubectl get deployment rabbitmq -o yaml > (Join-Path $backupDir 'rabbitmq-deployment-backup.yaml') 2>$null
         kubectl get service rabbitmq-service -o yaml > (Join-Path $backupDir 'rabbitmq-service-backup.yaml') 2>$null
 
-        Write-Host ("{0} Backup salvo em: {1}" -f $emoji_success, $backupDir) -ForegroundColor Green
+    Write-Host "$emoji_success Backup salvo em: $backupDir" -ForegroundColor Green
     } else {
         Write-Host '2. Backup ignorado por parametro.' -ForegroundColor Yellow
     }
@@ -116,31 +116,31 @@ try {
     }
     $helmResult = helm @helmArgs 2>&1
     if ($LASTEXITCODE -ne 0) {
-        Write-Host ("{0} Falha ao aplicar chart do RabbitMQ!" -f $emoji_error) -ForegroundColor Red
+    Write-Host "$emoji_error Falha ao aplicar chart do RabbitMQ!" -ForegroundColor Red
         if ($helmResult) {
             $helmResult | ForEach-Object { Write-Host "    $_" -ForegroundColor Red }
         }
         exit 1
     }
-    Write-Host ("{0} Chart aplicado com sucesso" -f $emoji_success) -ForegroundColor Green
+    Write-Host "$emoji_success Chart aplicado com sucesso" -ForegroundColor Green
     if ($helmResult) {
         $helmResult | ForEach-Object { Write-Host "    $_" -ForegroundColor Gray }
     }
 
     Write-Host '4. Aguardando deployment ficar pronto...' -ForegroundColor Cyan
     if (-not (Wait-ForDeployment -DeploymentName 'rabbitmq' -TimeoutSeconds 300)) {
-        Write-Host ("{0} Deployment nao ficou pronto no tempo esperado!" -f $emoji_error) -ForegroundColor Red
-        Write-Host ("{0} Status do deployment:" -f $emoji_info) -ForegroundColor Yellow
+    Write-Host "$emoji_error Deployment nao ficou pronto no tempo esperado!" -ForegroundColor Red
+    Write-Host "$emoji_info Status do deployment:" -ForegroundColor Yellow
         kubectl describe deployment rabbitmq
         exit 1
     }
 
     Write-Host '5. Verificacao final...' -ForegroundColor Cyan
 
-    Write-Host ("{0} Status dos pods:" -f $emoji_info) -ForegroundColor Yellow
+    Write-Host "$emoji_info Status dos pods:" -ForegroundColor Yellow
     kubectl get pods -l app=rabbitmq
 
-    Write-Host ("{0} Verificando filas criadas:" -f $emoji_info) -ForegroundColor Yellow
+    Write-Host "$emoji_info Verificando filas criadas:" -ForegroundColor Yellow
     $queues = Invoke-RabbitMQCommand 'rabbitmqctl list_queues name messages'
     if ($queues) {
         $queues | ForEach-Object { Write-Host "    $_" -ForegroundColor White }
@@ -148,7 +148,7 @@ try {
         Write-Host '    Nao foi possivel listar filas.' -ForegroundColor Yellow
     }
 
-    Write-Host ("{0} Verificando configuracao loopback:" -f $emoji_info) -ForegroundColor Yellow
+    Write-Host "$emoji_info Verificando configuracao loopback:" -ForegroundColor Yellow
     $loopback = Invoke-RabbitMQCommand "rabbitmqctl eval 'application:get_env(rabbit, loopback_users).'"
     if ($loopback) {
         $loopback | ForEach-Object { Write-Host "    $_" -ForegroundColor White }
@@ -156,7 +156,7 @@ try {
         Write-Host '    Nao foi possivel obter configuracao loopback.' -ForegroundColor Yellow
     }
 
-    Write-Host ("{0} Verificando plugins habilitados:" -f $emoji_info) -ForegroundColor Yellow
+    Write-Host "$emoji_info Verificando plugins habilitados:" -ForegroundColor Yellow
     $plugins = Invoke-RabbitMQCommand 'rabbitmq-plugins list --enabled --minimal'
     if ($plugins) {
         $plugins | ForEach-Object { Write-Host "    $_" -ForegroundColor White }
@@ -165,28 +165,28 @@ try {
     }
 
     Write-Host '=====================================================' -ForegroundColor Cyan
-    Write-Host ("{0} CONFIGURACAO RABBITMQ CONCLUIDA COM SUCESSO!" -f $emoji_success) -ForegroundColor Green
+    Write-Host "$emoji_success CONFIGURACAO RABBITMQ CONCLUIDA COM SUCESSO!" -ForegroundColor Green
     Write-Host '=====================================================' -ForegroundColor Cyan
 
-    Write-Host ("{0} RECURSOS APLICADOS:" -f $emoji_info) -ForegroundColor Cyan
-    Write-Host ("{0} ConfigMap renderizado via Helm" -f $emoji_success) -ForegroundColor Green
-    Write-Host ("{0} Deployment atualizado pelo chart" -f $emoji_success) -ForegroundColor Green
-    Write-Host ("{0} Loopback liberado (loopback_users = none)" -f $emoji_success) -ForegroundColor Green
+    Write-Host "$emoji_info RECURSOS APLICADOS:" -ForegroundColor Cyan
+    Write-Host "$emoji_success ConfigMap renderizado via Helm" -ForegroundColor Green
+    Write-Host "$emoji_success Deployment atualizado pelo chart" -ForegroundColor Green
+    Write-Host "$emoji_success Loopback liberado (loopback_users = none)" -ForegroundColor Green
 
-    Write-Host ("{0} CONEXOES:" -f $emoji_info) -ForegroundColor Cyan
+    Write-Host "$emoji_info CONEXOES:" -ForegroundColor Cyan
     Write-Host '  - AMQP: rabbitmq-service:5672' -ForegroundColor White
     Write-Host '  - Management: http://localhost:15672 (port-forward)' -ForegroundColor White
     Write-Host '  - Usuario: guest / Senha: guest' -ForegroundColor White
 
-    Write-Host ("{0} TESTES RECOMENDADOS:" -f $emoji_info) -ForegroundColor Cyan
+    Write-Host "$emoji_info TESTES RECOMENDADOS:" -ForegroundColor Cyan
     Write-Host '  - Verificar Azure Functions conectando' -ForegroundColor White
     Write-Host '  - Testar envio de mensagens' -ForegroundColor White
     Write-Host '  - Monitorar logs das functions' -ForegroundColor White
 
 } catch {
-    Write-Host ("{0} ERRO DURANTE APLICACAO:" -f $emoji_error) -ForegroundColor Red
+    Write-Host "$emoji_error ERRO DURANTE APLICACAO:" -ForegroundColor Red
     Write-Host $_.Exception.Message -ForegroundColor Red
     exit 1
 }
 
-Write-Host ("{0} Script concluido com sucesso!" -f $emoji_success) -ForegroundColor Green
+Write-Host "$emoji_success Script concluido com sucesso!" -ForegroundColor Green

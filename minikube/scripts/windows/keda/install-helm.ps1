@@ -5,6 +5,12 @@ $emoji_success = [char]::ConvertFromUtf32(0x2705)
 $emoji_error = [char]::ConvertFromUtf32(0x274C)
 $emoji_warning = [char]::ConvertFromUtf32(0x26A0)
 $emoji_info = [char]::ConvertFromUtf32(0x1F4A1)
+$emoji_book = [char]::ConvertFromUtf32(0x1F4DA)
+$emoji_party = [char]::ConvertFromUtf32(0x1F389)
+$emoji_pin = [char]::ConvertFromUtf32(0x1F4CC)
+$emoji_wrench = [char]::ConvertFromUtf32(0x1F527)
+$emoji_note = [char]::ConvertFromUtf32(0x1F4DD)
+$emoji_rocket = [char]::ConvertFromUtf32(0x1F680)
 
 Write-Host "=====================================================" -ForegroundColor Cyan
 Write-Host "Instalando Helm - Package Manager para Kubernetes" -ForegroundColor Green
@@ -145,20 +151,20 @@ Remove-Item $tempDir -Recurse -Force -ErrorAction SilentlyContinue
 Write-Host "   $emoji_success Arquivos temporarios removidos" -ForegroundColor Green
 
 Write-Host "`n=====================================================" -ForegroundColor Cyan
-Write-Host "🎉 HELM INSTALADO COM SUCESSO!" -ForegroundColor Green
+Write-Host "   $emoji_party HELM INSTALADO COM SUCESSO!" -ForegroundColor Green
 Write-Host "=====================================================" -ForegroundColor Cyan
 
-Write-Host "`n📚 INFORMACOES IMPORTANTES:" -ForegroundColor Yellow
-Write-Host "   📍 Localização: $helmDestination" -ForegroundColor Cyan
-Write-Host "   🔧 Comando: helm" -ForegroundColor Cyan
-Write-Host "   📝 PATH: $userBinPath" -ForegroundColor Cyan
+Write-Host "`n$emoji_book INFORMACOES IMPORTANTES:" -ForegroundColor Yellow
+Write-Host "   $emoji_pin Localização: $helmDestination" -ForegroundColor Cyan
+Write-Host "   $emoji_wrench Comando: helm" -ForegroundColor Cyan
+Write-Host "   $emoji_note PATH: $userBinPath" -ForegroundColor Cyan
 
-Write-Host "`n🚀 PROXIMOS PASSOS:" -ForegroundColor Yellow
+Write-Host "`n$emoji_rocket PROXIMOS PASSOS:" -ForegroundColor Yellow
 Write-Host "   1. Reinicie o PowerShell para garantir PATH atualizado" -ForegroundColor Cyan
 Write-Host "   2. Teste: helm version" -ForegroundColor Cyan
 Write-Host "   3. Continue com a instalacao KEDA: .\install-keda.ps1" -ForegroundColor Cyan
 
-Write-Host "`n🔧 COMANDOS HELM UTEIS:" -ForegroundColor Yellow
+Write-Host "`n$emoji_wrench COMANDOS HELM UTEIS:" -ForegroundColor Yellow
 Write-Host "   - helm version" -ForegroundColor Cyan
 Write-Host "   - helm repo list" -ForegroundColor Cyan
 Write-Host "   - helm search repo nome" -ForegroundColor Cyan

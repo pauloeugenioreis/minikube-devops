@@ -161,9 +161,9 @@ try {
     Write-Host "4. Verificar KEDA ScaledObjects: kubectl get scaledobjects" -ForegroundColor White
 } # fechamento correto do try
 catch {
-    Write-Host ($emoji_error + ' ERRO DURANTE VALIDACAO:') -ForegroundColor Red
+    Write-Host "   $emoji_error ERRO DURANTE VALIDACAO:" -ForegroundColor Red
     Write-Host $_.Exception.Message -ForegroundColor Red
     exit 1
 }
 
-Write-Host ($emoji_success + ' Validacao concluida com sucesso!') -ForegroundColor Green
+Write-Host "   $emoji_success Validacao concluida com sucesso!" -ForegroundColor Green

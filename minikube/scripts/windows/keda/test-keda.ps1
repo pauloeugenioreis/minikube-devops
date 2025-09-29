@@ -1,3 +1,6 @@
+$emoji_chart = [char]::ConvertFromUtf32(0x1F4CA)
+$emoji_party = [char]::ConvertFromUtf32(0x1F389)
+$emoji_wrench = [char]::ConvertFromUtf32(0x1F527)
 # Script de Teste e Validacao KEDA
 # Testa todos os componentes e exemplos
 
@@ -9,7 +12,6 @@ param(
 $emoji_success = [char]::ConvertFromUtf32(0x2705)
 $emoji_error = [char]::ConvertFromUtf32(0x274C)
 $emoji_warning = [char]::ConvertFromUtf32(0x26A0)
-$emoji_info = [char]::ConvertFromUtf32(0x1F4A1)
 
 Write-Host "=====================================================" -ForegroundColor Cyan
 Write-Host "KEDA - Teste e Validacao Completa" -ForegroundColor Green
@@ -195,10 +197,10 @@ Write-Host "`n6. Status de HPAs criados pelo KEDA..." -ForegroundColor Yellow
 kubectl get hpa -A 2>$null
 
 Write-Host "`n=====================================================" -ForegroundColor Cyan
-Write-Host "🎉 TESTE KEDA CONCLUIDO!" -ForegroundColor Green
+Write-Host "$emoji_party TESTE KEDA CONCLUIDO!" -ForegroundColor Green
 Write-Host "=====================================================" -ForegroundColor Cyan
 
-Write-Host "`n📊 RESULTADO DOS TESTES:" -ForegroundColor Yellow
+Write-Host "`n$emoji_chart RESULTADO DOS TESTES:" -ForegroundColor Yellow
 
 # Resumo final
 $scaledObjects = kubectl get scaledobject --all-namespaces --no-headers 2>$null
@@ -217,7 +219,7 @@ if ($hpas) {
     Write-Host "   $emoji_warning Nenhum HPA encontrado" -ForegroundColor Yellow
 }
 
-Write-Host "`n🔧 COMANDOS UTEIS PARA MONITORAMENTO:" -ForegroundColor Yellow
+Write-Host "`n$emoji_wrench COMANDOS UTEIS PARA MONITORAMENTO:" -ForegroundColor Yellow
 Write-Host "   - Ver ScaledObjects: kubectl get scaledobject -A" -ForegroundColor Cyan
 Write-Host "   - Ver HPAs: kubectl get hpa -A" -ForegroundColor Cyan
 Write-Host "   - Logs KEDA: kubectl logs -n keda -l app.kubernetes.io/name=keda-operator" -ForegroundColor Cyan
