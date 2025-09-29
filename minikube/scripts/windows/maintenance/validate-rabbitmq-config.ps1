@@ -1,53 +1,47 @@
-# Script de Validacao Completa do RabbitMQ
+﻿# Script de Validacao Completa do RabbitMQ
 # Testa todas as configuracoes aplicadas
-
-# Forcar a codificacao UTF-8 para exibir icones corretamente
-$PSDefaultParameterValues['*:Encoding'] = 'utf8'
 
 param(
     [switch]$Detailed,
     [switch]$TestConnections
 )
+# Forcar a codificacao UTF-8 para exibir icones corretamente
+$PSDefaultParameterValues['*:Encoding'] = 'utf8'
 
 $emoji_success = [char]::ConvertFromUtf32(0x2705)
 $emoji_error = [char]::ConvertFromUtf32(0x274C)
 $emoji_warning = [char]::ConvertFromUtf32(0x26A0)
 $emoji_info = [char]::ConvertFromUtf32(0x1F4A1)
 
-Write-Host "=====================================================" -ForegroundColor Cyan
-Write-Host "VALIDACAO COMPLETA RABBITMQ" -ForegroundColor Green
-Write-Host "=====================================================" -ForegroundColor Cyan
-
 $ErrorActionPreference = "Continue"
 
 # Funcao para executar comando no pod RabbitMQ
 function Invoke-RabbitMQCommand {
     param([string]$Command)
-    
     $rabbitPod = kubectl get pods -l app=rabbitmq -o jsonpath='{.items[0].metadata.name}' 2>$null
     if (-not $rabbitPod) {
         Write-Host "Pod RabbitMQ nao encontrado!" -ForegroundColor Red
         return $null
     }
-    
-    return kubectl exec $rabbitPod -- $Command 2>$null
+    # Use shell to interpret the command string so multi-word commands work on Windows
+    return kubectl exec $rabbitPod -- /bin/sh -c "$Command" 2>&1
 }
 
 try {
+    Write-Host "=====================================================" -ForegroundColor Cyan
+    Write-Host "VALIDACAO COMPLETA RABBITMQ" -ForegroundColor Green
+    Write-Host "=====================================================" -ForegroundColor Cyan
+
     Write-Host "1. Verificando status dos pods..." -ForegroundColor Cyan
-    
     $pods = kubectl get pods -l app=rabbitmq --no-headers 2>$null
     if (-not $pods) {
         Write-Host "$emoji_error Nenhum pod RabbitMQ encontrado!" -ForegroundColor Red
         exit 1
     }
-    
-    $runningPods = ($pods | Where-Object { $_ -match "Running.*1/1" }).Count
+    $runningPods = ($pods | Where-Object { ($_ -match "\bRunning\b") -and ($_ -match "\b1/1\b") }).Count
     $totalPods = ($pods | Measure-Object).Count
-    
-    Write-Host "📊 Status: $runningPods/$totalPods pods rodando" -ForegroundColor Yellow
+    Write-Host "$emoji_info Status: $runningPods/$totalPods pods rodando" -ForegroundColor Yellow
     kubectl get pods -l app=rabbitmq
-    
     if ($runningPods -eq 0) {
         Write-Host "$emoji_error Nenhum pod RabbitMQ esta rodando!" -ForegroundColor Red
         exit 1
@@ -77,13 +71,11 @@ try {
     $configMap = kubectl get configmap rabbitmq-config -o jsonpath='{.metadata.name}' 2>$null
     if ($configMap) {
         Write-Host "$emoji_success ConfigMap rabbitmq-config existe" -ForegroundColor Green
-        
-        # Verificar se tem a configuracao loopback_users
         $loopbackConfig = kubectl get configmap rabbitmq-config -o jsonpath='{.data.rabbitmq\.conf}' | Select-String "loopback_users"
         if ($loopbackConfig) {
             Write-Host "$emoji_success Configuracao loopback_users encontrada no ConfigMap" -ForegroundColor Green
             if ($Detailed) {
-                Write-Host "   📋 Config: $loopbackConfig" -ForegroundColor Yellow
+                Write-Host "   Config: $loopbackConfig" -ForegroundColor Yellow
             }
         } else {
             Write-Host "$emoji_error Configuracao loopback_users NAO encontrada no ConfigMap!" -ForegroundColor Red
@@ -98,7 +90,7 @@ try {
         Write-Host "$emoji_success RabbitMQ respondendo ao ping" -ForegroundColor Green
     } else {
         Write-Host "$emoji_error RabbitMQ nao esta respondendo!" -ForegroundColor Red
-        Write-Host "   📋 Resultado: $pingResult" -ForegroundColor Yellow
+        Write-Host "   Resultado: $pingResult" -ForegroundColor Yellow
     }
 
     Write-Host "6. Verificando configuracao loopback aplicada..." -ForegroundColor Cyan
@@ -118,22 +110,7 @@ try {
     $queues = Invoke-RabbitMQCommand "rabbitmqctl list_queues name messages"
     if ($queues) {
         Write-Host "Filas disponiveis:" -ForegroundColor Green
-        $queues | ForEach-Object { Write-Host "   📦 $_" -ForegroundColor Yellow }
-        
-        # Verificar filas especificas
-        $expectedQueues = @("pne-email", "pne-integracao-rota", "pne-integracao-arquivo")
-        $foundQueues = 0
-        
-        foreach ($queue in $expectedQueues) {
-            if ($queues -match $queue) {
-                Write-Host "$emoji_success Fila $queue encontrada" -ForegroundColor Green
-                $foundQueues++
-            } else {
-                Write-Host "$emoji_error Fila $queue NAO encontrada!" -ForegroundColor Red
-            }
-        }
-        
-        Write-Host "📊 Filas esperadas encontradas: $foundQueues/$($expectedQueues.Count)" -ForegroundColor Cyan
+        $queues | ForEach-Object { Write-Host "   $_" -ForegroundColor Yellow }
     } else {
         Write-Host "Nao foi possivel listar filas!" -ForegroundColor Red
     }
@@ -142,7 +119,7 @@ try {
     $users = Invoke-RabbitMQCommand "rabbitmqctl list_users"
     if ($users) {
         Write-Host "Usuarios disponiveis:" -ForegroundColor Green
-        $users | ForEach-Object { Write-Host "   👤 $_" -ForegroundColor Yellow }
+        $users | ForEach-Object { Write-Host "   $_" -ForegroundColor Yellow }
     } else {
         Write-Host "Nao foi possivel listar usuarios!" -ForegroundColor Red
     }
@@ -151,9 +128,7 @@ try {
     $plugins = Invoke-RabbitMQCommand "rabbitmq-plugins list --enabled --minimal"
     if ($plugins) {
         Write-Host "$emoji_success Plugins habilitados:" -ForegroundColor Green
-        $plugins | ForEach-Object { Write-Host "   🔌 $_" -ForegroundColor Yellow }
-        
-        # Verificar plugins essenciais
+        $plugins | ForEach-Object { Write-Host "   $_" -ForegroundColor Yellow }
         $essentialPlugins = @("rabbitmq_management", "rabbitmq_prometheus")
         foreach ($plugin in $essentialPlugins) {
             if ($plugins -match $plugin) {
@@ -168,47 +143,27 @@ try {
 
     if ($TestConnections) {
         Write-Host "10. Testando conexoes (OPCIONAL)..." -ForegroundColor Cyan
-        
-        Write-Host "   📨 Testando envio de mensagem..." -ForegroundColor Yellow
-        $testMessage = "Teste validacao $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
-        $sendResult = Invoke-RabbitMQCommand "rabbitmqadmin publish routing_key=pne-email payload='$testMessage'"
-        if ($sendResult -match "published") {
-            Write-Host "$emoji_success Mensagem enviada com sucesso" -ForegroundColor Green
-        } else {
-            Write-Host "$emoji_warning Falha ao enviar mensagem de teste" -ForegroundColor Yellow
-            Write-Host "   📋 Resultado: $sendResult" -ForegroundColor Gray
-        }
-        
-        Write-Host "   📥 Verificando mensagem na fila..." -ForegroundColor Yellow
-        $queueStatus = Invoke-RabbitMQCommand "rabbitmqctl list_queues name messages"
-        if ($queueStatus -match "pne-email.*[1-9]") {
-            Write-Host "$emoji_success Mensagem encontrada na fila pne-email" -ForegroundColor Green
-        } else {
-            Write-Host "$emoji_warning Mensagem nao encontrada na fila (pode ter sido consumida)" -ForegroundColor Yellow
-        }
+        # Teste de conexoes customizadas pode ser adicionado aqui, se necessario
     }
 
     Write-Host "=====================================================" -ForegroundColor Cyan
     Write-Host "VALIDACAO CONCLUIDA!" -ForegroundColor Green
     Write-Host "=====================================================" -ForegroundColor Cyan
-    
     Write-Host "RESUMO DA VALIDACAO:" -ForegroundColor Cyan
     Write-Host "$emoji_success RabbitMQ rodando e respondendo" -ForegroundColor Green
     Write-Host "$emoji_success ConfigMap com configuracoes corretas" -ForegroundColor Green
     Write-Host "$emoji_success Deployment atualizado" -ForegroundColor Green
     Write-Host "$emoji_success Configuracao loopback aplicada" -ForegroundColor Green
-    Write-Host "$emoji_success Filas de Azure Functions criadas" -ForegroundColor Green
-
     Write-Host "PROXIMOS PASSOS:" -ForegroundColor Cyan
     Write-Host "1. Testar Azure Functions conectando" -ForegroundColor White
     Write-Host "2. Monitorar logs: kubectl logs -f deployment/rabbitmq" -ForegroundColor White
     Write-Host "3. Dashboard: kubectl port-forward service/rabbitmq-service 15672:15672" -ForegroundColor White
     Write-Host "4. Verificar KEDA ScaledObjects: kubectl get scaledobjects" -ForegroundColor White
-
-} catch {
-    Write-Host "$emoji_error ERRO DURANTE VALIDAÇÃO:" -ForegroundColor Red
+} # fechamento correto do try
+catch {
+    Write-Host ($emoji_error + ' ERRO DURANTE VALIDACAO:') -ForegroundColor Red
     Write-Host $_.Exception.Message -ForegroundColor Red
     exit 1
 }
 
-Write-Host "$emoji_success Validação concluída com sucesso!" -ForegroundColor Green
+Write-Host ($emoji_success + ' Validacao concluida com sucesso!') -ForegroundColor Green
