@@ -179,7 +179,6 @@ try {
     Write-Host "$emoji_success ConfigMap atualizado com loopback_users = none" -ForegroundColor Green
     Write-Host "$emoji_success Deployment com healthchecks e recursos otimizados" -ForegroundColor Green
     Write-Host "$emoji_success Job de configuração executado com sucesso" -ForegroundColor Green
-    Write-Host "$emoji_success Filas criadas: pne-email, pne-integracao-rota, pne-integracao-arquivo" -ForegroundColor Green
 
     Write-Host "🔗 CONEXÕES:" -ForegroundColor Cyan
     Write-Host "  - AMQP: rabbitmq-service:5672" -ForegroundColor White
