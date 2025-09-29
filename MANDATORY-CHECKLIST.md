@@ -94,10 +94,10 @@ Este checklist DEVE ser seguido SEMPRE que criar, modificar ou expandir qualquer
 
 ### 3. DOCUMENTAÇÃO (SEMPRE)
 ```
-1. Atualizar CONVERSAS-E-DECISOES.md
-2. Atualizar HISTORICO-PROJETO-MINIKUBE.md
-3. Atualizar PROMPT-CONTINUIDADE.md
-4. Atualizar PROMPT-BACKUP-COMPLETO.md
+1. Atualizar DECISIONS-HISTORY.md
+2. Atualizar MINIKUBE-PROJECT-HISTORY.md
+3. Atualizar CONTINUITY-PROMPT.md
+4. Atualizar BACKUP-PROMPT.md
 ```
 
 ### 4. LIMPEZA

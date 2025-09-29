@@ -295,3 +295,15 @@ Este backup permite que qualquer IA futura:
 - Remoção do legado `apply-rabbitmq-config.sh` e atualização dos READMEs/testes para refletir a arquitetura baseada em Helm.
 - Detecção robusta da versão do `kubectl` (JSON/saída padrão) em todos os scripts, substituindo o flag `--short`.
 - Resultado: inicialização limpa (autostart Linux/Windows), logs completos e documentação sincronizada.
+
+### Fase 20: Toolkit KEDA Windows Reorganizado (29/09/2025)
+- Requisito: concentrar instalacao e testes do KEDA em scripts reutilizaveis fora do init principal.
+- Implementacao:
+  - Diretorio `minikube/scripts/windows/keda/` criado com `install-helm-fixed.ps1`, `install-keda.ps1` e `test-keda.ps1`
+  - Instalador verifica kubectl/helm/minikube, adiciona repositorio kedacore, ajusta imagePullPolicy e aguarda pods com barra de progresso
+  - Script de teste executa cenarios CPU, memoria e RabbitMQ e oferece flags `-SkipExamples` e `-CleanupOnly`
+  - `minikube/scripts/windows/init/install-keda.ps1` agora apenas orquestra o toolkit e compartilha caminhos via deteccao automatica
+- Resultado:
+  - OK KEDA pode ser instalado ou removido de forma independente do init
+  - OK Testes ficaram padronizados com limpeza rapida para troubleshooting
+  - OK Estrutura preparada para automacoes futuras (autostart, pipelines, suporte multiplataforma)

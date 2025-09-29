@@ -472,3 +472,15 @@ kubectl get jobs -n namespace                     # Jobs gerados
 - **Tecnologia**: Bash, PowerShell, Docker Image Load, Helm, Kubernetes Ingress.
 - **Resultado**: Ambiente inicializa com todos os pods saudáveis; logs exibem dados completos (kubectl, ingress, versões); documentação e testes em sintonia com o fluxo atual.
 - **Documentação**: DECISIONS-HISTORY.md, CONTINUITY-PROMPT.md, BACKUP-PROMPT.md, READMEs Linux/Geral.
+
+### Fase 20: Toolkit KEDA Windows Reorganizado (29/09/2025)
+- **Requisito**: Consolidar instalacao/teste do KEDA em scripts dedicados sem duplicacao dentro do init.
+- **Implementacao**:
+  - Criado o diretorio `minikube/scripts/windows/keda/` com `install-helm-fixed.ps1`, `install-keda.ps1` e `test-keda.ps1` padronizados
+  - Novo instalador valida kubectl/helm/minikube, ajusta `imagePullPolicy` e aguarda pods com feedback de progresso
+  - Script de teste executa cenarios CPU, memoria e RabbitMQ com opcoes `-SkipExamples` e `-CleanupOnly`
+  - `init-minikube-fixed.ps1` passou a reutilizar o toolkit em vez de manter logica duplicada
+- **Resultado**:
+  - OK Manutencao mais simples com scripts centralizados
+  - OK Instalacao e testes do KEDA se tornaram reproduziveis e reutilizaveis
+  - OK Estrutura pronta para futuras automacoes (autostart, troubleshooting, pipelines)

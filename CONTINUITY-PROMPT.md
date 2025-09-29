@@ -33,3 +33,9 @@
 - Reexecutar scripts de teste após qualquer mudança em dependências.
 
 **Status geral**: Ambiente Minikube + RabbitMQ + MongoDB + KEDA estável, com scripts multiplataforma totalmente alinhados.
+
+## Atualizacao 29/09/2025
+- Novo diretorio `minikube/scripts/windows/keda/` concentra instalacao e testes do KEDA
+- Scripts dedicados (`install-helm-fixed.ps1`, `install-keda.ps1`, `test-keda.ps1`) substituem logica duplicada no init
+- Instalador valida prerequisitos, ajusta imagePullPolicy e aguarda pods com feedback controlado
+- Testes KEDA cobrem exemplos de CPU, memoria e RabbitMQ com flags `-SkipExamples` e `-CleanupOnly`

@@ -688,3 +688,21 @@ cd "C:\DevOps"  # ou onde copiou o projeto
 - ✅ Documentação e validadores ajustados à arquitetura atual baseada em Helm.
 
 **Data**: 28/09/2025
+
+### 27. REORGANIZACAO SUITE KEDA WINDOWS
+**Usuario**: "preciso que os scripts do KEDA fiquem consolidados e com validacao completa"
+
+**Contexto**: Os fluxos de instalacao e teste do KEDA estavam espalhados entre init scripts e arquivos auxiliares, dificultando manutencao e reaproveitamento.
+
+**Implementacao**:
+- Criado o diretorio `minikube/scripts/windows/keda/` com `install-helm-fixed.ps1`, `install-keda.ps1` e `test-keda.ps1` como toolkit dedicado
+- Novo `install-keda.ps1` inclui verificacao de prerequisitos (kubectl/helm/minikube), patch de imagePullPolicy e rotina de timeout com feedback detalhado
+- Script `init/install-keda.ps1` foi simplificado para delegar ao toolkit e compartilhar caminhos do projeto via deteccao automatica
+- Testes automatizados do KEDA agora executam exemplos de CPU, memoria e RabbitMQ com opcao de cleanup rapido
+
+**Resultado**:
+- OK Estrutura do KEDA organizada em um unico local facil de manter
+- OK Instalacao e testes mais confiaveis com validacoes e logs claros
+- OK Scripts reutilizaveis por outros fluxos (init, troubleshooting, automacao futura)
+
+**Data**: 29/09/2025
