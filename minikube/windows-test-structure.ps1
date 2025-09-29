@@ -5,6 +5,11 @@
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 $PSDefaultParameterValues['*:Encoding'] = 'utf8'
 
+$emoji_success = [char]::ConvertFromUtf32(0x2705)
+$emoji_error = [char]::ConvertFromUtf32(0x274C)
+$emoji_warning = [char]::ConvertFromUtf32(0x26A0)
+$emoji_info = [char]::ConvertFromUtf32(0x1F4A1)
+
 # Importar funcoes de deteccao de paths
 $getProjectRootScript = Join-Path $PSScriptRoot "scripts\windows\Get-ProjectRoot.ps1"
 if (Test-Path $getProjectRootScript) {
@@ -47,10 +52,10 @@ function Test-Files {
         }
 
         if (Test-Path $fullPath) {
-            Write-Host "  ? $(Split-Path $file -Leaf) encontrado" -ForegroundColor Green
+            Write-Host "  $emoji_success $(Split-Path $file -Leaf) encontrado" -ForegroundColor Green
             $global:successCount++
         } else {
-            Write-Host "  ? $(Split-Path $file -Leaf) NAO encontrado em '$fullPath'" -ForegroundColor Red
+            Write-Host "  $emoji_error $(Split-Path $file -Leaf) NAO encontrado em '$fullPath'" -ForegroundColor Red
             $global:failureCount++
         }
     }
@@ -58,15 +63,15 @@ function Test-Files {
 
 # --- Definicao de todas as verificacoes de arquivos ---
 $fileChecks = @(
-    @{ Category = "Script de Inicializa��o"; Directory = "scripts\windows\init"; Files = @("init-minikube-fixed.ps1", "apply-rabbitmq-config.ps1", "install-keda.ps1") },
-    @{ Category = "Scripts de Manuten��o"; Directory = "scripts\windows\maintenance"; Files = @("fix-dashboard.ps1", "quick-status.ps1", "fix-kubectl-final.ps1", "validate-rabbitmq-config.ps1", "fix-dashboard-cronjob.ps1") },
+    @{ Category = "Script de Inicializacao"; Directory = "scripts\windows\init"; Files = @("init-minikube-fixed.ps1", "apply-rabbitmq-config.ps1", "install-keda.ps1") },
+    @{ Category = "Scripts de Manutencao"; Directory = "scripts\windows\maintenance"; Files = @("fix-dashboard.ps1", "quick-status.ps1", "fix-kubectl-final.ps1", "validate-rabbitmq-config.ps1", "fix-dashboard-cronjob.ps1") },
     @{ Category = "Scripts de Monitoramento"; Directory = "scripts\windows\monitoring"; Files = @("open-dashboard.ps1", "change-dashboard-port.ps1") },
     @{ Category = "Scripts KEDA"; Directory = "scripts\windows\keda"; Files = @("install-helm-fixed.ps1", "install-keda.ps1", "test-keda.ps1") },
     @{ Category = "Scripts Autostart"; Directory = "scripts\windows\autostart"; Files = @("minikube-autostart.bat") },
-    @{ Category = "Setup de M�quina Nova"; Directory = "scripts\windows"; Files = @("Setup-Fresh-Machine.ps1", "Bootstrap-DevOps.ps1") },
+    @{ Category = "Setup de Máquina Nova"; Directory = "scripts\windows"; Files = @("Setup-Fresh-Machine.ps1", "Bootstrap-DevOps.ps1") },
     @{ Category = "Configs KEDA"; Directory = "configs\keda\examples"; Files = @("cpu-scaling-example.yaml", "memory-scaling-example.yaml", "rabbitmq-scaling-example.yaml") },
-    @{ Category = "Documenta��o"; Directory = "docs"; Files = @("README.md", "KEDA.md") },
-    @{ Category = "Documenta��o Fresh Machine"; Directory = "docs\fresh-machine"; Files = @("SETUP.md", "DEMO.md", "CHECKLIST.md") },
+    @{ Category = "Documentacao"; Directory = "docs"; Files = @("README.md", "KEDA.md") },
+    @{ Category = "Documentacao Fresh Machine"; Directory = "docs\fresh-machine"; Files = @("SETUP.md", "DEMO.md", "CHECKLIST.md") },
     @{ Category = "Checklists na Raiz"; Directory = ""; Files = @("STRUCTURE-UPDATES-CHECKLIST.md", "MANDATORY-CHECKLIST.md", "DECISIONS-HISTORY.md", "DYNAMIC-PATHS.md", "MINIKUBE-PROJECT-HISTORY.md", "CONTINUITY-PROMPT.md", "BACKUP-PROMPT.md"); BasePath = if ($projectPaths) { $projectPaths.Root } else { $null } }
 )
 
@@ -74,52 +79,52 @@ $fileChecks = @(
 foreach ($check in $fileChecks) {
     # Pular verificacoes que dependem da raiz do projeto se ela nao foi detectada
     if ($check.BasePath -eq $null -and $check.Category -eq "Checklists na Raiz") {
-        Write-Host "`nVerifica��o de '$($check.Category)' pulada (raiz do projeto n�o detectada)" -ForegroundColor Yellow
+        Write-Host "`nVerificacao de '$($check.Category)' pulada (raiz do projeto nao detectada)" -ForegroundColor Yellow
         continue
     }
     Test-Files -Category $check.Category -Directory $check.Directory -Files $check.Files -BasePathOverride $check.BasePath
 }
 
-# --- Teste Espec�fico para Helm Charts ---
+# --- Teste Especifico para Helm Charts ---
 Write-Host "`nTestando estrutura de Helm Charts..." -ForegroundColor Yellow
 $chartsPath = Join-Path $basePath "charts"
 if (Test-Path $chartsPath) {
-    Write-Host "? Pasta de charts encontrada" -ForegroundColor Green
+    Write-Host "$emoji_success Pasta de charts encontrada" -ForegroundColor Green
     $global:successCount++
 
     $chartFolders = @("rabbitmq", "mongodb")
     foreach ($chart in $chartFolders) {
         $chartPath = Join-Path $chartsPath $chart
         if (Test-Path $chartPath) {
-            Write-Host "  ? Chart '$chart' encontrado" -ForegroundColor Green
+            Write-Host "  $emoji_success Chart '$chart' encontrado" -ForegroundColor Green
             $global:successCount++
 
             $chartFiles = @("Chart.yaml", "values.yaml")
             foreach ($file in $chartFiles) {
                 if (Test-Path (Join-Path $chartPath $file)) {
-                    Write-Host "    ? $file encontrado" -ForegroundColor Green
+                    Write-Host "    $emoji_success $file encontrado" -ForegroundColor Green
                     $global:successCount++
                 } else {
-                    Write-Host "    ? $file NAO encontrado em '$chart'" -ForegroundColor Red
+                    Write-Host "    $emoji_error $file NAO encontrado em '$chart'" -ForegroundColor Red
                     $global:failureCount++
                 }
             }
 
             $templatesPath = Join-Path $chartPath "templates"
             if (Test-Path $templatesPath) {
-                Write-Host "    ? Pasta 'templates' encontrada" -ForegroundColor Green
+                Write-Host "    $emoji_success Pasta 'templates' encontrada" -ForegroundColor Green
                 $global:successCount++
             } else {
-                Write-Host "    ? Pasta 'templates' NAO encontrada em '$chart'" -ForegroundColor Red
+                Write-Host "    $emoji_error Pasta 'templates' NAO encontrada em '$chart'" -ForegroundColor Red
                 $global:failureCount++
             }
         } else {
-            Write-Host "  ? Chart '$chart' NAO encontrado" -ForegroundColor Red
+            Write-Host "  $emoji_error Chart '$chart' NAO encontrado" -ForegroundColor Red
             $global:failureCount++
         }
     }
 } else {
-    Write-Host "? Pasta de charts NAO encontrada" -ForegroundColor Red
+    Write-Host "$emoji_error Pasta de charts NAO encontrada" -ForegroundColor Red
     $global:failureCount++
 }
 
@@ -142,11 +147,11 @@ foreach ($check in $linuxChecks) {
 
 Write-Host "`n=====================================" -ForegroundColor Cyan
 if ($global:failureCount -eq 0) {
-    Write-Host "? SUCESSO! ESTRUTURA COMPLETA E CONSISTENTE!" -ForegroundColor Green
+    Write-Host "$emoji_success SUCESSO! ESTRUTURA COMPLETA E CONSISTENTE!" -ForegroundColor Green
 } else {
-    Write-Host "? FALHA! Foram encontrados $($global:failureCount) problemas na estrutura." -ForegroundColor Red
+    Write-Host "$emoji_error FALHA! Foram encontrados $($global:failureCount) problemas na estrutura." -ForegroundColor Red
 }
-Write-Host "Total de verifica��es: $($global:successCount + $global:failureCount) | Sucessos: $($global:successCount) | Falhas: $($global:failureCount)" -ForegroundColor Cyan
+Write-Host "Total de verificacoes: $($global:successCount + $global:failureCount) | Sucessos: $($global:successCount) | Falhas: $($global:failureCount)" -ForegroundColor Cyan
 Write-Host "=====================================" -ForegroundColor Cyan
 
 Write-Host "`nPROXIMOS PASSOS:" -ForegroundColor Yellow
