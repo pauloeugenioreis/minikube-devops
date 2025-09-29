@@ -7,6 +7,11 @@ param(
     [switch]$Uninstall
 )
 
+$emoji_success = [char]::ConvertFromUtf32(0x2705)
+$emoji_error = [char]::ConvertFromUtf32(0x274C)
+$emoji_warning = [char]::ConvertFromUtf32(0x26A0)
+$emoji_info = [char]::ConvertFromUtf32(0x1F4A1)
+
 Write-Host "=====================================================" -ForegroundColor Cyan
 Write-Host "KEDA - Kubernetes Event-driven Autoscaling Setup" -ForegroundColor Green
 Write-Host "Versao: 2.15+ (Latest)" -ForegroundColor Green
@@ -44,7 +49,7 @@ function Set-KedaImagePolicy {
     foreach ($deploy in $Deployments) {
         kubectl patch deployment $deploy -n keda --type=json -p '[{"op":"replace","path":"/spec/template/spec/containers/0/imagePullPolicy","value":"IfNotPresent"}]' 2>$null | Out-Null
         if ($LASTEXITCODE -ne 0) {
-            Write-Host "   ⚠️ Não foi possível ajustar imagePullPolicy de $deploy" -ForegroundColor Yellow
+            Write-Host "   $emoji_warning Não foi possível ajustar imagePullPolicy de $deploy" -ForegroundColor Yellow
         }
     }
 }
@@ -63,33 +68,33 @@ function Test-MinikubeRunning {
 Write-Host "`n1. Verificando prerequisitos..." -ForegroundColor Yellow
 
 if (-not (Test-Command "kubectl")) {
-    Write-Host "   ❌ kubectl nao encontrado!" -ForegroundColor Red
+    Write-Host "   $emoji_error kubectl nao encontrado!" -ForegroundColor Red
     exit 1
 }
 
 if (-not (Test-Command "helm")) {
-    Write-Host "   ❌ Helm nao encontrado!" -ForegroundColor Red
+    Write-Host "   $emoji_error Helm nao encontrado!" -ForegroundColor Red
     Write-Host "   Instale o Helm: https://helm.sh/docs/intro/install/" -ForegroundColor Yellow
     exit 1
 }
 
 if (-not (Test-Command "minikube")) {
-    Write-Host "   ❌ Minikube nao encontrado!" -ForegroundColor Red
+    Write-Host "   $emoji_error Minikube nao encontrado!" -ForegroundColor Red
     exit 1
 }
 
-Write-Host "   ✅ kubectl: $(Get-KubectlVersionString)" -ForegroundColor Green
-Write-Host "   ✅ helm: $(helm version --short 2>$null)" -ForegroundColor Green
-Write-Host "   ✅ minikube: $(minikube version --short 2>$null)" -ForegroundColor Green
+Write-Host "   $emoji_success kubectl: $(Get-KubectlVersionString)" -ForegroundColor Green
+Write-Host "   $emoji_success helm: $(helm version --short 2>$null)" -ForegroundColor Green
+Write-Host "   $emoji_success minikube: $(minikube version --short 2>$null)" -ForegroundColor Green
 
 # Verificar se Minikube esta rodando
 Write-Host "`n2. Verificando status do Minikube..." -ForegroundColor Yellow
 if (-not (Test-MinikubeRunning)) {
-    Write-Host "   ❌ Minikube nao esta rodando!" -ForegroundColor Red
+    Write-Host "   $emoji_error Minikube nao esta rodando!" -ForegroundColor Red
     Write-Host "   Inicie o Minikube primeiro com o script principal" -ForegroundColor Yellow
     exit 1
 }
-Write-Host "   ✅ Minikube esta rodando" -ForegroundColor Green
+Write-Host "   $emoji_success Minikube esta rodando" -ForegroundColor Green
 
 # Se uninstall foi solicitado
 if ($Uninstall) {
@@ -106,8 +111,8 @@ if ($Uninstall) {
     kubectl delete crd scaledjobs.keda.sh --ignore-not-found=true 2>$null
     kubectl delete crd triggerauthentications.keda.sh --ignore-not-found=true 2>$null
     kubectl delete crd clustertriggerauthentications.keda.sh --ignore-not-found=true 2>$null
-    
-    Write-Host "`n✅ KEDA removido com sucesso!" -ForegroundColor Green
+
+    Write-Host "`n$emoji_success KEDA removido com sucesso!" -ForegroundColor Green
     exit 0
 }
 
@@ -120,13 +125,13 @@ if (-not $SkipHelm) {
     
     Write-Host "   Atualizando repositorios Helm..." -ForegroundColor Cyan
     helm repo update
-    
-    Write-Host "   ✅ Repositorio KEDA configurado" -ForegroundColor Green
+
+    Write-Host "   $emoji_success Repositorio KEDA configurado" -ForegroundColor Green
 }
 
 Write-Host "`n4. Criando namespace keda..." -ForegroundColor Yellow
 kubectl create namespace keda --dry-run=client -o yaml | kubectl apply -f -
-Write-Host "   ✅ Namespace 'keda' criado/verificado" -ForegroundColor Green
+Write-Host "   $emoji_success Namespace 'keda' criado/verificado" -ForegroundColor Green
 
 Write-Host "`n5. Instalando KEDA via Helm..." -ForegroundColor Yellow
 Write-Host "   Isso pode levar alguns minutos..." -ForegroundColor Cyan
@@ -143,11 +148,11 @@ Write-Host "   Executando: $helmInstallCmd" -ForegroundColor Cyan
 helm install keda kedacore/keda --namespace keda --set prometheus.metricServer.enabled=true --set prometheus.operator.enabled=true --set prometheus.operator.prometheusConfig.enabled=true
 
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "   ❌ Falha na instalacao do KEDA!" -ForegroundColor Red
+    Write-Host "   $emoji_error Falha na instalacao do KEDA!" -ForegroundColor Red
     exit 1
 }
 
-Write-Host "   ✅ KEDA instalado com sucesso!" -ForegroundColor Green
+Write-Host "   $emoji_success KEDA instalado com sucesso!" -ForegroundColor Green
 Set-KedaImagePolicy
 
 Write-Host "`n6. Aguardando pods do KEDA ficarem prontos..." -ForegroundColor Yellow
@@ -175,7 +180,7 @@ do {
     }
     
     if ($waited -ge $maxWait) {
-        Write-Host "   ⚠️ Timeout aguardando pods. Verificando status..." -ForegroundColor Yellow
+        Write-Host "   $emoji_warning Timeout aguardando pods. Verificando status..." -ForegroundColor Yellow
         break
     }
 } while ($true)
@@ -214,9 +219,9 @@ $components = @{
 
 foreach ($component in $components.GetEnumerator()) {
     if ($component.Value) {
-        Write-Host "   ✅ $($component.Key): Running" -ForegroundColor Green
+        Write-Host "   $emoji_success $($component.Key): Running" -ForegroundColor Green
     } else {
-        Write-Host "   ❌ $($component.Key): Not Running" -ForegroundColor Red
+        Write-Host "   $emoji_error $($component.Key): Not Running" -ForegroundColor Red
     }
 }
 
@@ -242,4 +247,4 @@ Write-Host "   - Status: kubectl get pods -n keda" -ForegroundColor Cyan
 Write-Host "   - Logs: kubectl logs -n keda -l app.kubernetes.io/name=keda-operator" -ForegroundColor Cyan
 Write-Host "   - Uninstall: .\install-keda.ps1 -Uninstall" -ForegroundColor Cyan
 
-Write-Host "`n✅ KEDA pronto para uso!" -ForegroundColor Green
+Write-Host "`n$emoji_success KEDA pronto para uso!" -ForegroundColor Green

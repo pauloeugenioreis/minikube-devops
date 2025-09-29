@@ -33,6 +33,6 @@ Write-Host "VERIFICACAO CONCLUIDA" -ForegroundColor Green
 Write-Host "============================================" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "ACESSO RAPIDO:" -ForegroundColor Yellow
+Write-Host "Dashboard K8s: http://localhost:15671 (via .\open-dashboard.ps1)" -ForegroundColor White
 Write-Host "RabbitMQ Management: http://localhost:15672" -ForegroundColor White
 Write-Host "MongoDB: localhost:27017" -ForegroundColor White  
-Write-Host "Dashboard K8s: http://localhost:4666 (via .\open-dashboard.ps1)" -ForegroundColor White

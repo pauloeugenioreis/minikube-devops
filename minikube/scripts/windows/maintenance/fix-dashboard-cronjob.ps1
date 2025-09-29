@@ -160,8 +160,8 @@ try {
     
     Write-Host "`nProximos passos:" -ForegroundColor Cyan
     Write-Host "1. Aguardar 30 segundos para estabilizacao completa" -ForegroundColor Yellow
-    Write-Host "2. Abrir Dashboard: minikube dashboard --port=4666" -ForegroundColor Yellow
-    Write-Host "3. Acessar: http://localhost:4666" -ForegroundColor Yellow
+    Write-Host "2. Abrir Dashboard: minikube dashboard --port=15671" -ForegroundColor Yellow
+    Write-Host "3. Acessar: http://localhost:15671" -ForegroundColor Yellow
     Write-Host "4. Ir para: Workloads > Cron Jobs" -ForegroundColor Yellow
     Write-Host "5. Clicar em 'cronjob-service' - deve abrir detalhes sem erro 404" -ForegroundColor Yellow
     

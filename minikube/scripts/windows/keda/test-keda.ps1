@@ -6,6 +6,11 @@ param(
     [switch]$CleanupOnly
 )
 
+$emoji_success = [char]::ConvertFromUtf32(0x2705)
+$emoji_error = [char]::ConvertFromUtf32(0x274C)
+$emoji_warning = [char]::ConvertFromUtf32(0x26A0)
+$emoji_info = [char]::ConvertFromUtf32(0x1F4A1)
+
 Write-Host "=====================================================" -ForegroundColor Cyan
 Write-Host "KEDA - Teste e Validacao Completa" -ForegroundColor Green
 Write-Host "=====================================================" -ForegroundColor Cyan
@@ -43,7 +48,7 @@ function Wait-ForPods {
         }
         
         if ($waited -ge $TimeoutSeconds) {
-            Write-Host "   ⚠️ Timeout aguardando pods em $Namespace" -ForegroundColor Yellow
+            Write-Host "   $emoji_warning Timeout aguardando pods em $Namespace" -ForegroundColor Yellow
             return $false
         }
     } while ($true)
@@ -60,8 +65,8 @@ if ($CleanupOnly) {
     kubectl delete deployment nginx-deployment --ignore-not-found=true 2>$null
     kubectl delete deployment memory-app-deployment --ignore-not-found=true 2>$null
     kubectl delete deployment rabbitmq-consumer-deployment --ignore-not-found=true 2>$null
-    
-    Write-Host "   ✅ Cleanup concluido!" -ForegroundColor Green
+
+    Write-Host "   $emoji_success Cleanup concluido!" -ForegroundColor Green
     exit 0
 }
 
@@ -70,17 +75,17 @@ Write-Host "`n1. Verificando instalacao KEDA..." -ForegroundColor Yellow
 # Verificar namespace keda
 $kedaNamespace = kubectl get namespace keda --no-headers 2>$null
 if (-not $kedaNamespace) {
-    Write-Host "   ❌ Namespace 'keda' nao encontrado!" -ForegroundColor Red
+    Write-Host "   $emoji_error Namespace 'keda' nao encontrado!" -ForegroundColor Red
     Write-Host "   Execute o script de instalacao primeiro" -ForegroundColor Yellow
     exit 1
 }
-Write-Host "   ✅ Namespace keda existe" -ForegroundColor Green
+Write-Host "   $emoji_success Namespace keda existe" -ForegroundColor Green
 
 # Verificar pods KEDA
 Write-Host "`n   Verificando pods KEDA:" -ForegroundColor Cyan
 $kedaPods = kubectl get pods -n keda --no-headers 2>$null
 if (-not $kedaPods) {
-    Write-Host "   ❌ Nenhum pod KEDA encontrado!" -ForegroundColor Red
+    Write-Host "   $emoji_error Nenhum pod KEDA encontrado!" -ForegroundColor Red
     exit 1
 }
 
@@ -89,7 +94,7 @@ $totalPods = ($kedaPods | Measure-Object).Count
 
 Write-Host "   Status: $runningPods/$totalPods pods rodando" -ForegroundColor Cyan
 if ($runningPods -ne $totalPods) {
-    Write-Host "   ⚠️ Nem todos os pods KEDA estao rodando!" -ForegroundColor Yellow
+    Write-Host "   $emoji_warning Nem todos os pods KEDA estao rodando!" -ForegroundColor Yellow
     kubectl get pods -n keda
 }
 
@@ -99,9 +104,9 @@ $crds = @("scaledobjects.keda.sh", "scaledjobs.keda.sh", "triggerauthentications
 foreach ($crd in $crds) {
     $exists = kubectl get crd $crd --no-headers 2>$null
     if ($exists) {
-        Write-Host "   ✅ $crd" -ForegroundColor Green
+        Write-Host "   $emoji_success $crd" -ForegroundColor Green
     } else {
-        Write-Host "   ❌ $crd" -ForegroundColor Red
+        Write-Host "   $emoji_error $crd" -ForegroundColor Red
     }
 }
 
@@ -115,7 +120,7 @@ if ($kedaVersion) {
 }
 
 if ($SkipExamples) {
-    Write-Host "`n✅ Verificacao basica concluida!" -ForegroundColor Green
+    Write-Host "`n$emoji_success Verificacao basica concluida!" -ForegroundColor Green
     exit 0
 }
 
@@ -125,24 +130,24 @@ Write-Host "   Aplicando CPU scaling example..." -ForegroundColor Cyan
 kubectl apply -f ..\examples\cpu-scaling-example.yaml
 
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "   ❌ Falha ao aplicar exemplo CPU!" -ForegroundColor Red
+    Write-Host "   $emoji_error Falha ao aplicar exemplo CPU!" -ForegroundColor Red
 } else {
-    Write-Host "   ✅ Exemplo CPU aplicado" -ForegroundColor Green
-    
+    Write-Host "   $emoji_success Exemplo CPU aplicado" -ForegroundColor Green
+
     # Aguardar deployment estar pronto
     Write-Host "   Aguardando deployment..." -ForegroundColor Cyan
     if (Wait-ForPods -LabelSelector "app=nginx") {
-        Write-Host "   ✅ Deployment nginx pronto" -ForegroundColor Green
+        Write-Host "   $emoji_success Deployment nginx pronto" -ForegroundColor Green
     }
     
     # Verificar ScaledObject
     Write-Host "   Verificando ScaledObject..." -ForegroundColor Cyan
     $scaledObject = kubectl get scaledobject cpu-scaledobject --no-headers 2>$null
     if ($scaledObject) {
-        Write-Host "   ✅ ScaledObject criado" -ForegroundColor Green
+        Write-Host "   $emoji_success ScaledObject criado" -ForegroundColor Green
         kubectl get scaledobject cpu-scaledobject
     } else {
-        Write-Host "   ❌ ScaledObject nao encontrado" -ForegroundColor Red
+        Write-Host "   $emoji_error ScaledObject nao encontrado" -ForegroundColor Red
     }
 }
 
@@ -152,14 +157,14 @@ Write-Host "   Aplicando Memory scaling example..." -ForegroundColor Cyan
 kubectl apply -f ..\examples\memory-scaling-example.yaml
 
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "   ❌ Falha ao aplicar exemplo Memory!" -ForegroundColor Red
+    Write-Host "   $emoji_error Falha ao aplicar exemplo Memory!" -ForegroundColor Red
 } else {
-    Write-Host "   ✅ Exemplo Memory aplicado" -ForegroundColor Green
-    
+    Write-Host "   $emoji_success Exemplo Memory aplicado" -ForegroundColor Green
+
     # Aguardar deployment estar pronto
     Write-Host "   Aguardando deployment..." -ForegroundColor Cyan
     if (Wait-ForPods -LabelSelector "app=memory-app") {
-        Write-Host "   ✅ Deployment memory-app pronto" -ForegroundColor Green
+        Write-Host "   $emoji_success Deployment memory-app pronto" -ForegroundColor Green
     }
 }
 
@@ -168,18 +173,18 @@ Write-Host "`n4. Verificando integracao com RabbitMQ..." -ForegroundColor Yellow
 # Verificar se RabbitMQ existe
 $rabbitmqService = kubectl get service rabbitmq --no-headers 2>$null
 if ($rabbitmqService) {
-    Write-Host "   ✅ RabbitMQ service encontrado" -ForegroundColor Green
+    Write-Host "   $emoji_success RabbitMQ service encontrado" -ForegroundColor Green
     
     Write-Host "   Aplicando RabbitMQ scaling example..." -ForegroundColor Cyan
     kubectl apply -f ..\examples\rabbitmq-scaling-example.yaml
     
     if ($LASTEXITCODE -eq 0) {
-        Write-Host "   ✅ Exemplo RabbitMQ aplicado" -ForegroundColor Green
+        Write-Host "   $emoji_success Exemplo RabbitMQ aplicado" -ForegroundColor Green
     } else {
-        Write-Host "   ⚠️ Exemplo RabbitMQ pode precisar de ajustes" -ForegroundColor Yellow
+        Write-Host "   $emoji_warning Exemplo RabbitMQ pode precisar de ajustes" -ForegroundColor Yellow
     }
 } else {
-    Write-Host "   ⚠️ RabbitMQ nao encontrado - pulando exemplo" -ForegroundColor Yellow
+    Write-Host "   $emoji_warning RabbitMQ nao encontrado - pulando exemplo" -ForegroundColor Yellow
     Write-Host "   Para testar integracao RabbitMQ, certifique-se que RabbitMQ esta rodando" -ForegroundColor Cyan
 }
 
@@ -199,17 +204,17 @@ Write-Host "`n📊 RESULTADO DOS TESTES:" -ForegroundColor Yellow
 $scaledObjects = kubectl get scaledobject --all-namespaces --no-headers 2>$null
 if ($scaledObjects) {
     $soCount = ($scaledObjects | Measure-Object).Count
-    Write-Host "   ✅ $soCount ScaledObjects criados" -ForegroundColor Green
+    Write-Host "   $emoji_success $soCount ScaledObjects criados" -ForegroundColor Green
 } else {
-    Write-Host "   ⚠️ Nenhum ScaledObject encontrado" -ForegroundColor Yellow
+    Write-Host "   $emoji_warning Nenhum ScaledObject encontrado" -ForegroundColor Yellow
 }
 
 $hpas = kubectl get hpa --all-namespaces --no-headers 2>$null
 if ($hpas) {
     $hpaCount = ($hpas | Measure-Object).Count
-    Write-Host "   ✅ $hpaCount HPAs gerenciados pelo KEDA" -ForegroundColor Green
+    Write-Host "   $emoji_success $hpaCount HPAs gerenciados pelo KEDA" -ForegroundColor Green
 } else {
-    Write-Host "   ⚠️ Nenhum HPA encontrado" -ForegroundColor Yellow
+    Write-Host "   $emoji_warning Nenhum HPA encontrado" -ForegroundColor Yellow
 }
 
 Write-Host "`n🔧 COMANDOS UTEIS PARA MONITORAMENTO:" -ForegroundColor Yellow
@@ -221,4 +226,4 @@ Write-Host "   - Describe ScaledObject: kubectl describe scaledobject <nome>" -F
 Write-Host "`n🧹 CLEANUP:" -ForegroundColor Yellow
 Write-Host "   - Remover testes: .\test-keda.ps1 -CleanupOnly" -ForegroundColor Cyan
 
-Write-Host "`n✅ KEDA testado e funcionando!" -ForegroundColor Green
+Write-Host "`n$emoji_success KEDA testado e funcionando!" -ForegroundColor Green

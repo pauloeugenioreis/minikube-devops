@@ -397,10 +397,10 @@ kubectl get jobs -n namespace                     # Jobs gerados
 - RabbitMQ: 15672 (Management), 5672 (AMQP)
 - MongoDB: 27017
 
-### Fase 16: Correção Dashboard - Porta 4666 e Processo Corretivo
+### Fase 16: Correção Dashboard - Porta 15671 e Processo Corretivo
 - **Requisito**: Dashboard não funcionando após restart + violação grave do CHECKLIST-OBRIGATORIO.md
 - **Problema Inicial**: Porta 53954 bloqueada por permissões do Windows
-- **Solução Temporária**: Porta 4666 validada e funcionando
+- **Solução Temporária**: Porta 15671 validada e funcionando
 - **Violação Crítica**: Agent editou diretamente estrutura principal, ignorou workflow temp/ → validação → migração
 - **Tecnologia**: Port-forward robusto, PID tracking, lógica de recuperação automática
 - **Processo Corretivo**:
@@ -408,7 +408,7 @@ kubectl get jobs -n namespace                     # Jobs gerados
   - Validação completa com teste-validacao.ps1
   - Melhorias: processo cleanup, PID verification, retry logic, extended testing (8 attempts, 20s wait)
   - Documentação obrigatória: CONVERSAS-E-DECISOES.md, HISTORICO-PROJETO-MINIKUBE.md, PROMPT-CONTINUIDADE.md, PROMPT-BACKUP-COMPLETO.md
-- **Resultado**: Dashboard funcionando na porta 4666 + processo arquitetural corrigido
+- **Resultado**: Dashboard funcionando na porta 15671 + processo arquitetural corrigido
 - **Documentação**: Todos arquivos obrigatórios atualizados conforme CHECKLIST-OBRIGATORIO.md
 
 ### Fase 17: Remoção Completa Azure - Ambiente Genérico
@@ -439,7 +439,7 @@ kubectl get jobs -n namespace                     # Jobs gerados
 ✅ **Alternativas kubectl funcionais**
 ✅ **URLs e portas corrigidas conforme documentação**
 ✅ **Procedimentos RBAC automatizados**
-✅ **Dashboard funcionando na porta 4666**
+✅ **Dashboard funcionando na porta 15671**
 ✅ **Processo arquitetural corrigido e documentado**
 ✅ **CHECKLIST-OBRIGATORIO.md sendo respeitado**
 ✅ **Ambiente genérico RabbitMQ + KEDA sem dependências Azure**

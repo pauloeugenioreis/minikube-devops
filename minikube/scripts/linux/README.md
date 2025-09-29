@@ -36,7 +36,7 @@ minikube/scripts/linux/
 ### init/
 - **init-minikube-fixed.sh**
   - Inicialização completa do cluster usando os charts Helm locais (`minikube/charts`).
-  - Habilita addons essenciais, cria port-forwards (Dashboard em `4666`).
+  - Habilita addons essenciais, cria port-forwards (Dashboard em `15671`).
   - Suporta `--install-keda`, `--skip-keda`, `--skip-addons` e `--skip-rabbitmq-config`.
 
 ### keda/
@@ -67,7 +67,7 @@ minikube/scripts/linux/
 
 ### monitoring/
 - **open-dashboard.sh**
-  - Garante port-forward estável em `http://localhost:4666` e abre o navegador via `xdg-open` quando disponível.
+  - Garante port-forward estável em `http://localhost:15671` e abre o navegador via `xdg-open` quando disponível.
 
 - **change-dashboard-port.sh**
   - Altera a porta do dashboard para evitar conflitos.

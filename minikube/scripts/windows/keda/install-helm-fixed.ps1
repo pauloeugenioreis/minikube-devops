@@ -1,6 +1,11 @@
 # Script para Instalar Helm no Windows
 # Prerequisito para KEDA
 
+$emoji_success = [char]::ConvertFromUtf32(0x2705)
+$emoji_error = [char]::ConvertFromUtf32(0x274C)
+$emoji_warning = [char]::ConvertFromUtf32(0x26A0)
+$emoji_info = [char]::ConvertFromUtf32(0x1F4A1)
+
 Write-Host "=====================================================" -ForegroundColor Cyan
 Write-Host "Instalando Helm - Package Manager para Kubernetes" -ForegroundColor Green
 Write-Host "=====================================================" -ForegroundColor Cyan
@@ -159,4 +164,4 @@ Write-Host "   - helm repo list" -ForegroundColor Cyan
 Write-Host "   - helm search repo nome" -ForegroundColor Cyan
 Write-Host "   - helm install nome chart" -ForegroundColor Cyan
 
-Write-Host "`nHelm pronto para uso!" -ForegroundColor Green
+Write-Host "`n$emoji_success Helm pronto para uso!" -ForegroundColor Green

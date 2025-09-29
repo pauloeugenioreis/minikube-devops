@@ -9,6 +9,10 @@ param(
     [switch]$ForceApply
 )
 
+$emoji_success = [char]::ConvertFromUtf32(0x2705)
+$emoji_error = [char]::ConvertFromUtf32(0x274C)
+$emoji_warning = [char]::ConvertFromUtf32(0x26A0)
+
 Write-Host "=====================================================" -ForegroundColor Cyan
 Write-Host "🔧 APLICANDO CONFIGURAÇÕES RABBITMQ ATUALIZADAS" -ForegroundColor Green
 Write-Host "=====================================================" -ForegroundColor Cyan
@@ -33,14 +37,14 @@ function Wait-ForDeployment {
         
         $status = kubectl get deployment $DeploymentName -o jsonpath='{.status.readyReplicas}' 2>$null
         if ($status -eq "1") {
-            Write-Host "✅ Deployment $DeploymentName está pronto!" -ForegroundColor Green
+            Write-Host " $emoji_success Deployment $DeploymentName está pronto!" -ForegroundColor Green
             return $true
         }
         
         Write-Host "   ⏳ Aguardando... ($waited/$TimeoutSeconds segundos)" -ForegroundColor Yellow
         
         if ($waited -ge $TimeoutSeconds) {
-            Write-Host "   ⚠️ Timeout aguardando deployment $DeploymentName" -ForegroundColor Red
+            Write-Host "   $emoji_warning Timeout aguardando deployment $DeploymentName" -ForegroundColor Red
             return $false
         }
     } while ($true)
@@ -64,10 +68,10 @@ function Wait-ForJob {
         
         $status = kubectl get job $JobName -o jsonpath='{.status.conditions[0].type}' 2>$null
         if ($status -eq "Complete") {
-            Write-Host "✅ Job $JobName completado com sucesso!" -ForegroundColor Green
+            Write-Host " $emoji_success Job $JobName completado com sucesso!" -ForegroundColor Green
             return $true
         } elseif ($status -eq "Failed") {
-            Write-Host "❌ Job $JobName falhou!" -ForegroundColor Red
+            Write-Host " $emoji_error Job $JobName falhou!" -ForegroundColor Red
             Write-Host "📋 Logs do job:" -ForegroundColor Yellow
             kubectl logs job/$JobName
             return $false
@@ -76,7 +80,7 @@ function Wait-ForJob {
         Write-Host "   ⏳ Job em andamento... ($waited/$TimeoutSeconds segundos)" -ForegroundColor Yellow
         
         if ($waited -ge $TimeoutSeconds) {
-            Write-Host "   ⚠️ Timeout aguardando job $JobName" -ForegroundColor Red
+            Write-Host "   $emoji_warning Timeout aguardando job $JobName" -ForegroundColor Red
             Write-Host "📋 Logs do job:" -ForegroundColor Yellow
             kubectl logs job/$JobName
             return $false
@@ -88,10 +92,10 @@ try {
     Write-Host "1. Verificando namespace..." -ForegroundColor Cyan
     $namespace = kubectl get namespace default -o name 2>$null
     if (-not $namespace) {
-        Write-Host "❌ Namespace default não encontrado!" -ForegroundColor Red
+        Write-Host " $emoji_error Namespace default não encontrado!" -ForegroundColor Red
         exit 1
     }
-    Write-Host "✅ Namespace default OK" -ForegroundColor Green
+    Write-Host " $emoji_success Namespace default OK" -ForegroundColor Green
 
     # Backup dos recursos existentes (se não skipped)
     if (-not $SkipBackup) {
@@ -103,32 +107,32 @@ try {
         kubectl get configmap rabbitmq-config -o yaml > "$backupDir\rabbitmq-config-backup.yaml" 2>$null
         kubectl get deployment rabbitmq -o yaml > "$backupDir\rabbitmq-deployment-backup.yaml" 2>$null
         kubectl get service rabbitmq-service -o yaml > "$backupDir\rabbitmq-service-backup.yaml" 2>$null
-        
-        Write-Host "✅ Backup salvo em: $backupDir" -ForegroundColor Green
+
+        Write-Host " $emoji_success Backup salvo em: $backupDir" -ForegroundColor Green
     }
 
     Write-Host "3. Removendo job de configuração anterior (se existir)..." -ForegroundColor Cyan
     kubectl delete job rabbitmq-setup --ignore-not-found=true
-    Write-Host "✅ Cleanup job anterior OK" -ForegroundColor Green
+    Write-Host " $emoji_success Cleanup job anterior OK" -ForegroundColor Green
 
     Write-Host "4. Aplicando ConfigMap atualizado..." -ForegroundColor Cyan
     $configResult = kubectl apply -f "rabbitmq.yaml"
     if ($LASTEXITCODE -ne 0) {
-        Write-Host "❌ Falha ao aplicar ConfigMap!" -ForegroundColor Red
+        Write-Host " $emoji_error Falha ao aplicar ConfigMap!" -ForegroundColor Red
         exit 1
     }
-    Write-Host "✅ ConfigMap aplicado: $configResult" -ForegroundColor Green
+    Write-Host " $emoji_success ConfigMap aplicado: $configResult" -ForegroundColor Green
 
     Write-Host "5. Reiniciando deployment RabbitMQ..." -ForegroundColor Cyan
     kubectl rollout restart deployment/rabbitmq
     if ($LASTEXITCODE -ne 0) {
-        Write-Host "❌ Falha ao reiniciar deployment!" -ForegroundColor Red
+        Write-Host " $emoji_error Falha ao reiniciar deployment!" -ForegroundColor Red
         exit 1
     }
 
     Write-Host "6. Aguardando deployment estar pronto..." -ForegroundColor Cyan
     if (-not (Wait-ForDeployment -DeploymentName "rabbitmq" -TimeoutSeconds 300)) {
-        Write-Host "❌ Deployment não ficou pronto no tempo esperado!" -ForegroundColor Red
+        Write-Host " $emoji_error Deployment não ficou pronto no tempo esperado!" -ForegroundColor Red
         Write-Host "📋 Status do deployment:" -ForegroundColor Yellow
         kubectl describe deployment rabbitmq
         exit 1
@@ -137,14 +141,14 @@ try {
     Write-Host "7. Aplicando job de configuração..." -ForegroundColor Cyan
     $jobResult = kubectl apply -f "rabbitmq-setup-job.yaml"
     if ($LASTEXITCODE -ne 0) {
-        Write-Host "❌ Falha ao aplicar job de configuração!" -ForegroundColor Red
+        Write-Host " $emoji_error Falha ao aplicar job de configuração!" -ForegroundColor Red
         exit 1
     }
-    Write-Host "✅ Job aplicado: $jobResult" -ForegroundColor Green
+    Write-Host " $emoji_success Job aplicado: $jobResult" -ForegroundColor Green
 
     Write-Host "8. Aguardando job de configuração..." -ForegroundColor Cyan
     if (-not (Wait-ForJob -JobName "rabbitmq-setup" -TimeoutSeconds 600)) {
-        Write-Host "❌ Job de configuração falhou!" -ForegroundColor Red
+        Write-Host " $emoji_error Job de configuração falhou!" -ForegroundColor Red
         exit 1
     }
 
@@ -172,11 +176,11 @@ try {
     Write-Host "=====================================================" -ForegroundColor Cyan
     
     Write-Host "📊 RECURSOS APLICADOS:" -ForegroundColor Cyan
-    Write-Host "✅ ConfigMap atualizado com loopback_users = none" -ForegroundColor Green
-    Write-Host "✅ Deployment com healthchecks e recursos otimizados" -ForegroundColor Green
-    Write-Host "✅ Job de configuração executado com sucesso" -ForegroundColor Green
-    Write-Host "✅ Filas criadas: pne-email, pne-integracao-rota, pne-integracao-arquivo" -ForegroundColor Green
-    
+    Write-Host "$emoji_success ConfigMap atualizado com loopback_users = none" -ForegroundColor Green
+    Write-Host "$emoji_success Deployment com healthchecks e recursos otimizados" -ForegroundColor Green
+    Write-Host "$emoji_success Job de configuração executado com sucesso" -ForegroundColor Green
+    Write-Host "$emoji_success Filas criadas: pne-email, pne-integracao-rota, pne-integracao-arquivo" -ForegroundColor Green
+
     Write-Host "🔗 CONEXÕES:" -ForegroundColor Cyan
     Write-Host "  - AMQP: rabbitmq-service:5672" -ForegroundColor White
     Write-Host "  - Management: http://localhost:15672 (port-forward)" -ForegroundColor White
@@ -188,9 +192,9 @@ try {
     Write-Host "  - Monitorar logs das functions" -ForegroundColor White
 
 } catch {
-    Write-Host "❌ ERRO DURANTE APLICAÇÃO:" -ForegroundColor Red
+    Write-Host " $emoji_error ERRO DURANTE APLICAÇÃO:" -ForegroundColor Red
     Write-Host $_.Exception.Message -ForegroundColor Red
     exit 1
 }
 
-Write-Host "✅ Script concluído com sucesso!" -ForegroundColor Green
+Write-Host " $emoji_success Script concluído com sucesso!" -ForegroundColor Green

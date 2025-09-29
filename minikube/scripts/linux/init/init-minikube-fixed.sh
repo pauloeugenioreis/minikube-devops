@@ -262,7 +262,7 @@ patch_metrics_server_image() {
     if ! kubectl patch deployment metrics-server -n kube-system \
         --type=json \
         -p='[{"op":"replace","path":"/spec/template/spec/containers/0/image","value":"registry.k8s.io/metrics-server/metrics-server:v0.8.0"}]' >/dev/null 2>&1; then
-        echo -e "${YELLOW}   ⚠️ Nao foi possivel ajustar a imagem do metrics-server. Verifique manualmente.${NC}"
+        echo -e "${YELLOW}   ⚠️  Nao foi possivel ajustar a imagem do metrics-server. Verifique manualmente.${NC}"
     fi
 }
 
@@ -416,8 +416,8 @@ start_port_forward "default" "service/mongodb-service" "27017:27017"
 check_port 27017 && echo -e "${GREEN}   MongoDB disponivel em mongodb://localhost:27017${NC}" || echo -e "${YELLOW}   ⚠️ MongoDB nao respondeu (porta 27017).${NC}"
 
 kill_port_forward "kubernetes-dashboard"
-start_port_forward "kubernetes-dashboard" "service/kubernetes-dashboard" "4666:80"
-check_port 4666 && echo -e "${GREEN}   Dashboard em http://localhost:4666${NC}" || echo -e "${YELLOW}   ⚠️ Dashboard nao respondeu (porta 4666).${NC}"
+start_port_forward "kubernetes-dashboard" "service/kubernetes-dashboard" "15671:80"
+check_port 15671 && echo -e "${GREEN}   Dashboard em http://localhost:15671${NC}" || echo -e "${YELLOW}   ⚠️ Dashboard nao respondeu (porta 15671).${NC}"
 
 if [[ "$INSTALL_KEDA" == true ]]; then
     echo -e "${YELLOW}Instalando/validando KEDA...${NC}"
@@ -456,7 +456,7 @@ ${YELLOW}Informacoes de acesso:${NC}
 ${WHITE}   • RabbitMQ UI:   http://rabbitmq.local  (guest/guest)${NC}
 ${WHITE}   • RabbitMQ AMQP: amqp://guest:guest@localhost:5672${NC}
 ${WHITE}   • MongoDB URI:   mongodb://admin:admin@localhost:27017/admin${NC}
-${WHITE}   • Dashboard:     http://localhost:4666${NC}
+${WHITE}   • Dashboard:     http://localhost:15671${NC}
 SUMMARY
 
 if [[ "$INSTALL_KEDA" == true ]]; then

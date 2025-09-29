@@ -15,9 +15,13 @@ $metricsServerImages = @(
     "registry.k8s.io/metrics-server/metrics-server@sha256:89258156d0e9af60403eafd44da9676fd66f600c7934d468ccc17e42b199aee2"
 )
 
+$emoji_success = [char]::ConvertFromUtf32(0x2705)
+$emoji_error = [char]::ConvertFromUtf32(0x274C)
+$emoji_warning = [char]::ConvertFromUtf32(0x26A0)
+
 function Ensure-MetricsServerImage {
     if (-not (Test-Command "docker")) {
-        Write-Host "   ⚠️ Docker indisponível para pré-carregar imagens do metrics-server" -ForegroundColor Yellow
+        Write-Host "   $emoji_warning Docker indisponível para pré-carregar imagens do metrics-server" -ForegroundColor Yellow
         return
     }
 
@@ -34,7 +38,7 @@ function Ensure-MetricsServerImage {
             Write-Host "   Baixando imagem $image..." -ForegroundColor White
             docker pull $image 2>$null | Out-Null
             if ($LASTEXITCODE -ne 0) {
-                Write-Host "   ⚠️ Falha ao baixar $image. O addon tentará buscar diretamente." -ForegroundColor Yellow
+                Write-Host "   $emoji_warning Falha ao baixar $image. O addon tentará buscar diretamente." -ForegroundColor Yellow
                 continue
             }
         }
@@ -42,9 +46,9 @@ function Ensure-MetricsServerImage {
         Write-Host "   Carregando $image no Minikube..." -ForegroundColor White
         & minikube image load $image 2>$null | Out-Null
         if ($LASTEXITCODE -ne 0) {
-            Write-Host "   ⚠️ Não foi possível carregar $image no Minikube. Verifique manualmente." -ForegroundColor Yellow
+            Write-Host "   $emoji_warning Nao foi possivel carregar $image no Minikube. Verifique manualmente." -ForegroundColor Yellow
         } else {
-            Write-Host "   ✅ $image disponível para o metrics-server." -ForegroundColor Green
+            Write-Host "   $emoji_success $image disponivel para o metrics-server." -ForegroundColor Green
         }
     }
 }
@@ -55,7 +59,7 @@ function Patch-MetricsServerImage {
         --type=json `
         -p '[{"op":"replace","path":"/spec/template/spec/containers/0/image","value":"registry.k8s.io/metrics-server/metrics-server:v0.8.0"}]' 2>$null | Out-Null
     if ($LASTEXITCODE -ne 0) {
-        Write-Host "   ⚠️ Nao foi possivel ajustar a imagem do metrics-server. Verifique manualmente." -ForegroundColor Yellow
+        Write-Host "   $emoji_warning Nao foi possivel ajustar a imagem do metrics-server. Verifique manualmente." -ForegroundColor Yellow
     }
 }
 
@@ -489,7 +493,7 @@ Start-Process -FilePath "kubectl" -ArgumentList "port-forward", "service/rabbitm
 Write-Host "   Criando port-forward para MongoDB (27017)..." -ForegroundColor White
 Start-Process -FilePath "kubectl" -ArgumentList "port-forward", "service/mongodb-service", "27017:27017" -WindowStyle Hidden
 
-Write-Host "   Criando port-forward para Dashboard K8s (4666)..." -ForegroundColor White
+Write-Host "   Criando port-forward para Dashboard K8s (15671)..." -ForegroundColor White
 
 # Aguardar Dashboard estar totalmente pronto antes de criar port-forward
 Write-Host "   Aguardando Dashboard estar pronto..." -ForegroundColor Yellow
@@ -512,13 +516,13 @@ if ($dashboardReady) {
     # Parar qualquer port-forward existente do dashboard
     Get-Process kubectl -ErrorAction SilentlyContinue | Where-Object {
         $_.CommandLine -like "*kubernetes-dashboard*" -or 
-        $_.CommandLine -like "*4666*"
+        $_.CommandLine -like "*15671*"
     } | Stop-Process -Force -ErrorAction SilentlyContinue
     
     Start-Sleep -Seconds 2
     
     # Criar port-forward do dashboard com maior robustez
-    $dashboardJob = Start-Process -FilePath "kubectl" -ArgumentList "port-forward", "-n", "kubernetes-dashboard", "service/kubernetes-dashboard", "4666:80" -WindowStyle Hidden -PassThru
+    $dashboardJob = Start-Process -FilePath "kubectl" -ArgumentList "port-forward", "-n", "kubernetes-dashboard", "service/kubernetes-dashboard", "15671:80" -WindowStyle Hidden -PassThru
     
     if ($dashboardJob) {
         Write-Host "   Port-forward Dashboard criado (PID: $($dashboardJob.Id))" -ForegroundColor Green
@@ -587,7 +591,10 @@ function Test-FinalValidation {
     $issues = @()
     $success = 0
     $total = 0
-    
+    $emoji_success = [char]::ConvertFromUtf32(0x2705)
+    $emoji_error = [char]::ConvertFromUtf32(0x274C)
+    $emoji_warning = [char]::ConvertFromUtf32(0x26A0)
+
     Write-Host "   Testando componentes principais..." -ForegroundColor White
     
     # Testar pods principais
@@ -595,10 +602,10 @@ function Test-FinalValidation {
     $rabbitPod = kubectl get pods -l app=rabbitmq --no-headers 2>$null
     $rabbitReady = $rabbitPod | Where-Object { $_ -match "1/1.*Running" }
     if ($rabbitReady) {
-        Write-Host "     OK RabbitMQ pod rodando" -ForegroundColor Green
+        Write-Host "     $emoji_success RabbitMQ pod rodando" -ForegroundColor Green
         $success++
     } else {
-        Write-Host "     ERRO RabbitMQ pod com problemas" -ForegroundColor Red
+        Write-Host "     $emoji_error RabbitMQ pod com problemas" -ForegroundColor Red
         Write-Host "       Debug: $rabbitPod" -ForegroundColor Gray
         $issues += "RabbitMQ pod nao esta rodando corretamente"
     }
@@ -607,10 +614,10 @@ function Test-FinalValidation {
     $mongoPod = kubectl get pods -l app=mongodb --no-headers 2>$null
     $mongoReady = $mongoPod | Where-Object { $_ -match "1/1.*Running" }
     if ($mongoReady) {
-        Write-Host "     OK MongoDB pod rodando" -ForegroundColor Green
+        Write-Host "     $emoji_success MongoDB pod rodando" -ForegroundColor Green
         $success++
     } else {
-        Write-Host "     ERRO MongoDB pod com problemas" -ForegroundColor Red
+        Write-Host "     $emoji_error MongoDB pod com problemas" -ForegroundColor Red
         Write-Host "       Debug: $mongoPod" -ForegroundColor Gray
         $issues += "MongoDB pod nao esta rodando corretamente"
     }
@@ -623,16 +630,16 @@ function Test-FinalValidation {
         $readyCount = ($kedaReady | Measure-Object).Count
 
         if ($totalKeda -eq 0) {
-            Write-Host "     ERRO KEDA pods nao encontrados" -ForegroundColor Red
+            Write-Host "     $emoji_error KEDA pods nao encontrados" -ForegroundColor Red
             $issues += "KEDA nao possui pods implantados"
         } elseif ($totalKeda -eq 3) {
-            Write-Host "     OK KEDA pods rodando ($readyCount/$totalKeda pods)" -ForegroundColor Green
+            Write-Host "     $emoji_success KEDA pods rodando ($readyCount/$totalKeda pods)" -ForegroundColor Green
             $success++
         } elseif ($readyCount -ne $totalKeda) {
-            Write-Host "     ERRO KEDA pods incompletos ($readyCount/$totalKeda)" -ForegroundColor Red
+            Write-Host "     $emoji_error KEDA pods incompletos ($readyCount/$totalKeda)" -ForegroundColor Red
             $issues += "KEDA nao tem todos os pods rodando (esperado $totalKeda, prontos $readyCount)"
         } else {
-            Write-Host "     OK KEDA pods rodando ($readyCount/$totalKeda pods)" -ForegroundColor Green
+            Write-Host "     $emoji_success KEDA pods rodando ($readyCount/$totalKeda pods)" -ForegroundColor Green
             $success++
         }
     }
@@ -643,30 +650,30 @@ function Test-FinalValidation {
     $total++
     $rabbitTest = Test-NetConnection -ComputerName localhost -Port 15672 -InformationLevel Quiet -WarningAction SilentlyContinue
     if ($rabbitTest) {
-        Write-Host "     OK RabbitMQ Management acessivel (15672)" -ForegroundColor Green
+        Write-Host "     $emoji_success RabbitMQ Management acessivel (15672)" -ForegroundColor Green
         $success++
     } else {
-        Write-Host "     ERRO RabbitMQ Management inacessivel" -ForegroundColor Red
+        Write-Host "     $emoji_error RabbitMQ Management inacessivel" -ForegroundColor Red
         $issues += "RabbitMQ Management nao esta acessivel na porta 15672"
     }
     
     $total++
     $mongoTest = Test-NetConnection -ComputerName localhost -Port 27017 -InformationLevel Quiet -WarningAction SilentlyContinue
     if ($mongoTest) {
-        Write-Host "     OK MongoDB acessivel (27017)" -ForegroundColor Green
+        Write-Host "     $emoji_success MongoDB acessivel (27017)" -ForegroundColor Green
         $success++
     } else {
-        Write-Host "     ERRO MongoDB inacessivel" -ForegroundColor Red
+        Write-Host "     $emoji_error MongoDB inacessivel" -ForegroundColor Red
         $issues += "MongoDB nao esta acessivel na porta 27017"
     }
     
     $total++
-    $dashboardTest = Test-NetConnection -ComputerName localhost -Port 4666 -InformationLevel Quiet -WarningAction SilentlyContinue
+    $dashboardTest = Test-NetConnection -ComputerName localhost -Port 15671 -InformationLevel Quiet -WarningAction SilentlyContinue
     if ($dashboardTest) {
-        Write-Host "     OK Dashboard K8s acessivel (4666)" -ForegroundColor Green
+        Write-Host "     $emoji_success Dashboard K8s acessivel (15671)" -ForegroundColor Green
         $success++
     } else {
-        Write-Host "     AVISO Dashboard K8s inacessivel (pode precisar de tempo)" -ForegroundColor Yellow
+        Write-Host "     $emoji_warning Dashboard K8s inacessivel (pode precisar de tempo)" -ForegroundColor Yellow
         # Dashboard nao e critico, nao adiciona aos issues
     }
     
@@ -709,10 +716,10 @@ $mongoTest = Test-NetConnection -ComputerName localhost -Port 27017 -Information
 
 # Teste especial para Dashboard com mais tentativas
 $dashboardTest = $false
-Write-Host "   Testando conectividade Dashboard (4666)..." -ForegroundColor Yellow
+Write-Host "   Testando conectividade Dashboard (15671)..." -ForegroundColor Yellow
 for ($i = 1; $i -le 8; $i++) {
     Write-Host "     Tentativa $i/8..." -ForegroundColor Gray
-    $dashboardTest = Test-NetConnection -ComputerName localhost -Port 4666 -InformationLevel Quiet -WarningAction SilentlyContinue
+    $dashboardTest = Test-NetConnection -ComputerName localhost -Port 15671 -InformationLevel Quiet -WarningAction SilentlyContinue
     if ($dashboardTest) {
         Write-Host "     Dashboard conectado!" -ForegroundColor Green
         break
@@ -740,20 +747,20 @@ if ($dashboardTest) {
     # Tentar recriar port-forward do dashboard
     Get-Process kubectl -ErrorAction SilentlyContinue | Where-Object {
         $_.CommandLine -like "*kubernetes-dashboard*" -or 
-        $_.CommandLine -like "*4666*"
+        $_.CommandLine -like "*15671*"
     } | Stop-Process -Force -ErrorAction SilentlyContinue
     
     Start-Sleep -Seconds 3
     
     Write-Host "   Recriando port-forward do Dashboard..." -ForegroundColor Yellow
-    $retryDashboard = Start-Process -FilePath "kubectl" -ArgumentList "port-forward", "-n", "kubernetes-dashboard", "service/kubernetes-dashboard", "4666:80" -WindowStyle Hidden -PassThru
+    $retryDashboard = Start-Process -FilePath "kubectl" -ArgumentList "port-forward", "-n", "kubernetes-dashboard", "service/kubernetes-dashboard", "15671:80" -WindowStyle Hidden -PassThru
     
     if ($retryDashboard) {
         Write-Host "   Port-forward recriado (PID: $($retryDashboard.Id))" -ForegroundColor Green
         Start-Sleep -Seconds 10
         
         # Teste final
-        $finalTest = Test-NetConnection -ComputerName localhost -Port 4666 -InformationLevel Quiet -WarningAction SilentlyContinue
+        $finalTest = Test-NetConnection -ComputerName localhost -Port 15671 -InformationLevel Quiet -WarningAction SilentlyContinue
         if ($finalTest) {
             Write-Host "   Dashboard agora acessivel!" -ForegroundColor Green
         } else {
@@ -769,6 +776,10 @@ Write-Host "=====================================================" -ForegroundCo
 Write-Host ""
 Write-Host "Informacoes de Acesso:" -ForegroundColor Yellow
 Write-Host ""
+Write-Host "Dashboard do Kubernetes:" -ForegroundColor Cyan
+Write-Host "   Web UI: http://localhost:15671" -ForegroundColor White
+Write-Host "   Alternativo: minikube dashboard" -ForegroundColor White
+Write-Host ""
 Write-Host "RabbitMQ:" -ForegroundColor Cyan
 Write-Host "   Management UI: http://localhost:15672" -ForegroundColor White
 Write-Host "   Usuario/Senha: guest/guest" -ForegroundColor White
@@ -779,10 +790,6 @@ Write-Host "MongoDB:" -ForegroundColor Cyan
 Write-Host "   Connection String: mongodb://admin:admin@localhost:27017/admin" -ForegroundColor White
 Write-Host "   Host: localhost:27017" -ForegroundColor White
 Write-Host "   Usuario/Senha: admin/admin" -ForegroundColor White
-Write-Host ""
-Write-Host "Dashboard do Kubernetes:" -ForegroundColor Cyan
-Write-Host "   Web UI: http://localhost:4666" -ForegroundColor White
-Write-Host "   Alternativo: minikube dashboard" -ForegroundColor White
 Write-Host ""
 Write-Host "Componentes Instalados:" -ForegroundColor Yellow
 Write-Host "   - storage-provisioner" -ForegroundColor White

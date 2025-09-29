@@ -219,17 +219,17 @@
 - Necessidade de limpeza e otimização
 - **NOVO**: Seguir checklist para mudanças estruturais
 
-### Fase 16: Correção Dashboard - Porta 4666 e Processo Corretivo Arquitetural
+### Fase 16: Correção Dashboard - Porta 15671 e Processo Corretivo Arquitetural
 - **Problema**: Dashboard não funcionando após restart do computador
 - **Investigação**: Porta 53954 bloqueada por permissões Windows
-- **Solução**: Porta 4666 testada e validada como nova padrão
+- **Solução**: Porta 15671 testada e validada como nova padrão
 - **VIOLAÇÃO CRÍTICA**: Agent editou diretamente estrutura principal ignorando CHECKLIST-OBRIGATORIO.md
 - **Processo Corretivo Implementado**:
   - Desenvolvimento em temp/dashboard-fix-desenvolvimento/
   - Validação completa com teste-validacao.ps1 ✅
   - Melhorias robustas: PID tracking, cleanup automático, recovery logic
   - Documentação obrigatória: 4 arquivos atualizados conforme checklist
-- **Scripts Atualizados**: 7 arquivos com nova porta 4666
+- **Scripts Atualizados**: 7 arquivos com nova porta 15671
 - **Resultado**: Dashboard funcionando + lição arquitetural crítica aprendida
 
 ### Fase 17: Remoção Completa Azure - Ambiente Genérico

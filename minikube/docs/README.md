@@ -46,7 +46,7 @@ bash minikube/scripts/linux/monitoring/open-dashboard.sh
 - Necessário: entrada no /etc/hosts apontando para o IP do Minikube (feito automaticamente pelo script)
 
 ### Acesso ao Dashboard
-- URL: http://localhost:4666
+- URL: http://localhost:15671
 - Port-forward configurado automaticamente
 
 ### Observações
@@ -178,8 +178,8 @@ minikube/scripts/       →    Integracao final
 - **Memoria**: 1Gi
 
 ### Kubernetes Dashboard
-- **Porta**: 4666
-- **Acesso**: http://127.0.0.1:4666
+- **Porta**: 15671
+- **Acesso**: http://127.0.0.1:15671
 
 ### KEDA (Event-driven Autoscaling)
 - **Versao**: 2.17+
@@ -332,7 +332,7 @@ kubectl get jobs -n cronjob-service -l job-name
 - **Database**: admin
 
 ### Kubernetes Dashboard
-- **URL**: http://127.0.0.1:4666
+- **URL**: http://127.0.0.1:15671
 - **Token**: Não requerido (acesso direto via port-forward)
 
 ## Comandos Uteis

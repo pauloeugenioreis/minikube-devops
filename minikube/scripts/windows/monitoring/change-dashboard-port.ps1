@@ -10,7 +10,7 @@ Write-Host "=====================================================" -ForegroundCo
 Write-Host "ALTERANDO PORTA DO DASHBOARD KUBERNETES" -ForegroundColor Green
 Write-Host "=====================================================" -ForegroundColor Cyan
 
-$portaAtual = 4666
+$portaAtual = 15671
 Write-Host "Porta atual: $portaAtual" -ForegroundColor Yellow
 Write-Host "Nova porta: $NovaPorta" -ForegroundColor Green
 

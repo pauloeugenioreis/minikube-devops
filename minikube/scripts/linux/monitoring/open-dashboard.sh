@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-PORT="${1:-4666}"
+PORT="${1:-15671}"
 NAMESPACE="kubernetes-dashboard"
 SERVICE="service/kubernetes-dashboard"
 

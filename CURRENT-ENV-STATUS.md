@@ -15,7 +15,7 @@
 - **RabbitMQ Management**: 15672
 - **RabbitMQ AMQP**: 5672
 - **MongoDB**: 27017
-- **Dashboard Kubernetes**: 4666
+- **Dashboard Kubernetes**: 15671
 
 ### CronJob Status
 - **Nome**: cronjob-service

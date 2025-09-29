@@ -567,12 +567,12 @@ cd "C:\DevOps"  # ou onde copiou o projeto
 
 ---
 
-### 16. CORREÇÃO DASHBOARD - PORTA 4666 E VIOLAÇÃO CHECKLIST
+### 16. CORREÇÃO DASHBOARD - PORTA 15671 E VIOLAÇÃO CHECKLIST
 **Usuario**: "não deu certo, outra coisa, você não deve alterar a porta que deixamos como padrão que é 53954"
-**Depois**: "tente a porta 4666 se der certo defina ela como padrão"
+**Depois**: "tente a porta 15671 se der certo defina ela como padrão"
 **E depois**: "você executou nossas premissias?" + "e o nosso CHECKLIST-OBRIGATORIO?"
 
-**Contexto**: Dashboard não estava funcionando com porta 53954 por problemas de permissões. Agent mudou para 4666 que funcionou, mas VIOLOU completamente as premissas arquiteturais e o CHECKLIST-OBRIGATORIO.md.
+**Contexto**: Dashboard não estava funcionando com porta 53954 por problemas de permissões. Agent mudou para 15671 que funcionou, mas VIOLOU completamente as premissas arquiteturais e o CHECKLIST-OBRIGATORIO.md.
 
 **Violações Identificadas**:
 - ❌ Editou diretamente scripts da estrutura principal
@@ -589,12 +589,12 @@ cd "C:\DevOps"  # ou onde copiou o projeto
    - Limpeza de processos conflitantes  
    - Lógica de recuperação automática
    - Testes de conectividade aprimorados (8 tentativas, 20s wait)
-4. **Porta 4666**: Validada e funcionando
+4. **Porta 15671**: Validada e funcionando
 5. **Seguindo CHECKLIST**: Atualizando documentação obrigatória
 
 **Resultado**: 
 - ✅ Melhorias validadas em temp/
-- ✅ Dashboard funcionando na porta 4666
+- ✅ Dashboard funcionando na porta 15671
 - ✅ Processo corretivo seguindo premissas estabelecidas
 - ✅ CHECKLIST-OBRIGATORIO sendo respeitado
 

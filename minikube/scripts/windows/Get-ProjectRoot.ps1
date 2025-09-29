@@ -2,6 +2,11 @@
 # Funcao utilitaria para detectar automaticamente a pasta raiz do projeto DevOps
 # Pode ser importada por outros scripts para paths dinamicos
 
+$emoji_success = [char]::ConvertFromUtf32(0x2705)
+$emoji_error = [char]::ConvertFromUtf32(0x274C)
+$emoji_warning = [char]::ConvertFromUtf32(0x26A0)
+$emoji_info = [char]::ConvertFromUtf32(0x1F4A1)
+
 function Get-ProjectRoot {
     <#
     .SYNOPSIS
@@ -174,25 +179,25 @@ function Test-ProjectRoot {
         $successCount = 0
         foreach ($test in $tests) {
             if (Test-Path $test.Path) {
-                Write-Host "   ✅ $($test.Name)" -ForegroundColor Green
+                Write-Host "   $emoji_success $($test.Name)" -ForegroundColor Green
                 $successCount++
             } else {
-                Write-Host "   ❌ $($test.Name)" -ForegroundColor Red
+                Write-Host "   $emoji_error $($test.Name)" -ForegroundColor Red
                 Write-Host "      Caminho: $($test.Path)" -ForegroundColor Gray
             }
         }
         
         Write-Host "`nResultado:" -ForegroundColor Yellow
         if ($successCount -eq $tests.Count) {
-            Write-Host "   ✅ Deteccao funcionando perfeitamente! ($successCount/$($tests.Count))" -ForegroundColor Green
+            Write-Host "   $emoji_success Deteccao funcionando perfeitamente! ($successCount/$($tests.Count))" -ForegroundColor Green
             return $true
         } else {
-            Write-Host "   ⚠️  Alguns arquivos nao encontrados ($successCount/$($tests.Count))" -ForegroundColor Yellow
+            Write-Host "   $emoji_warning Alguns arquivos nao encontrados ($successCount/$($tests.Count))" -ForegroundColor Yellow
             return $false
         }
         
     } catch {
-        Write-Host "❌ ERRO na deteccao: $($_.Exception.Message)" -ForegroundColor Red
+        Write-Host "$emoji_error ERRO na deteccao: $($_.Exception.Message)" -ForegroundColor Red
         return $false
     }
 }
