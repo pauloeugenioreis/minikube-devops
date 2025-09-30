@@ -68,7 +68,7 @@ $fileChecks = @(
     @{ Category = "Scripts de Monitoramento"; Directory = "scripts\windows\monitoring"; Files = @("open-dashboard.ps1", "change-dashboard-port.ps1") },
     @{ Category = "Scripts KEDA"; Directory = "scripts\windows\keda"; Files = @("install-helm-fixed.ps1", "install-keda.ps1", "test-keda.ps1") },
     @{ Category = "Scripts Autostart"; Directory = "scripts\windows\autostart"; Files = @("minikube-autostart.bat") },
-    @{ Category = "Setup de Máquina Nova"; Directory = "scripts\windows"; Files = @("Setup-Fresh-Machine.ps1", "Bootstrap-DevOps.ps1") },
+    @{ Category = "Setup de Maquina Nova"; Directory = "scripts\windows"; Files = @("Setup-Fresh-Machine.ps1", "Bootstrap-DevOps.ps1") },
     @{ Category = "Configs KEDA"; Directory = "configs\keda\examples"; Files = @("cpu-scaling-example.yaml", "memory-scaling-example.yaml", "rabbitmq-scaling-example.yaml") },
     @{ Category = "Documentacao"; Directory = "docs"; Files = @("README.md", "KEDA.md") },
     @{ Category = "Documentacao Fresh Machine"; Directory = "docs\fresh-machine"; Files = @("SETUP.md", "DEMO.md", "CHECKLIST.md") },
