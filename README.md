@@ -86,3 +86,21 @@ bash minikube/scripts/linux/quick-status.sh
 ## Licenca | License
 Este projeto e aberto para uso pessoal ou profissional.
 This project is open for personal or commercial usage.
+
+---
+
+## Imagens do Projeto
+
+Imagens ilustrativas do ambiente e dos principais componentes:
+
+<p align="center">
+  <img src="minikube/docs/assets/1.png" alt="Imagem 1" width="600" />
+  <img src="minikube/docs/assets/2.png" alt="Imagem 2" width="600" />
+  <img src="minikube/docs/assets/3.png" alt="Imagem 3" width="600" />
+  <img src="minikube/docs/assets/4.png" alt="Imagem 4" width="600" />
+  <img src="minikube/docs/assets/5.png" alt="Imagem 5" width="600" />
+  <img src="minikube/docs/assets/6.png" alt="Imagem 6" width="600" />
+  <img src="minikube/docs/assets/7.png" alt="Imagem 7" width="600" />
+  <img src="minikube/docs/assets/8.png" alt="Imagem 8" width="600" />
+  <img src="minikube/docs/assets/9.png" alt="Imagem 9" width="600" />
+</p>
