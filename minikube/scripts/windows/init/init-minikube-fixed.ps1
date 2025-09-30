@@ -1,4 +1,4 @@
-# Script de Inicializacao Completa do Minikube com RabbitMQ, MongoDB e KEDA
+﻿# Script de Inicializacao Completa do Minikube com RabbitMQ, MongoDB e KEDA
 # Este script garante que tudo seja iniciado automaticamente
 
 param(
@@ -21,7 +21,7 @@ $emoji_warning = [char]::ConvertFromUtf32(0x26A0)
 
 function Ensure-MetricsServerImage {
     if (-not (Test-Command "docker")) {
-        Write-Host "   $emoji_warning Docker indisponível para pré-carregar imagens do metrics-server" -ForegroundColor Yellow
+        Write-Host "   $emoji_warning Docker indisponÃ­vel para prÃ©-carregar imagens do metrics-server" -ForegroundColor Yellow
         return
     }
 
@@ -38,7 +38,7 @@ function Ensure-MetricsServerImage {
             Write-Host "   Baixando imagem $image..." -ForegroundColor White
             docker pull $image 2>$null | Out-Null
             if ($LASTEXITCODE -ne 0) {
-                Write-Host "   $emoji_warning Falha ao baixar $image. O addon tentará buscar diretamente." -ForegroundColor Yellow
+                Write-Host "   $emoji_warning Falha ao baixar $image. O addon tentarÃ¡ buscar diretamente." -ForegroundColor Yellow
                 continue
             }
         }
@@ -389,10 +389,11 @@ try {
             Write-Host "AVISO: Versoes incompativeis detectadas!" -ForegroundColor Yellow
             Write-Host "kubectl: $kubectlVersion | Kubernetes: $minikubeK8sVersion" -ForegroundColor Yellow
             Write-Host "Executando atualizacao automatica..." -ForegroundColor Yellow
-            if (Test-Path ".\update-kubectl.ps1") {
-                & ".\update-kubectl.ps1"
+            $fixScriptPath = Join-Path (Split-Path $PSScriptRoot -Parent) 'maintenance\fix-kubectl-final.ps1'
+            if (Test-Path $fixScriptPath) {
+                & $fixScriptPath
             } else {
-                Write-Host "Script de atualizacao nao encontrado. Use 'minikube kubectl -- version --client' se houver problemas." -ForegroundColor Yellow
+                Write-Host "Script de atualizacao nao encontrado em $fixScriptPath. Use 'minikube kubectl -- version --client' se houver problemas." -ForegroundColor Yellow
             }
         } else {
             Write-Host "[OK] Versoes compativeis: $kubectlVersion" -ForegroundColor Green
