@@ -188,9 +188,15 @@ get_kubectl_version() {
 }
 
 ensure_docker_running() {
-    if systemctl is-active --quiet docker; then
+    if docker info >/dev/null 2>&1; then
         echo -e "${GREEN}Docker ja esta em execucao.${NC}"
         return
+    fi
+
+    if systemctl is-active --quiet docker; then
+        echo -e "${RED}Docker esta ativo, mas o cliente nao conseguiu se conectar ao socket.${NC}"
+        echo -e "${YELLOW}Verifique se seu usuario tem permissao (ex.: sudo usermod -aG docker $USER && newgrp docker) ou se a variavel DOCKER_HOST aponta para um socket valido.${NC}"
+        exit 1
     fi
 
     echo -e "${YELLOW}Iniciando servico Docker...${NC}"
@@ -206,6 +212,7 @@ ensure_docker_running() {
             echo -e "${GREEN}Docker pronto!${NC}"
         else
             echo -e "${RED}Docker nao ficou pronto no tempo esperado.${NC}"
+            echo -e "${YELLOW}Valide manualmente com: docker info${NC}"
             exit 1
         fi
     else
@@ -214,18 +221,91 @@ ensure_docker_running() {
     fi
 }
 
+get_minikube_host_status() {
+    minikube status --format='{{.Host}}' 2>/dev/null || true
+}
+
+start_minikube() {
+    local status
+
+    echo ""
+    if command_exists python3; then
+        set +e
+        python3 - <<'PY'
+import re
+import subprocess
+import sys
+
+cmd = ["minikube", "start", "--driver=docker"]
+pattern = re.compile(r":\s*([0-9.]+\s+[KMGTPE]?i?B\s*/\s*[0-9.]+\s+[KMGTPE]?i?B)\s+([0-9.]+%)")
+
+def emit(line: str) -> None:
+    line = line.rstrip('\n')
+    matches = pattern.search(line)
+    if matches:
+        print(f"   {matches.group(1)} {matches.group(2)}", flush=True)
+    else:
+        print(line, flush=True)
+
+with subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1) as proc:
+    for chunk in proc.stdout:
+        for piece in chunk.replace('\r', '\n').split('\n'):
+            if piece:
+                emit(piece)
+    proc.wait()
+    sys.exit(proc.returncode)
+PY
+        status=$?
+        set -e
+        return "$status"
+    fi
+
+    if command_exists stdbuf; then
+        set +e
+        stdbuf -oL -eL minikube start --driver=docker 2>&1 | tr '\r' '\n'
+        status=${PIPESTATUS[0]}
+        set -e
+    else
+        set +e
+        minikube start --driver=docker 2>&1 | tr '\r' '\n'
+        status=${PIPESTATUS[0]}
+        set -e
+    fi
+
+    return "$status"
+}
+
 ensure_minikube_running() {
-    if minikube status >/dev/null 2>&1; then
+    local host_status
+    host_status="$(get_minikube_host_status)"
+
+    if [[ "$host_status" == "Running" ]]; then
         echo -e "${GREEN}Minikube ja esta rodando.${NC}"
         return
     fi
 
+    if [[ -n "$host_status" ]]; then
+        echo -e "${YELLOW}Minikube detectado com status: ${host_status}.${NC}"
+    else
+        echo -e "${YELLOW}Minikube nao respondeu ao status. Tentando iniciar...${NC}"
+    fi
+
     echo -e "${YELLOW}Iniciando Minikube (driver docker)...${NC}"
-    if ! minikube start --driver=docker; then
+    if ! start_minikube; then
         echo -e "${RED}Falha ao iniciar o Minikube.${NC}"
-        echo -e "${YELLOW}Tente executar 'minikube delete --all --purge' e rodar o script novamente.${NC}"
+        echo -e "${YELLOW}Verifique com: minikube status && minikube logs --tail=50${NC}"
+        echo -e "${YELLOW}Se necessario execute 'minikube delete --all --purge' e rode o script novamente.${NC}"
         exit 1
     fi
+
+    host_status="$(get_minikube_host_status)"
+    if [[ "$host_status" != "Running" ]]; then
+        echo -e "${RED}Minikube nao ficou pronto. Status atual: ${host_status:-desconhecido}.${NC}"
+        echo -e "${YELLOW}Verifique com: minikube status && minikube logs --tail=50${NC}"
+        exit 1
+    fi
+
+    echo -e "${GREEN}Minikube iniciado com sucesso.${NC}"
 }
 
 METRICS_SERVER_IMAGES=(
@@ -380,13 +460,21 @@ ensure_docker_running
 ensure_minikube_running
 
 if [[ "$SKIP_ADDONS" == false ]]; then
+    local_addons=(storage-provisioner metrics-server default-storageclass dashboard ingress)
+
     echo -e "${YELLOW}Habilitando addons essenciais...${NC}"
     ensure_metrics_server_image
-    for addon in storage-provisioner metrics-server default-storageclass dashboard; do
+    for addon in "${local_addons[@]}"; do
         echo -e "${WHITE}   Habilitando $addon...${NC}"
         minikube addons enable "$addon" >/dev/null 2>&1 || echo -e "${YELLOW}   ⚠️ Falha ao habilitar $addon. Verifique manualmente.${NC}"
     done
     patch_metrics_server_image
+
+    if kubectl get namespace ingress-nginx >/dev/null 2>&1; then
+        wait_for_resource "Ingress controller" "pod -l app.kubernetes.io/component=controller" "ingress-nginx" 300 || true
+    else
+        echo -e "${YELLOW}   ⚠️ Namespace ingress-nginx nao encontrado apos habilitar o addon ingress.${NC}"
+    fi
 fi
 
 wait_for_resource "nó Minikube" "node/minikube" ""
