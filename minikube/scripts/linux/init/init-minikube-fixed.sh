@@ -507,6 +507,18 @@ kill_port_forward "kubernetes-dashboard"
 start_port_forward "kubernetes-dashboard" "service/kubernetes-dashboard" "15671:80"
 check_port 15671 && echo -e "${GREEN}   Dashboard em http://localhost:15671${NC}" || echo -e "${YELLOW}   ⚠️ Dashboard nao respondeu (porta 15671).${NC}"
 
+MINIKUBE_IP=$(minikube ip 2>/dev/null || true)
+if [[ -n "$MINIKUBE_IP" ]]; then
+    HOSTS_LINE="${MINIKUBE_IP} rabbitmq.local"
+    HOSTS_MESSAGE="**Atenção:** adicione em /etc/hosts: ${HOSTS_LINE}"
+else
+    HOSTS_LINE="<IP_DO_MINIKUBE> rabbitmq.local"
+    HOSTS_MESSAGE="**Atenção:** execute 'minikube ip' e adicione em /etc/hosts: ${HOSTS_LINE}"
+fi
+printf -v HOSTS_COMMAND "sudo sh -c 'cat <<EOF >> /etc/hosts\\n%s\\nEOF'" "$HOSTS_LINE"
+HOSTS_COMMAND_DISPLAY=${HOSTS_COMMAND//$'\n'/$'\n'        }
+HOSTS_COMMAND_DISPLAY="        ${HOSTS_COMMAND_DISPLAY}"
+
 if [[ "$INSTALL_KEDA" == true ]]; then
     echo -e "${YELLOW}Instalando/validando KEDA...${NC}"
     if [[ -f "$KEDA_INSTALLER" ]]; then
@@ -541,6 +553,9 @@ ${CYAN}=====================================================${NC}
 ${GREEN}AMBIENTE CONFIGURADO COM SUCESSO!${NC}
 ${CYAN}=====================================================${NC}
 ${YELLOW}Informacoes de acesso:${NC}
+${YELLOW}${HOSTS_MESSAGE}${NC}
+${YELLOW}     ou copie o comando:${NC}
+${YELLOW}${HOSTS_COMMAND_DISPLAY}${NC}
 ${WHITE}   • RabbitMQ UI:   http://rabbitmq.local  (guest/guest)${NC}
 ${WHITE}   • RabbitMQ AMQP: amqp://guest:guest@localhost:5672${NC}
 ${WHITE}   • MongoDB URI:   mongodb://admin:admin@localhost:27017/admin${NC}
