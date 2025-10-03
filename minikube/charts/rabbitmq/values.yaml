@@ -3,7 +3,7 @@ replicaCount: 1
 
 image:
   repository: rabbitmq
-  tag: "3.12-management"
+  tag: "4.1-management"
 
 service:
   type: NodePort
@@ -46,17 +46,18 @@ config: |
   management.tcp.port = 15672
   log.console = true
   log.console.level = info
-  log.file = false
-  cluster_formation.peer_discovery_backend = classic_config
+  # RabbitMQ 4.x: Configurações otimizadas para single node
   heartbeat = 60
+  # Sem clustering para single-node
+  default_queue_type = classic
 
 enabled_plugins: |
   [rabbitmq_management,rabbitmq_prometheus,rabbitmq_management_agent].
 
 resources:
   requests:
-    memory: "256Mi"
+    memory: "512Mi"  # Aumentado para RabbitMQ 4.x
     cpu: "200m"
   limits:
-    memory: "512Mi"
+    memory: "1Gi"    # Aumentado para RabbitMQ 4.x  
     cpu: "500m"

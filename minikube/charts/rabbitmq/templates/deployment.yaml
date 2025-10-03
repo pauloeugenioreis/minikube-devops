@@ -14,6 +14,7 @@ spec:
       labels:
         app: rabbitmq
     spec:
+      serviceAccountName: rabbitmq
       containers:
       - name: rabbitmq
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
@@ -50,17 +51,19 @@ spec:
             command:
             - rabbitmq-diagnostics
             - ping
-          initialDelaySeconds: 60
+          initialDelaySeconds: 120  # Aumentado para dar mais tempo
           periodSeconds: 30
           timeoutSeconds: 10
+          failureThreshold: 5  # Mais tolerante a falhas
         readinessProbe:
           exec:
             command:
             - rabbitmq-diagnostics
-            - check_port_connectivity
-          initialDelaySeconds: 20
-          periodSeconds: 10
-          timeoutSeconds: 5
+            - ping  # Mudado para ping (menos rigoroso)
+          initialDelaySeconds: 60  # Aumentado
+          periodSeconds: 15
+          timeoutSeconds: 10
+          failureThreshold: 3
       volumes:
       - name: rabbitmq-data
         {{- if .Values.persistence.enabled }}

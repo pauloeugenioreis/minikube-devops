@@ -1,0 +1,1471 @@
+[0;36m=====================================================[0m
+[0;32mInicializando ambiente Minikube completo (Linux)[0m
+[0;36m=====================================================[0m
+Projeto detectado em: [1;37m/home/paulo/Downloads/Globo/minikube-devops[0m
+Log: [1;37m/home/paulo/Downloads/Globo/minikube-devops/log/init-linux-20251003.log[0m
+[0;32mVersoes detectadas:[0m
+[1;37m   • kubectl:  v1.34.1[0m
+[1;37m   • minikube: v1.37.0[0m
+[1;37m   • helm:     v3.19.0+g3d8990f[0m
+[0;32mDocker ja esta em execucao.[0m
+[1;33mMinikube detectado com status: Stopped.[0m
+[1;33mIniciando Minikube (driver docker)...[0m
+
+* minikube v1.37.0 on Ubuntu 24.04
+* Using the docker driver based on existing profile
+* Starting "minikube" primary control-plane node in "minikube" cluster
+* Pulling base image v0.0.48 ...
+! Failing to connect to https://registry.k8s.io/ from inside the minikube container
+* To pull new external images, you may need to configure a proxy: https://minikube.sigs.k8s.io/docs/reference/networking/proxy/
+* Verifying Kubernetes components...
+  - Using image docker.io/kubernetesui/dashboard:v2.7.0
+  - Using image registry.k8s.io/ingress-nginx/kube-webhook-certgen:v1.6.2
+  - Using image gcr.io/k8s-minikube/storage-provisioner:v5
+  - Using image registry.k8s.io/ingress-nginx/controller:v1.13.2
+  - Using image docker.io/kubernetesui/metrics-scraper:v1.0.8
+  - Using image registry.k8s.io/metrics-server/metrics-server:v0.8.0
+  - Using image registry.k8s.io/ingress-nginx/kube-webhook-certgen:v1.6.2
+* Some dashboard features require the metrics-server addon. To enable all features please run:
+	minikube addons enable metrics-server
+* Verifying ingress addon...
+* Enabled addons: metrics-server, default-storageclass, dashboard, storage-provisioner, ingress
+* Done! kubectl is now configured to use "minikube" cluster and "default" namespace by default
+[0;32mMinikube iniciado com sucesso.[0m
+[1;33mHabilitando addons essenciais...[0m
+[1;37m   Carregando registry.k8s.io/metrics-server/metrics-server:v0.8.0 no Minikube...[0m
+[0;32m   registry.k8s.io/metrics-server/metrics-server:v0.8.0 disponivel para o metrics-server.[0m
+[1;37m   Carregando registry.k8s.io/metrics-server/metrics-server@sha256:89258156d0e9af60403eafd44da9676fd66f600c7934d468ccc17e42b199aee2 no Minikube...[0m
+[0;32m   registry.k8s.io/metrics-server/metrics-server@sha256:89258156d0e9af60403eafd44da9676fd66f600c7934d468ccc17e42b199aee2 disponivel para o metrics-server.[0m
+[1;37m   Habilitando storage-provisioner...[0m
+[1;37m   Habilitando metrics-server...[0m
+[1;37m   Habilitando default-storageclass...[0m
+[1;37m   Habilitando dashboard...[0m
+[1;37m   Habilitando ingress...[0m
+[1;37m   Ajustando deployment do metrics-server para usar imagem local (tag)...[0m
+[1;37m   Aguardando Ingress controller...[0m
+[1;37m   ...aguardando Ingress controller (5s/300s)[0m
+[1;37m   ...aguardando Ingress controller (10s/300s)[0m
+[0;32m   Ingress controller pronto![0m
+[1;37m   Aguardando nó Minikube...[0m
+[0;32m   nó Minikube pronto![0m
+[1;37m   Instalando/atualizando rabbitmq (Helm)...[0m
+Release "rabbitmq" has been upgraded. Happy Helming!
+NAME: rabbitmq
+LAST DEPLOYED: Fri Oct  3 06:12:40 2025
+NAMESPACE: default
+STATUS: deployed
+REVISION: 8
+TEST SUITE: None
+[0;32m   rabbitmq pronto via Helm.[0m
+[1;37m   Instalando/atualizando mongodb (Helm)...[0m
+Release "mongodb" has been upgraded. Happy Helming!
+NAME: mongodb
+LAST DEPLOYED: Fri Oct  3 06:12:40 2025
+NAMESPACE: default
+STATUS: deployed
+REVISION: 8
+TEST SUITE: None
+[0;32m   mongodb pronto via Helm.[0m
+[1;37m   Aguardando RabbitMQ...[0m
+[0;32m   RabbitMQ pronto![0m
+[1;37m   Aguardando MongoDB...[0m
+[0;32m   MongoDB pronto![0m
+[1;33mConfigurando port-forwards locais...[0m
+[0;32m   RabbitMQ Management em http://localhost:15672[0m
+[0;32m   RabbitMQ AMQP disponivel em localhost:5672[0m
+[0;32m   MongoDB disponivel em mongodb://localhost:27017[0m
+[0;32m   Dashboard em http://localhost:15671[0m
+[1;33mInstalando/validando KEDA...[0m
+[0;36m=====================================================[0m
+[0;32mKEDA - Kubernetes Event-driven Autoscaling Setup[0m
+[0;32mVersao: 2.15+ (Latest)[0m
+[0;36m=====================================================[0m
+
+[1;33m1. Verificando prerequisitos...[0m
+[0;32m   ✅ kubectl: v1.34.1[0m
+[0;32m   ✅ helm: v3.19.0+g3d8990f[0m
+[0;32m   ✅ minikube: v1.37.0[0m
+
+[1;33m2. Verificando status do Minikube...[0m
+[0;32m   ✅ Minikube esta rodando[0m
+
+[1;33m3. Baixando e carregando imagens do KEDA no Minikube...[0m
+[0;36m   Baixando ghcr.io/kedacore/keda:2.17.2 ...[0m
+2.17.2: Pulling from kedacore/keda
+Digest: sha256:72dc058e478d7743a20f6f2f3af76a67d80b6f748a656a32d42a0ce560cc75c7
+Status: Image is up to date for ghcr.io/kedacore/keda:2.17.2
+ghcr.io/kedacore/keda:2.17.2
+[0;36m   Carregando ghcr.io/kedacore/keda:2.17.2 no Minikube ...[0m
+[0;36m   Baixando ghcr.io/kedacore/keda-admission-webhooks:2.17.2 ...[0m
+2.17.2: Pulling from kedacore/keda-admission-webhooks
+Digest: sha256:c8227c6edb4d9926f7ed366bc8f383e9e461c6dd58d708e97539ad9393caffa8
+Status: Image is up to date for ghcr.io/kedacore/keda-admission-webhooks:2.17.2
+ghcr.io/kedacore/keda-admission-webhooks:2.17.2
+[0;36m   Carregando ghcr.io/kedacore/keda-admission-webhooks:2.17.2 no Minikube ...[0m
+[0;36m   Baixando ghcr.io/kedacore/keda-metrics-apiserver:2.17.2 ...[0m
+2.17.2: Pulling from kedacore/keda-metrics-apiserver
+Digest: sha256:f312f50ddc578ef1629c5a69adeb8672b44c9914383d1eea940245d3f5d18a85
+Status: Image is up to date for ghcr.io/kedacore/keda-metrics-apiserver:2.17.2
+ghcr.io/kedacore/keda-metrics-apiserver:2.17.2
+[0;36m   Carregando ghcr.io/kedacore/keda-metrics-apiserver:2.17.2 no Minikube ...[0m
+[0;32m   ✅ Imagens do KEDA carregadas no Minikube[0m
+
+[1;33m4. Configurando repositorio Helm do KEDA...[0m
+
+[1;33m4. Criando namespace keda...[0m
+namespace/keda unchanged
+[0;32m   ✅ Namespace 'keda' criado/verificado[0m
+
+[1;33m5. Instalando KEDA via Helm...[0m
+[0;36m   Isso pode levar alguns minutos...[0m
+Release "keda" has been upgraded. Happy Helming!
+NAME: keda
+LAST DEPLOYED: Fri Oct  3 06:13:16 2025
+NAMESPACE: keda
+STATUS: deployed
+REVISION: 8
+TEST SUITE: None
+NOTES:
+:::^.     .::::^:     :::::::::::::::    .:::::::::.                   .^.                  
+7???~   .^7????~.     7??????????????.   :?????????77!^.              .7?7.                 
+7???~  ^7???7~.       ~!!!!!!!!!!!!!!.   :????!!!!7????7~.           .7???7.                
+7???~^7????~.                            :????:    :~7???7.         :7?????7.               
+7???7????!.           ::::::::::::.      :????:      .7???!        :7??77???7.              
+7????????7:           7???????????~      :????:       :????:      :???7?5????7.             
+7????!~????^          !77777777777^      :????:       :????:     ^???7?#P7????7.            
+7???~  ^????~                            :????:      :7???!     ^???7J#@J7?????7.           
+7???~   :7???!.                          :????:   .:~7???!.    ~???7Y&@#7777????7.          
+7???~    .7???7:      !!!!!!!!!!!!!!!    :????7!!77????7^     ~??775@@@GJJYJ?????7.         
+7???~     .!????^     7?????????????7.   :?????????7!~:      !????G@@@@@@@@5??????7:        
+::::.       :::::     :::::::::::::::    .::::::::..        .::::JGGGB@@@&7:::::::::        
+                                                                      ?@@#~                  
+                                                                      P@B^                   
+                                                                    :&G:                    
+                                                                    !5.                     
+                                                                    .Kubernetes Event-driven Autoscaling (KEDA) - Application autoscaling made simple.
+
+Get started by deploying Scaled Objects to your cluster:
+    - Information about Scaled Objects : https://keda.sh/docs/latest/concepts/
+    - Samples: https://github.com/kedacore/samples
+
+Get information about the deployed ScaledObjects:
+  kubectl get scaledobject [--namespace <namespace>]
+
+Get details about a deployed ScaledObject:
+  kubectl describe scaledobject <scaled-object-name> [--namespace <namespace>]
+
+Get information about the deployed ScaledObjects:
+  kubectl get triggerauthentication [--namespace <namespace>]
+
+Get details about a deployed ScaledObject:
+  kubectl describe triggerauthentication <trigger-authentication-name> [--namespace <namespace>]
+
+Get an overview of the Horizontal Pod Autoscalers (HPA) that KEDA is using behind the scenes:
+  kubectl get hpa [--all-namespaces] [--namespace <namespace>]
+
+Learn more about KEDA:
+- Documentation: https://keda.sh/
+- Support: https://keda.sh/support/
+- File an issue: https://github.com/kedacore/keda/issues/new/choose
+[0;32m   ✅ KEDA instalado com sucesso![0m
+[1;37m   Ajustando imagePullPolicy dos componentes KEDA...[0m
+
+[1;33m6. Aguardando pods KEDA ficarem prontos...[0m
+[1;37m   ⏱️ 5s - Pods prontos: 3/6[0m
+[1;37m   ⏱️ 10s - Pods prontos: 3/6[0m
+[1;37m   ⏱️ 15s - Pods prontos: 3/6[0m
+[1;37m   ⏱️ 20s - Pods prontos: 3/5[0m
+[1;37m   ⏱️ 25s - Pods prontos: 3/5[0m
+[1;37m   ⏱️ 30s - Pods prontos: 3/5[0m
+[1;37m   ⏱️ 35s - Pods prontos: 3/4[0m
+[1;37m   ⏱️ 40s - Pods prontos: 3/4[0m
+[1;37m   ⏱️ 45s - Pods prontos: 3/4[0m
+[1;37m   ⏱️ 50s - Pods prontos: 3/3[0m
+[0;32m   ✅ Todos os pods KEDA estao prontos![0m
+
+[1;33m7. Validando instalacao...[0m
+[0;32m   ✅ Namespace keda existe[0m
+[0;32m   ✅ CRD scaledobjects.keda.sh existe[0m
+[0;32m   ✅ CRD scaledjobs.keda.sh existe[0m
+[0;32m   ✅ CRD triggerauthentications.keda.sh existe[0m
+[0;32m   ✅ CRD clustertriggerauthentications.keda.sh existe[0m
+[0;32m   ✅ KEDA versao: ghcr.io/kedacore/keda:2.17.2[0m
+
+[1;37mStatus dos pods KEDA:[0m
+NAME                                               READY   STATUS    RESTARTS      AGE
+keda-admission-webhooks-b6d7bc9b7-hqpmj            1/1     Running   6 (94s ago)   9h
+keda-operator-597fc586bf-hvfkc                     1/1     Running   5 (94s ago)   9h
+keda-operator-metrics-apiserver-59bddcb94b-d9h5h   1/1     Running   6 (94s ago)   9h
+
+[0;36m=====================================================[0m
+[0;32m🎉 INSTALACAO KEDA CONCLUIDA![0m
+[0;36m=====================================================[0m
+
+[1;33m📋 COMANDOS UTEIS:[0m
+[1;37m   • Ver pods KEDA: kubectl get pods -n keda[0m
+[1;37m   • Ver ScaledObjects: kubectl get scaledobject -A[0m
+[1;37m   • Ver HPAs: kubectl get hpa -A[0m
+[1;37m   • Logs KEDA: kubectl logs -n keda -l app.kubernetes.io/name=keda-operator[0m
+
+[1;33m📁 EXEMPLOS DISPONIVEIS:[0m
+[1;37m   • Localizacao: /home/paulo/Downloads/Globo/minikube-devops/minikube/configs/keda/examples/[0m
+[1;37m   • Script de teste: /home/paulo/Downloads/Globo/minikube-devops/minikube/scripts/linux/keda/test-keda.sh[0m
+
+[0;32m✅ KEDA pronto para uso![0m
+[1;37m   Ajustando imagePullPolicy dos componentes KEDA para IfNotPresent...[0m
+[1;33mExecutando validacoes rapidas...[0m
+[0;32m   RabbitMQ via Ingress respondeu (http://rabbitmq.local).[0m
+[0;32m   MongoDB respondeu ao ping.[0m
+[0;36m=====================================================[0m
+[0;32mAMBIENTE CONFIGURADO COM SUCESSO![0m
+[0;36m=====================================================[0m
+[1;33mInformacoes de acesso:[0m
+[1;33m**Atenção:** adicione em /etc/hosts: 192.168.49.2 rabbitmq.local[0m
+[1;33m     ou copie o comando:[0m
+[1;33m        sudo sh -c 'cat <<EOF >> /etc/hosts
+        192.168.49.2 rabbitmq.local
+        EOF'[0m
+[1;37m   • RabbitMQ UI:   http://rabbitmq.local  (guest/guest)[0m
+[1;37m   • RabbitMQ AMQP: amqp://guest:guest@localhost:5672[0m
+[1;37m   • MongoDB URI:   mongodb://admin:admin@localhost:27017/admin[0m
+[1;37m   • Dashboard:     http://localhost:15671[0m
+[1;37m   • KEDA:         kubectl get pods -n keda[0m
+[1;33mLog completo:[0m [1;37m/home/paulo/Downloads/Globo/minikube-devops/log/init-linux-20251003.log[0m
+[0;32mAmbiente pronto para uso![0m
+[0;36m=====================================================[0m
+[0;32mInicializando ambiente Minikube completo (Linux)[0m
+[0;36m=====================================================[0m
+Projeto detectado em: [1;37m/home/paulo/Downloads/Globo/minikube-devops[0m
+Log: [1;37m/home/paulo/Downloads/Globo/minikube-devops/log/init-linux-20251003.log[0m
+[0;32mVersoes detectadas:[0m
+[1;37m   • kubectl:  v1.34.1[0m
+[1;37m   • minikube: v1.37.0[0m
+[1;37m   • helm:     v3.19.0+g3d8990f[0m
+[0;32mDocker ja esta em execucao.[0m
+[0;32mMinikube ja esta rodando.[0m
+[1;33mHabilitando addons essenciais...[0m
+[1;37m   Carregando registry.k8s.io/metrics-server/metrics-server:v0.8.0 no Minikube...[0m
+[0;32m   registry.k8s.io/metrics-server/metrics-server:v0.8.0 disponivel para o metrics-server.[0m
+[1;37m   Carregando registry.k8s.io/metrics-server/metrics-server@sha256:89258156d0e9af60403eafd44da9676fd66f600c7934d468ccc17e42b199aee2 no Minikube...[0m
+[0;32m   registry.k8s.io/metrics-server/metrics-server@sha256:89258156d0e9af60403eafd44da9676fd66f600c7934d468ccc17e42b199aee2 disponivel para o metrics-server.[0m
+[1;37m   Habilitando storage-provisioner...[0m
+[1;37m   Habilitando metrics-server...[0m
+[1;37m   Habilitando default-storageclass...[0m
+[1;37m   Habilitando dashboard...[0m
+[1;37m   Habilitando ingress...[0m
+[1;37m   Ajustando deployment do metrics-server para usar imagem local (tag)...[0m
+[1;37m   Aguardando Ingress controller...[0m
+[0;32m   Ingress controller pronto![0m
+[1;37m   Aguardando nó Minikube...[0m
+[0;32m   nó Minikube pronto![0m
+[1;37m   Instalando/atualizando rabbitmq (Helm)...[0m
+Release "rabbitmq" has been upgraded. Happy Helming!
+NAME: rabbitmq
+LAST DEPLOYED: Fri Oct  3 06:26:34 2025
+NAMESPACE: default
+STATUS: deployed
+REVISION: 9
+TEST SUITE: None
+[0;32m   rabbitmq pronto via Helm.[0m
+[1;37m   Instalando/atualizando mongodb (Helm)...[0m
+Release "mongodb" has been upgraded. Happy Helming!
+NAME: mongodb
+LAST DEPLOYED: Fri Oct  3 06:26:35 2025
+NAMESPACE: default
+STATUS: deployed
+REVISION: 9
+TEST SUITE: None
+[0;32m   mongodb pronto via Helm.[0m
+[1;37m   Aguardando RabbitMQ...[0m
+[1;37m   ...aguardando RabbitMQ (5s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (10s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (15s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (20s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (25s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (30s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (35s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (40s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (45s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (50s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (55s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (60s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (65s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (70s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (75s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (80s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (85s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (90s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (95s/300s)[0m
+[0;36m=====================================================[0m
+[0;32mInicializando ambiente Minikube completo (Linux)[0m
+[0;36m=====================================================[0m
+Projeto detectado em: [1;37m/home/paulo/Downloads/Globo/minikube-devops[0m
+Log: [1;37m/home/paulo/Downloads/Globo/minikube-devops/log/init-linux-20251003.log[0m
+[0;32mVersoes detectadas:[0m
+[1;37m   • kubectl:  v1.34.1[0m
+[1;37m   • minikube: v1.37.0[0m
+[1;37m   • helm:     v3.19.0+g3d8990f[0m
+[0;32mDocker ja esta em execucao.[0m
+[0;32mMinikube ja esta rodando.[0m
+[1;33mHabilitando addons essenciais...[0m
+[1;37m   Carregando registry.k8s.io/metrics-server/metrics-server:v0.8.0 no Minikube...[0m
+[0;32m   registry.k8s.io/metrics-server/metrics-server:v0.8.0 disponivel para o metrics-server.[0m
+[1;37m   Carregando registry.k8s.io/metrics-server/metrics-server@sha256:89258156d0e9af60403eafd44da9676fd66f600c7934d468ccc17e42b199aee2 no Minikube...[0m
+[0;32m   registry.k8s.io/metrics-server/metrics-server@sha256:89258156d0e9af60403eafd44da9676fd66f600c7934d468ccc17e42b199aee2 disponivel para o metrics-server.[0m
+[1;37m   Habilitando storage-provisioner...[0m
+[1;37m   Habilitando metrics-server...[0m
+[1;37m   Habilitando default-storageclass...[0m
+[1;37m   Habilitando dashboard...[0m
+[1;37m   Habilitando ingress...[0m
+[1;37m   Ajustando deployment do metrics-server para usar imagem local (tag)...[0m
+[1;37m   Aguardando Ingress controller...[0m
+[0;32m   Ingress controller pronto![0m
+[1;37m   Aguardando nó Minikube...[0m
+[0;32m   nó Minikube pronto![0m
+[1;37m   Instalando/atualizando rabbitmq (Helm)...[0m
+Release "rabbitmq" has been upgraded. Happy Helming!
+NAME: rabbitmq
+LAST DEPLOYED: Fri Oct  3 06:31:23 2025
+NAMESPACE: default
+STATUS: deployed
+REVISION: 10
+TEST SUITE: None
+[0;32m   rabbitmq pronto via Helm.[0m
+[1;37m   Instalando/atualizando mongodb (Helm)...[0m
+Release "mongodb" has been upgraded. Happy Helming!
+NAME: mongodb
+LAST DEPLOYED: Fri Oct  3 06:31:23 2025
+NAMESPACE: default
+STATUS: deployed
+REVISION: 10
+TEST SUITE: None
+[0;32m   mongodb pronto via Helm.[0m
+[1;37m   Aguardando RabbitMQ...[0m
+[1;37m   ...aguardando RabbitMQ (5s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (10s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (15s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (20s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (25s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (30s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (35s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (40s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (45s/300s)[0m
+[0;36m=====================================================[0m
+[0;32mInicializando ambiente Minikube completo (Linux)[0m
+[0;36m=====================================================[0m
+Projeto detectado em: [1;37m/home/paulo/Downloads/Globo/minikube-devops[0m
+Log: [1;37m/home/paulo/Downloads/Globo/minikube-devops/log/init-linux-20251003.log[0m
+[0;32mVersoes detectadas:[0m
+[1;37m   • kubectl:  v1.34.1[0m
+[1;37m   • minikube: v1.37.0[0m
+[1;37m   • helm:     v3.19.0+g3d8990f[0m
+[0;32mDocker ja esta em execucao.[0m
+[0;32mMinikube ja esta rodando.[0m
+[1;33mHabilitando addons essenciais...[0m
+[1;37m   Carregando registry.k8s.io/metrics-server/metrics-server:v0.8.0 no Minikube...[0m
+[0;32m   registry.k8s.io/metrics-server/metrics-server:v0.8.0 disponivel para o metrics-server.[0m
+[1;37m   Carregando registry.k8s.io/metrics-server/metrics-server@sha256:89258156d0e9af60403eafd44da9676fd66f600c7934d468ccc17e42b199aee2 no Minikube...[0m
+[0;32m   registry.k8s.io/metrics-server/metrics-server@sha256:89258156d0e9af60403eafd44da9676fd66f600c7934d468ccc17e42b199aee2 disponivel para o metrics-server.[0m
+[1;37m   Habilitando storage-provisioner...[0m
+[1;37m   Habilitando metrics-server...[0m
+[1;37m   Habilitando default-storageclass...[0m
+[1;37m   Habilitando dashboard...[0m
+[1;37m   Habilitando ingress...[0m
+[1;37m   Ajustando deployment do metrics-server para usar imagem local (tag)...[0m
+[1;37m   Aguardando Ingress controller...[0m
+[0;32m   Ingress controller pronto![0m
+[1;37m   Aguardando nó Minikube...[0m
+[0;32m   nó Minikube pronto![0m
+[1;37m   Instalando/atualizando rabbitmq (Helm)...[0m
+Release "rabbitmq" has been upgraded. Happy Helming!
+NAME: rabbitmq
+LAST DEPLOYED: Fri Oct  3 06:34:26 2025
+NAMESPACE: default
+STATUS: deployed
+REVISION: 11
+TEST SUITE: None
+[0;32m   rabbitmq pronto via Helm.[0m
+[1;37m   Instalando/atualizando mongodb (Helm)...[0m
+Release "mongodb" has been upgraded. Happy Helming!
+NAME: mongodb
+LAST DEPLOYED: Fri Oct  3 06:34:27 2025
+NAMESPACE: default
+STATUS: deployed
+REVISION: 11
+TEST SUITE: None
+[0;32m   mongodb pronto via Helm.[0m
+[1;37m   Aguardando RabbitMQ...[0m
+[1;37m   ...aguardando RabbitMQ (5s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (10s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (15s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (20s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (25s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (30s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (35s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (40s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (45s/300s)[0m
+[0;36m=====================================================[0m
+[0;32mInicializando ambiente Minikube completo (Linux)[0m
+[0;36m=====================================================[0m
+Projeto detectado em: [1;37m/home/paulo/Downloads/Globo/minikube-devops[0m
+Log: [1;37m/home/paulo/Downloads/Globo/minikube-devops/log/init-linux-20251003.log[0m
+[0;32mVersoes detectadas:[0m
+[1;37m   • kubectl:  v1.34.1[0m
+[1;37m   • minikube: v1.37.0[0m
+[1;37m   • helm:     v3.19.0+g3d8990f[0m
+[0;32mDocker ja esta em execucao.[0m
+[0;32mMinikube ja esta rodando.[0m
+[1;33mHabilitando addons essenciais...[0m
+[1;37m   Carregando registry.k8s.io/metrics-server/metrics-server:v0.8.0 no Minikube...[0m
+[0;32m   registry.k8s.io/metrics-server/metrics-server:v0.8.0 disponivel para o metrics-server.[0m
+[1;37m   Carregando registry.k8s.io/metrics-server/metrics-server@sha256:89258156d0e9af60403eafd44da9676fd66f600c7934d468ccc17e42b199aee2 no Minikube...[0m
+[0;32m   registry.k8s.io/metrics-server/metrics-server@sha256:89258156d0e9af60403eafd44da9676fd66f600c7934d468ccc17e42b199aee2 disponivel para o metrics-server.[0m
+[1;37m   Habilitando storage-provisioner...[0m
+[1;37m   Habilitando metrics-server...[0m
+[1;37m   Habilitando default-storageclass...[0m
+[1;37m   Habilitando dashboard...[0m
+[1;37m   Habilitando ingress...[0m
+[1;37m   Ajustando deployment do metrics-server para usar imagem local (tag)...[0m
+[1;37m   Aguardando Ingress controller...[0m
+[0;32m   Ingress controller pronto![0m
+[1;37m   Aguardando nó Minikube...[0m
+[0;32m   nó Minikube pronto![0m
+[1;37m   Instalando/atualizando rabbitmq (Helm)...[0m
+Release "rabbitmq" has been upgraded. Happy Helming!
+NAME: rabbitmq
+LAST DEPLOYED: Fri Oct  3 06:36:15 2025
+NAMESPACE: default
+STATUS: deployed
+REVISION: 12
+TEST SUITE: None
+[0;32m   rabbitmq pronto via Helm.[0m
+[1;37m   Instalando/atualizando mongodb (Helm)...[0m
+Release "mongodb" has been upgraded. Happy Helming!
+NAME: mongodb
+LAST DEPLOYED: Fri Oct  3 06:36:16 2025
+NAMESPACE: default
+STATUS: deployed
+REVISION: 12
+TEST SUITE: None
+[0;32m   mongodb pronto via Helm.[0m
+[1;37m   Aguardando RabbitMQ...[0m
+[1;37m   ...aguardando RabbitMQ (5s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (10s/300s)[0m
+[0;32m   RabbitMQ pronto![0m
+[1;37m   Aguardando MongoDB...[0m
+[0;32m   MongoDB pronto![0m
+[1;33mConfigurando port-forwards locais...[0m
+[0;32m   RabbitMQ Management em http://localhost:15672[0m
+[0;32m   RabbitMQ AMQP disponivel em localhost:5672[0m
+[0;32m   MongoDB disponivel em mongodb://localhost:27017[0m
+[0;32m   Dashboard em http://localhost:15671[0m
+[1;33mInstalando/validando KEDA...[0m
+[0;36m=====================================================[0m
+[0;32mKEDA - Kubernetes Event-driven Autoscaling Setup[0m
+[0;32mVersao: 2.15+ (Latest)[0m
+[0;36m=====================================================[0m
+
+[1;33m1. Verificando prerequisitos...[0m
+[0;32m   ✅ kubectl: v1.34.1[0m
+[0;32m   ✅ helm: v3.19.0+g3d8990f[0m
+[0;32m   ✅ minikube: v1.37.0[0m
+
+[1;33m2. Verificando status do Minikube...[0m
+[0;32m   ✅ Minikube esta rodando[0m
+
+[1;33m3. Baixando e carregando imagens do KEDA no Minikube...[0m
+[0;36m   Baixando ghcr.io/kedacore/keda:2.17.2 ...[0m
+2.17.2: Pulling from kedacore/keda
+Digest: sha256:72dc058e478d7743a20f6f2f3af76a67d80b6f748a656a32d42a0ce560cc75c7
+Status: Image is up to date for ghcr.io/kedacore/keda:2.17.2
+ghcr.io/kedacore/keda:2.17.2
+[0;36m   Carregando ghcr.io/kedacore/keda:2.17.2 no Minikube ...[0m
+[0;36m   Baixando ghcr.io/kedacore/keda-admission-webhooks:2.17.2 ...[0m
+2.17.2: Pulling from kedacore/keda-admission-webhooks
+Digest: sha256:c8227c6edb4d9926f7ed366bc8f383e9e461c6dd58d708e97539ad9393caffa8
+Status: Image is up to date for ghcr.io/kedacore/keda-admission-webhooks:2.17.2
+ghcr.io/kedacore/keda-admission-webhooks:2.17.2
+[0;36m   Carregando ghcr.io/kedacore/keda-admission-webhooks:2.17.2 no Minikube ...[0m
+[0;36m   Baixando ghcr.io/kedacore/keda-metrics-apiserver:2.17.2 ...[0m
+2.17.2: Pulling from kedacore/keda-metrics-apiserver
+Digest: sha256:f312f50ddc578ef1629c5a69adeb8672b44c9914383d1eea940245d3f5d18a85
+Status: Image is up to date for ghcr.io/kedacore/keda-metrics-apiserver:2.17.2
+ghcr.io/kedacore/keda-metrics-apiserver:2.17.2
+[0;36m   Carregando ghcr.io/kedacore/keda-metrics-apiserver:2.17.2 no Minikube ...[0m
+[0;32m   ✅ Imagens do KEDA carregadas no Minikube[0m
+
+[1;33m4. Configurando repositorio Helm do KEDA...[0m
+
+[1;33m4. Criando namespace keda...[0m
+namespace/keda unchanged
+[0;32m   ✅ Namespace 'keda' criado/verificado[0m
+
+[1;33m5. Instalando KEDA via Helm...[0m
+[0;36m   Isso pode levar alguns minutos...[0m
+Release "keda" has been upgraded. Happy Helming!
+NAME: keda
+LAST DEPLOYED: Fri Oct  3 06:37:14 2025
+NAMESPACE: keda
+STATUS: deployed
+REVISION: 9
+TEST SUITE: None
+NOTES:
+:::^.     .::::^:     :::::::::::::::    .:::::::::.                   .^.                  
+7???~   .^7????~.     7??????????????.   :?????????77!^.              .7?7.                 
+7???~  ^7???7~.       ~!!!!!!!!!!!!!!.   :????!!!!7????7~.           .7???7.                
+7???~^7????~.                            :????:    :~7???7.         :7?????7.               
+7???7????!.           ::::::::::::.      :????:      .7???!        :7??77???7.              
+7????????7:           7???????????~      :????:       :????:      :???7?5????7.             
+7????!~????^          !77777777777^      :????:       :????:     ^???7?#P7????7.            
+7???~  ^????~                            :????:      :7???!     ^???7J#@J7?????7.           
+7???~   :7???!.                          :????:   .:~7???!.    ~???7Y&@#7777????7.          
+7???~    .7???7:      !!!!!!!!!!!!!!!    :????7!!77????7^     ~??775@@@GJJYJ?????7.         
+7???~     .!????^     7?????????????7.   :?????????7!~:      !????G@@@@@@@@5??????7:        
+::::.       :::::     :::::::::::::::    .::::::::..        .::::JGGGB@@@&7:::::::::        
+                                                                      ?@@#~                  
+                                                                      P@B^                   
+                                                                    :&G:                    
+                                                                    !5.                     
+                                                                    .Kubernetes Event-driven Autoscaling (KEDA) - Application autoscaling made simple.
+
+Get started by deploying Scaled Objects to your cluster:
+    - Information about Scaled Objects : https://keda.sh/docs/latest/concepts/
+    - Samples: https://github.com/kedacore/samples
+
+Get information about the deployed ScaledObjects:
+  kubectl get scaledobject [--namespace <namespace>]
+
+Get details about a deployed ScaledObject:
+  kubectl describe scaledobject <scaled-object-name> [--namespace <namespace>]
+
+Get information about the deployed ScaledObjects:
+  kubectl get triggerauthentication [--namespace <namespace>]
+
+Get details about a deployed ScaledObject:
+  kubectl describe triggerauthentication <trigger-authentication-name> [--namespace <namespace>]
+
+Get an overview of the Horizontal Pod Autoscalers (HPA) that KEDA is using behind the scenes:
+  kubectl get hpa [--all-namespaces] [--namespace <namespace>]
+
+Learn more about KEDA:
+- Documentation: https://keda.sh/
+- Support: https://keda.sh/support/
+- File an issue: https://github.com/kedacore/keda/issues/new/choose
+[0;32m   ✅ KEDA instalado com sucesso![0m
+[1;37m   Ajustando imagePullPolicy dos componentes KEDA...[0m
+
+[1;33m6. Aguardando pods KEDA ficarem prontos...[0m
+[1;37m   ⏱️ 5s - Pods prontos: 3/6[0m
+[1;37m   ⏱️ 10s - Pods prontos: 3/6[0m
+[1;37m   ⏱️ 15s - Pods prontos: 3/6[0m
+[1;37m   ⏱️ 20s - Pods prontos: 3/5[0m
+[1;37m   ⏱️ 25s - Pods prontos: 3/5[0m
+[1;37m   ⏱️ 30s - Pods prontos: 3/5[0m
+[1;37m   ⏱️ 35s - Pods prontos: 3/4[0m
+[1;37m   ⏱️ 40s - Pods prontos: 3/4[0m
+[1;37m   ⏱️ 45s - Pods prontos: 3/4[0m
+[1;37m   ⏱️ 50s - Pods prontos: 3/3[0m
+[0;32m   ✅ Todos os pods KEDA estao prontos![0m
+
+[1;33m7. Validando instalacao...[0m
+[0;32m   ✅ Namespace keda existe[0m
+[0;32m   ✅ CRD scaledobjects.keda.sh existe[0m
+[0;32m   ✅ CRD scaledjobs.keda.sh existe[0m
+[0;32m   ✅ CRD triggerauthentications.keda.sh existe[0m
+[0;32m   ✅ CRD clustertriggerauthentications.keda.sh existe[0m
+[0;32m   ✅ KEDA versao: ghcr.io/kedacore/keda:2.17.2[0m
+
+[1;37mStatus dos pods KEDA:[0m
+NAME                                               READY   STATUS    RESTARTS      AGE
+keda-admission-webhooks-b6d7bc9b7-hqpmj            1/1     Running   6 (25m ago)   9h
+keda-operator-597fc586bf-hvfkc                     1/1     Running   5 (25m ago)   9h
+keda-operator-metrics-apiserver-59bddcb94b-d9h5h   1/1     Running   6 (25m ago)   9h
+
+[0;36m=====================================================[0m
+[0;32m🎉 INSTALACAO KEDA CONCLUIDA![0m
+[0;36m=====================================================[0m
+
+[1;33m📋 COMANDOS UTEIS:[0m
+[1;37m   • Ver pods KEDA: kubectl get pods -n keda[0m
+[1;37m   • Ver ScaledObjects: kubectl get scaledobject -A[0m
+[1;37m   • Ver HPAs: kubectl get hpa -A[0m
+[1;37m   • Logs KEDA: kubectl logs -n keda -l app.kubernetes.io/name=keda-operator[0m
+
+[1;33m📁 EXEMPLOS DISPONIVEIS:[0m
+[1;37m   • Localizacao: /home/paulo/Downloads/Globo/minikube-devops/minikube/configs/keda/examples/[0m
+[1;37m   • Script de teste: /home/paulo/Downloads/Globo/minikube-devops/minikube/scripts/linux/keda/test-keda.sh[0m
+
+[0;32m✅ KEDA pronto para uso![0m
+[1;37m   Ajustando imagePullPolicy dos componentes KEDA para IfNotPresent...[0m
+[1;33mExecutando validacoes rapidas...[0m
+[0;32m   RabbitMQ via Ingress respondeu (http://rabbitmq.local).[0m
+[0;32m   MongoDB respondeu ao ping.[0m
+[0;36m=====================================================[0m
+[0;32mAMBIENTE CONFIGURADO COM SUCESSO![0m
+[0;36m=====================================================[0m
+[1;33mInformacoes de acesso:[0m
+[1;33m**Atenção:** adicione em /etc/hosts: 192.168.49.2 rabbitmq.local[0m
+[1;33m     ou copie o comando:[0m
+[1;33m        sudo sh -c 'cat <<EOF >> /etc/hosts
+        192.168.49.2 rabbitmq.local
+        EOF'[0m
+[1;37m   • RabbitMQ UI:   http://rabbitmq.local  (guest/guest)[0m
+[1;37m   • RabbitMQ AMQP: amqp://guest:guest@localhost:5672[0m
+[1;37m   • MongoDB URI:   mongodb://admin:admin@localhost:27017/admin[0m
+[1;37m   • Dashboard:     http://localhost:15671[0m
+[1;37m   • KEDA:         kubectl get pods -n keda[0m
+[1;33mLog completo:[0m [1;37m/home/paulo/Downloads/Globo/minikube-devops/log/init-linux-20251003.log[0m
+[0;32mAmbiente pronto para uso![0m
+[0;36m=====================================================[0m
+[0;32mInicializando ambiente Minikube completo (Linux)[0m
+[0;36m=====================================================[0m
+Projeto detectado em: [1;37m/home/paulo/Downloads/Globo/minikube-devops[0m
+Log: [1;37m/home/paulo/Downloads/Globo/minikube-devops/log/init-linux-20251003.log[0m
+[0;32mVersoes detectadas:[0m
+[1;37m   • kubectl:  v1.34.1[0m
+[1;37m   • minikube: v1.37.0[0m
+[1;37m   • helm:     v3.19.0+g3d8990f[0m
+[0;32mDocker ja esta em execucao.[0m
+[0;32mMinikube ja esta rodando.[0m
+[1;33mHabilitando addons essenciais...[0m
+[1;37m   Carregando registry.k8s.io/metrics-server/metrics-server:v0.8.0 no Minikube...[0m
+[0;32m   registry.k8s.io/metrics-server/metrics-server:v0.8.0 disponivel para o metrics-server.[0m
+[1;37m   Carregando registry.k8s.io/metrics-server/metrics-server@sha256:89258156d0e9af60403eafd44da9676fd66f600c7934d468ccc17e42b199aee2 no Minikube...[0m
+[0;32m   registry.k8s.io/metrics-server/metrics-server@sha256:89258156d0e9af60403eafd44da9676fd66f600c7934d468ccc17e42b199aee2 disponivel para o metrics-server.[0m
+[1;37m   Habilitando storage-provisioner...[0m
+[1;37m   Habilitando metrics-server...[0m
+[1;37m   Habilitando default-storageclass...[0m
+[1;37m   Habilitando dashboard...[0m
+[1;37m   Habilitando ingress...[0m
+[1;37m   Ajustando deployment do metrics-server para usar imagem local (tag)...[0m
+[1;37m   Aguardando Ingress controller...[0m
+[0;32m   Ingress controller pronto![0m
+[1;37m   Aguardando nó Minikube...[0m
+[0;32m   nó Minikube pronto![0m
+[1;37m   Instalando/atualizando rabbitmq (Helm)...[0m
+Release "rabbitmq" does not exist. Installing it now.
+NAME: rabbitmq
+LAST DEPLOYED: Fri Oct  3 10:11:09 2025
+NAMESPACE: default
+STATUS: deployed
+REVISION: 1
+TEST SUITE: None
+[0;32m   rabbitmq pronto via Helm.[0m
+[1;37m   Instalando/atualizando mongodb (Helm)...[0m
+Release "mongodb" does not exist. Installing it now.
+NAME: mongodb
+LAST DEPLOYED: Fri Oct  3 10:11:10 2025
+NAMESPACE: default
+STATUS: deployed
+REVISION: 1
+TEST SUITE: None
+[0;32m   mongodb pronto via Helm.[0m
+[1;37m   Aguardando RabbitMQ...[0m
+[1;37m   ...aguardando RabbitMQ (5s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (10s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (15s/300s)[0m
+[0;36m=====================================================[0m
+[0;32mInicializando ambiente Minikube completo (Linux)[0m
+[0;36m=====================================================[0m
+Projeto detectado em: [1;37m/home/paulo/Downloads/Globo/minikube-devops[0m
+Log: [1;37m/home/paulo/Downloads/Globo/minikube-devops/log/init-linux-20251003.log[0m
+[0;32mVersoes detectadas:[0m
+[1;37m   • kubectl:  v1.34.1[0m
+[1;37m   • minikube: v1.37.0[0m
+[1;37m   • helm:     v3.19.0+g3d8990f[0m
+[0;32mDocker ja esta em execucao.[0m
+[0;32mMinikube ja esta rodando.[0m
+[1;33mHabilitando addons essenciais...[0m
+[1;37m   Carregando registry.k8s.io/metrics-server/metrics-server:v0.8.0 no Minikube...[0m
+[0;32m   registry.k8s.io/metrics-server/metrics-server:v0.8.0 disponivel para o metrics-server.[0m
+[1;37m   Carregando registry.k8s.io/metrics-server/metrics-server@sha256:89258156d0e9af60403eafd44da9676fd66f600c7934d468ccc17e42b199aee2 no Minikube...[0m
+[0;32m   registry.k8s.io/metrics-server/metrics-server@sha256:89258156d0e9af60403eafd44da9676fd66f600c7934d468ccc17e42b199aee2 disponivel para o metrics-server.[0m
+[1;37m   Habilitando storage-provisioner...[0m
+[1;37m   Habilitando metrics-server...[0m
+[1;37m   Habilitando default-storageclass...[0m
+[1;37m   Habilitando dashboard...[0m
+[1;37m   Habilitando ingress...[0m
+[1;37m   Ajustando deployment do metrics-server para usar imagem local (tag)...[0m
+[1;37m   Aguardando Ingress controller...[0m
+[0;32m   Ingress controller pronto![0m
+[1;37m   Aguardando nó Minikube...[0m
+[0;32m   nó Minikube pronto![0m
+[1;37m   Instalando/atualizando rabbitmq (Helm)...[0m
+Release "rabbitmq" has been upgraded. Happy Helming!
+NAME: rabbitmq
+LAST DEPLOYED: Fri Oct  3 10:13:59 2025
+NAMESPACE: default
+STATUS: deployed
+REVISION: 2
+TEST SUITE: None
+[0;32m   rabbitmq pronto via Helm.[0m
+[1;37m   Instalando/atualizando mongodb (Helm)...[0m
+Release "mongodb" has been upgraded. Happy Helming!
+NAME: mongodb
+LAST DEPLOYED: Fri Oct  3 10:14:00 2025
+NAMESPACE: default
+STATUS: deployed
+REVISION: 2
+TEST SUITE: None
+[0;32m   mongodb pronto via Helm.[0m
+[1;37m   Aguardando RabbitMQ...[0m
+[1;37m   ...aguardando RabbitMQ (5s/300s)[0m
+[0;36m=====================================================[0m
+[0;32mInicializando ambiente Minikube completo (Linux)[0m
+[0;36m=====================================================[0m
+Projeto detectado em: [1;37m/home/paulo/Downloads/Globo/minikube-devops[0m
+Log: [1;37m/home/paulo/Downloads/Globo/minikube-devops/log/init-linux-20251003.log[0m
+[0;32mVersoes detectadas:[0m
+[1;37m   • kubectl:  v1.34.1[0m
+[1;37m   • minikube: v1.37.0[0m
+[1;37m   • helm:     v3.19.0+g3d8990f[0m
+[0;32mDocker ja esta em execucao.[0m
+[0;32mMinikube ja esta rodando.[0m
+[1;33mHabilitando addons essenciais...[0m
+[1;37m   Carregando registry.k8s.io/metrics-server/metrics-server:v0.8.0 no Minikube...[0m
+[0;32m   registry.k8s.io/metrics-server/metrics-server:v0.8.0 disponivel para o metrics-server.[0m
+[1;37m   Carregando registry.k8s.io/metrics-server/metrics-server@sha256:89258156d0e9af60403eafd44da9676fd66f600c7934d468ccc17e42b199aee2 no Minikube...[0m
+[0;32m   registry.k8s.io/metrics-server/metrics-server@sha256:89258156d0e9af60403eafd44da9676fd66f600c7934d468ccc17e42b199aee2 disponivel para o metrics-server.[0m
+[1;37m   Habilitando storage-provisioner...[0m
+[1;37m   Habilitando metrics-server...[0m
+[1;37m   Habilitando default-storageclass...[0m
+[1;37m   Habilitando dashboard...[0m
+[1;37m   Habilitando ingress...[0m
+[1;37m   Ajustando deployment do metrics-server para usar imagem local (tag)...[0m
+[1;37m   Aguardando Ingress controller...[0m
+[0;32m   Ingress controller pronto![0m
+[1;37m   Aguardando nó Minikube...[0m
+[0;32m   nó Minikube pronto![0m
+[1;37m   Instalando/atualizando rabbitmq (Helm)...[0m
+Release "rabbitmq" does not exist. Installing it now.
+NAME: rabbitmq
+LAST DEPLOYED: Fri Oct  3 10:18:13 2025
+NAMESPACE: default
+STATUS: deployed
+REVISION: 1
+TEST SUITE: None
+[0;32m   rabbitmq pronto via Helm.[0m
+[1;37m   Instalando/atualizando mongodb (Helm)...[0m
+Release "mongodb" does not exist. Installing it now.
+NAME: mongodb
+LAST DEPLOYED: Fri Oct  3 10:18:14 2025
+NAMESPACE: default
+STATUS: deployed
+REVISION: 1
+TEST SUITE: None
+[0;32m   mongodb pronto via Helm.[0m
+[1;37m   Aguardando RabbitMQ...[0m
+[1;37m   ...aguardando RabbitMQ (5s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (10s/300s)[0m
+[0;36m=====================================================[0m
+[0;32mInicializando ambiente Minikube completo (Linux)[0m
+[0;36m=====================================================[0m
+Projeto detectado em: [1;37m/home/paulo/Downloads/Globo/minikube-devops[0m
+Log: [1;37m/home/paulo/Downloads/Globo/minikube-devops/log/init-linux-20251003.log[0m
+[0;32mVersoes detectadas:[0m
+[1;37m   • kubectl:  v1.34.1[0m
+[1;37m   • minikube: v1.37.0[0m
+[1;37m   • helm:     v3.19.0+g3d8990f[0m
+[0;32mDocker ja esta em execucao.[0m
+[1;33mMinikube detectado com status: * Profile "minikube" not found. Run "minikube profile list" to view all profiles.
+  To start a cluster, run: "minikube start".[0m
+[1;33mIniciando Minikube (driver docker)...[0m
+
+* minikube v1.37.0 on Ubuntu 24.04
+* Using the docker driver based on user configuration
+* Using Docker driver with root privileges
+* Starting "minikube" primary control-plane node in "minikube" cluster
+* Pulling base image v0.0.48 ...
+* Downloading Kubernetes v1.34.0 preload ...
+   1.61 KiB / 488.52 MiB 0.00%
+* To pull new external images, you may need to configure a proxy: https://minikube.sigs.k8s.io/docs/reference/networking/proxy/
+* Configuring bridge CNI (Container Networking Interface) ...
+* Verifying Kubernetes components...
+  - Using image gcr.io/k8s-minikube/storage-provisioner:v5
+* Enabled addons: storage-provisioner, default-storageclass
+* Done! kubectl is now configured to use "minikube" cluster and "default" namespace by default
+[0;32mMinikube iniciado com sucesso.[0m
+[1;33mHabilitando addons essenciais...[0m
+[1;37m   Carregando registry.k8s.io/metrics-server/metrics-server:v0.8.0 no Minikube...[0m
+[0;32m   registry.k8s.io/metrics-server/metrics-server:v0.8.0 disponivel para o metrics-server.[0m
+[1;37m   Carregando registry.k8s.io/metrics-server/metrics-server@sha256:89258156d0e9af60403eafd44da9676fd66f600c7934d468ccc17e42b199aee2 no Minikube...[0m
+[0;32m   registry.k8s.io/metrics-server/metrics-server@sha256:89258156d0e9af60403eafd44da9676fd66f600c7934d468ccc17e42b199aee2 disponivel para o metrics-server.[0m
+[1;37m   Habilitando storage-provisioner...[0m
+[1;37m   Habilitando metrics-server...[0m
+[1;37m   Habilitando default-storageclass...[0m
+[1;37m   Habilitando dashboard...[0m
+[1;37m   Habilitando ingress...[0m
+[0;36m=====================================================[0m
+[0;32mInicializando ambiente Minikube completo (Linux)[0m
+[0;36m=====================================================[0m
+Projeto detectado em: [1;37m/home/paulo/Downloads/Globo/minikube-devops[0m
+Log: [1;37m/home/paulo/Downloads/Globo/minikube-devops/log/init-linux-20251003.log[0m
+[0;32mVersoes detectadas:[0m
+[1;37m   • kubectl:  v1.34.1[0m
+[1;37m   • minikube: v1.37.0[0m
+[1;37m   • helm:     v3.19.0+g3d8990f[0m
+[0;32mDocker ja esta em execucao.[0m
+[0;32mMinikube ja esta rodando.[0m
+[1;33mHabilitando addons essenciais...[0m
+[1;37m   Carregando registry.k8s.io/metrics-server/metrics-server:v0.8.0 no Minikube...[0m
+[0;32m   registry.k8s.io/metrics-server/metrics-server:v0.8.0 disponivel para o metrics-server.[0m
+[1;37m   Carregando registry.k8s.io/metrics-server/metrics-server@sha256:89258156d0e9af60403eafd44da9676fd66f600c7934d468ccc17e42b199aee2 no Minikube...[0m
+[0;32m   registry.k8s.io/metrics-server/metrics-server@sha256:89258156d0e9af60403eafd44da9676fd66f600c7934d468ccc17e42b199aee2 disponivel para o metrics-server.[0m
+[1;37m   Habilitando storage-provisioner...[0m
+[1;37m   Habilitando metrics-server...[0m
+[1;37m   Habilitando default-storageclass...[0m
+[1;37m   Habilitando dashboard...[0m
+[1;37m   Habilitando ingress...[0m
+[0;36m=====================================================[0m
+[0;32mInicializando ambiente Minikube completo (Linux)[0m
+[0;36m=====================================================[0m
+Projeto detectado em: [1;37m/home/paulo/Downloads/Globo/minikube-devops[0m
+Log: [1;37m/home/paulo/Downloads/Globo/minikube-devops/log/init-linux-20251003.log[0m
+[0;32mVersoes detectadas:[0m
+[1;37m   • kubectl:  v1.34.1[0m
+[1;37m   • minikube: v1.37.0[0m
+[1;37m   • helm:     v3.19.0+g3d8990f[0m
+[0;32mDocker ja esta em execucao.[0m
+[1;33mMinikube detectado com status: * Profile "minikube" not found. Run "minikube profile list" to view all profiles.
+  To start a cluster, run: "minikube start".[0m
+[1;33mIniciando Minikube (driver docker)...[0m
+
+* minikube v1.37.0 on Ubuntu 24.04
+* Using the docker driver based on user configuration
+* Using Docker driver with root privileges
+* Starting "minikube" primary control-plane node in "minikube" cluster
+* Pulling base image v0.0.48 ...
+* Downloading Kubernetes v1.34.0 preload ...
+   1.61 KiB / 488.52 MiB 0.00%
+* Verifying Kubernetes components...
+  - Using image gcr.io/k8s-minikube/storage-provisioner:v5
+* Enabled addons: storage-provisioner, default-storageclass
+* Done! kubectl is now configured to use "minikube" cluster and "default" namespace by default
+[0;32mMinikube iniciado com sucesso.[0m
+[1;33mHabilitando addons essenciais...[0m
+[1;37m   Carregando registry.k8s.io/metrics-server/metrics-server:v0.8.0 no Minikube...[0m
+[0;32m   registry.k8s.io/metrics-server/metrics-server:v0.8.0 disponivel para o metrics-server.[0m
+[1;37m   Carregando registry.k8s.io/metrics-server/metrics-server@sha256:89258156d0e9af60403eafd44da9676fd66f600c7934d468ccc17e42b199aee2 no Minikube...[0m
+[0;32m   registry.k8s.io/metrics-server/metrics-server@sha256:89258156d0e9af60403eafd44da9676fd66f600c7934d468ccc17e42b199aee2 disponivel para o metrics-server.[0m
+[1;37m   Habilitando storage-provisioner...[0m
+[1;37m   Habilitando metrics-server...[0m
+[1;37m   Habilitando default-storageclass...[0m
+[1;37m   Habilitando dashboard...[0m
+[1;37m   Habilitando ingress...[0m
+[1;37m   Ajustando deployment do metrics-server para usar imagem local (tag)...[0m
+[1;37m   Aguardando Ingress controller...[0m
+[1;37m   ...aguardando Ingress controller (5s/300s)[0m
+[0;32m   Ingress controller pronto![0m
+[1;37m   Aguardando nó Minikube...[0m
+[0;32m   nó Minikube pronto![0m
+[1;37m   Instalando/atualizando rabbitmq (Helm)...[0m
+Release "rabbitmq" does not exist. Installing it now.
+NAME: rabbitmq
+LAST DEPLOYED: Fri Oct  3 10:48:26 2025
+NAMESPACE: default
+STATUS: deployed
+REVISION: 1
+TEST SUITE: None
+[0;32m   rabbitmq pronto via Helm.[0m
+[1;37m   Instalando/atualizando mongodb (Helm)...[0m
+Release "mongodb" does not exist. Installing it now.
+NAME: mongodb
+LAST DEPLOYED: Fri Oct  3 10:48:27 2025
+NAMESPACE: default
+STATUS: deployed
+REVISION: 1
+TEST SUITE: None
+[0;32m   mongodb pronto via Helm.[0m
+[1;37m   Aguardando RabbitMQ...[0m
+[1;37m   ...aguardando RabbitMQ (5s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (10s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (15s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (20s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (25s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (30s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (35s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (40s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (45s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (50s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (55s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (60s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (65s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (70s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (75s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (80s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (85s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (90s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (95s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (100s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (105s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (110s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (115s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (120s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (125s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (130s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (135s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (140s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (145s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (150s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (155s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (160s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (165s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (170s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (175s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (180s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (185s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (190s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (195s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (200s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (205s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (210s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (215s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (220s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (225s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (230s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (235s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (240s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (245s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (250s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (255s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (260s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (265s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (270s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (275s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (280s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (285s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (290s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (295s/300s)[0m
+[1;37m   ...aguardando RabbitMQ (300s/300s)[0m
+[1;33m   ⚠️ Timeout aguardando RabbitMQ. Verifique manualmente.[0m
+[0;36m=====================================================[0m
+[0;32mInicializando ambiente Minikube completo (Linux)[0m
+[0;36m=====================================================[0m
+Projeto detectado em: [1;37m/home/paulo/Downloads/Globo/minikube-devops[0m
+Log: [1;37m/home/paulo/Downloads/Globo/minikube-devops/log/init-linux-20251003.log[0m
+[0;32mVersoes detectadas:[0m
+[1;37m   • kubectl:  v1.34.1[0m
+[1;37m   • minikube: v1.37.0[0m
+[1;37m   • helm:     v3.19.0+g3d8990f[0m
+[0;32mDocker ja esta em execucao.[0m
+[0;32mMinikube ja esta rodando.[0m
+[1;33mHabilitando addons essenciais...[0m
+[1;37m   Carregando registry.k8s.io/metrics-server/metrics-server:v0.8.0 no Minikube...[0m
+[0;32m   registry.k8s.io/metrics-server/metrics-server:v0.8.0 disponivel para o metrics-server.[0m
+[1;37m   Carregando registry.k8s.io/metrics-server/metrics-server@sha256:89258156d0e9af60403eafd44da9676fd66f600c7934d468ccc17e42b199aee2 no Minikube...[0m
+[0;32m   registry.k8s.io/metrics-server/metrics-server@sha256:89258156d0e9af60403eafd44da9676fd66f600c7934d468ccc17e42b199aee2 disponivel para o metrics-server.[0m
+[1;37m   Habilitando storage-provisioner...[0m
+[1;37m   Habilitando metrics-server...[0m
+[1;37m   Habilitando default-storageclass...[0m
+[1;37m   Habilitando dashboard...[0m
+[1;37m   Habilitando ingress...[0m
+[1;37m   Ajustando deployment do metrics-server para usar imagem local (tag)...[0m
+[1;37m   Aguardando Ingress controller...[0m
+[0;32m   Ingress controller pronto![0m
+[1;37m   Aguardando nó Minikube...[0m
+[0;32m   nó Minikube pronto![0m
+[1;37m   Instalando/atualizando rabbitmq (Helm)...[0m
+Release "rabbitmq" has been upgraded. Happy Helming!
+NAME: rabbitmq
+LAST DEPLOYED: Fri Oct  3 11:03:47 2025
+NAMESPACE: default
+STATUS: deployed
+REVISION: 3
+TEST SUITE: None
+[0;32m   rabbitmq pronto via Helm.[0m
+[1;37m   Instalando/atualizando mongodb (Helm)...[0m
+Release "mongodb" has been upgraded. Happy Helming!
+NAME: mongodb
+LAST DEPLOYED: Fri Oct  3 11:03:48 2025
+NAMESPACE: default
+STATUS: deployed
+REVISION: 2
+TEST SUITE: None
+[0;32m   mongodb pronto via Helm.[0m
+[1;37m   Aguardando RabbitMQ...[0m
+[1;37m   ...aguardando RabbitMQ (5s/100s)[0m
+[1;37m   ...aguardando RabbitMQ (10s/100s)[0m
+[1;37m   ...aguardando RabbitMQ (15s/100s)[0m
+[1;37m   ...aguardando RabbitMQ (20s/100s)[0m
+[1;37m   ...aguardando RabbitMQ (25s/100s)[0m
+[1;37m   ...aguardando RabbitMQ (30s/100s)[0m
+[1;37m   ...aguardando RabbitMQ (35s/100s)[0m
+[1;37m   ...aguardando RabbitMQ (40s/100s)[0m
+[1;37m   ...aguardando RabbitMQ (45s/100s)[0m
+[1;37m   ...aguardando RabbitMQ (50s/100s)[0m
+[1;37m   ...aguardando RabbitMQ (55s/100s)[0m
+[1;37m   ...aguardando RabbitMQ (60s/100s)[0m
+[1;37m   ...aguardando RabbitMQ (65s/100s)[0m
+[1;37m   ...aguardando RabbitMQ (70s/100s)[0m
+[1;37m   ...aguardando RabbitMQ (75s/100s)[0m
+[1;37m   ...aguardando RabbitMQ (80s/100s)[0m
+[1;37m   ...aguardando RabbitMQ (85s/100s)[0m
+[1;37m   ...aguardando RabbitMQ (90s/100s)[0m
+[1;37m   ...aguardando RabbitMQ (95s/100s)[0m
+[1;37m   ...aguardando RabbitMQ (100s/100s)[0m
+[1;33m   ⚠️ Timeout aguardando RabbitMQ. Continuando mesmo assim...[0m
+[1;37m   Aguardando MongoDB...[0m
+[0;32m   MongoDB pronto![0m
+[1;33mConfigurando port-forwards locais...[0m
+[0;32m   RabbitMQ Management em http://localhost:15672[0m
+[0;32m   RabbitMQ AMQP disponivel em localhost:5672[0m
+[0;32m   MongoDB disponivel em mongodb://localhost:27017[0m
+[0;32m   Dashboard em http://localhost:15671[0m
+[1;33mInstalando/validando KEDA...[0m
+[0;36m=====================================================[0m
+[0;32mKEDA - Kubernetes Event-driven Autoscaling Setup[0m
+[0;32mVersao: 2.15+ (Latest)[0m
+[0;36m=====================================================[0m
+
+[1;33m1. Verificando prerequisitos...[0m
+[0;32m   ✅ kubectl: v1.34.1[0m
+[0;32m   ✅ helm: v3.19.0+g3d8990f[0m
+[0;32m   ✅ minikube: v1.37.0[0m
+
+[1;33m2. Verificando status do Minikube...[0m
+[0;32m   ✅ Minikube esta rodando[0m
+
+[1;33m3. Baixando e carregando imagens do KEDA no Minikube...[0m
+[0;36m   Baixando ghcr.io/kedacore/keda:2.17.2 ...[0m
+2.17.2: Pulling from kedacore/keda
+Digest: sha256:72dc058e478d7743a20f6f2f3af76a67d80b6f748a656a32d42a0ce560cc75c7
+Status: Image is up to date for ghcr.io/kedacore/keda:2.17.2
+ghcr.io/kedacore/keda:2.17.2
+[0;36m   Carregando ghcr.io/kedacore/keda:2.17.2 no Minikube ...[0m
+[0;36m   Baixando ghcr.io/kedacore/keda-admission-webhooks:2.17.2 ...[0m
+2.17.2: Pulling from kedacore/keda-admission-webhooks
+Digest: sha256:c8227c6edb4d9926f7ed366bc8f383e9e461c6dd58d708e97539ad9393caffa8
+Status: Image is up to date for ghcr.io/kedacore/keda-admission-webhooks:2.17.2
+ghcr.io/kedacore/keda-admission-webhooks:2.17.2
+[0;36m   Carregando ghcr.io/kedacore/keda-admission-webhooks:2.17.2 no Minikube ...[0m
+[0;36m   Baixando ghcr.io/kedacore/keda-metrics-apiserver:2.17.2 ...[0m
+2.17.2: Pulling from kedacore/keda-metrics-apiserver
+Digest: sha256:f312f50ddc578ef1629c5a69adeb8672b44c9914383d1eea940245d3f5d18a85
+Status: Image is up to date for ghcr.io/kedacore/keda-metrics-apiserver:2.17.2
+ghcr.io/kedacore/keda-metrics-apiserver:2.17.2
+[0;36m   Carregando ghcr.io/kedacore/keda-metrics-apiserver:2.17.2 no Minikube ...[0m
+[0;32m   ✅ Imagens do KEDA carregadas no Minikube[0m
+
+[1;33m4. Configurando repositorio Helm do KEDA...[0m
+
+[1;33m4. Criando namespace keda...[0m
+namespace/keda created
+[0;32m   ✅ Namespace 'keda' criado/verificado[0m
+
+[1;33m5. Instalando KEDA via Helm...[0m
+[0;36m   Isso pode levar alguns minutos...[0m
+Release "keda" does not exist. Installing it now.
+I1003 11:07:47.425572   64003 warnings.go:110] "Warning: unrecognized format \"int32\""
+I1003 11:07:47.480856   64003 warnings.go:110] "Warning: unrecognized format \"int32\""
+I1003 11:07:47.480871   64003 warnings.go:110] "Warning: unrecognized format \"int64\""
+NAME: keda
+LAST DEPLOYED: Fri Oct  3 11:07:47 2025
+NAMESPACE: keda
+STATUS: deployed
+REVISION: 1
+TEST SUITE: None
+NOTES:
+:::^.     .::::^:     :::::::::::::::    .:::::::::.                   .^.                  
+7???~   .^7????~.     7??????????????.   :?????????77!^.              .7?7.                 
+7???~  ^7???7~.       ~!!!!!!!!!!!!!!.   :????!!!!7????7~.           .7???7.                
+7???~^7????~.                            :????:    :~7???7.         :7?????7.               
+7???7????!.           ::::::::::::.      :????:      .7???!        :7??77???7.              
+7????????7:           7???????????~      :????:       :????:      :???7?5????7.             
+7????!~????^          !77777777777^      :????:       :????:     ^???7?#P7????7.            
+7???~  ^????~                            :????:      :7???!     ^???7J#@J7?????7.           
+7???~   :7???!.                          :????:   .:~7???!.    ~???7Y&@#7777????7.          
+7???~    .7???7:      !!!!!!!!!!!!!!!    :????7!!77????7^     ~??775@@@GJJYJ?????7.         
+7???~     .!????^     7?????????????7.   :?????????7!~:      !????G@@@@@@@@5??????7:        
+::::.       :::::     :::::::::::::::    .::::::::..        .::::JGGGB@@@&7:::::::::        
+                                                                      ?@@#~                  
+                                                                      P@B^                   
+                                                                    :&G:                    
+                                                                    !5.                     
+                                                                    .Kubernetes Event-driven Autoscaling (KEDA) - Application autoscaling made simple.
+
+Get started by deploying Scaled Objects to your cluster:
+    - Information about Scaled Objects : https://keda.sh/docs/latest/concepts/
+    - Samples: https://github.com/kedacore/samples
+
+Get information about the deployed ScaledObjects:
+  kubectl get scaledobject [--namespace <namespace>]
+
+Get details about a deployed ScaledObject:
+  kubectl describe scaledobject <scaled-object-name> [--namespace <namespace>]
+
+Get information about the deployed ScaledObjects:
+  kubectl get triggerauthentication [--namespace <namespace>]
+
+Get details about a deployed ScaledObject:
+  kubectl describe triggerauthentication <trigger-authentication-name> [--namespace <namespace>]
+
+Get an overview of the Horizontal Pod Autoscalers (HPA) that KEDA is using behind the scenes:
+  kubectl get hpa [--all-namespaces] [--namespace <namespace>]
+
+Learn more about KEDA:
+- Documentation: https://keda.sh/
+- Support: https://keda.sh/support/
+- File an issue: https://github.com/kedacore/keda/issues/new/choose
+[0;32m   ✅ KEDA instalado com sucesso![0m
+[1;37m   Ajustando imagePullPolicy dos componentes KEDA...[0m
+
+[1;33m6. Aguardando pods KEDA ficarem prontos...[0m
+[1;37m   ⏱️ 5s - Pods prontos: 0/6[0m
+[1;37m   ⏱️ 10s - Pods prontos: 1/5[0m
+[1;37m   ⏱️ 15s - Pods prontos: 1/5[0m
+[1;37m   ⏱️ 20s - Pods prontos: 1/5[0m
+[1;37m   ⏱️ 25s - Pods prontos: 3/3[0m
+[0;32m   ✅ Todos os pods KEDA estao prontos![0m
+
+[1;33m7. Validando instalacao...[0m
+[0;32m   ✅ Namespace keda existe[0m
+[0;32m   ✅ CRD scaledobjects.keda.sh existe[0m
+[0;32m   ✅ CRD scaledjobs.keda.sh existe[0m
+[0;32m   ✅ CRD triggerauthentications.keda.sh existe[0m
+[0;32m   ✅ CRD clustertriggerauthentications.keda.sh existe[0m
+[0;32m   ✅ KEDA versao: ghcr.io/kedacore/keda:2.17.2[0m
+
+[1;37mStatus dos pods KEDA:[0m
+NAME                                               READY   STATUS    RESTARTS      AGE
+keda-admission-webhooks-b6d7bc9b7-bwz65            1/1     Running   1 (25s ago)   26s
+keda-operator-597fc586bf-5ktlb                     1/1     Running   1 (25s ago)   26s
+keda-operator-metrics-apiserver-59bddcb94b-7tjg2   1/1     Running   1 (24s ago)   26s
+
+[0;36m=====================================================[0m
+[0;32m🎉 INSTALACAO KEDA CONCLUIDA![0m
+[0;36m=====================================================[0m
+
+[1;33m📋 COMANDOS UTEIS:[0m
+[1;37m   • Ver pods KEDA: kubectl get pods -n keda[0m
+[1;37m   • Ver ScaledObjects: kubectl get scaledobject -A[0m
+[1;37m   • Ver HPAs: kubectl get hpa -A[0m
+[1;37m   • Logs KEDA: kubectl logs -n keda -l app.kubernetes.io/name=keda-operator[0m
+
+[1;33m📁 EXEMPLOS DISPONIVEIS:[0m
+[1;37m   • Localizacao: /home/paulo/Downloads/Globo/minikube-devops/minikube/configs/keda/examples/[0m
+[1;37m   • Script de teste: /home/paulo/Downloads/Globo/minikube-devops/minikube/scripts/linux/keda/test-keda.sh[0m
+
+[0;32m✅ KEDA pronto para uso![0m
+[1;37m   Ajustando imagePullPolicy dos componentes KEDA para IfNotPresent...[0m
+[1;33mExecutando validacoes rapidas...[0m
+[0;32m   RabbitMQ via Ingress respondeu (http://rabbitmq.local).[0m
+[0;32m   MongoDB respondeu ao ping.[0m
+[0;36m=====================================================[0m
+[0;32mAMBIENTE CONFIGURADO COM SUCESSO![0m
+[0;36m=====================================================[0m
+[1;33mInformacoes de acesso:[0m
+[1;33m**Atenção:** adicione em /etc/hosts: 192.168.49.2 rabbitmq.local[0m
+[1;33m     ou copie o comando:[0m
+[1;33m        sudo sh -c 'cat <<EOF >> /etc/hosts
+        192.168.49.2 rabbitmq.local
+        EOF'[0m
+[1;37m   • RabbitMQ UI:   http://rabbitmq.local  (guest/guest)[0m
+[1;37m   • RabbitMQ AMQP: amqp://guest:guest@localhost:5672[0m
+[1;37m   • MongoDB URI:   mongodb://admin:admin@localhost:27017/admin[0m
+[1;37m   • Dashboard:     http://localhost:15671[0m
+[1;37m   • KEDA:         kubectl get pods -n keda[0m
+[1;33mLog completo:[0m [1;37m/home/paulo/Downloads/Globo/minikube-devops/log/init-linux-20251003.log[0m
+[0;32mAmbiente pronto para uso![0m
+[0;36m=====================================================[0m
+[0;32mInicializando ambiente Minikube completo (Linux)[0m
+[0;36m=====================================================[0m
+Projeto detectado em: [1;37m/home/paulo/Downloads/Globo/minikube-devops[0m
+Log: [1;37m/home/paulo/Downloads/Globo/minikube-devops/log/init-linux-20251003.log[0m
+[0;32mVersoes detectadas:[0m
+[1;37m   • kubectl:  v1.34.1[0m
+[1;37m   • minikube: v1.37.0[0m
+[1;37m   • helm:     v3.19.0+g3d8990f[0m
+[0;32mDocker ja esta em execucao.[0m
+[0;32mMinikube ja esta rodando.[0m
+[1;33mHabilitando addons essenciais...[0m
+[1;37m   Carregando registry.k8s.io/metrics-server/metrics-server:v0.8.0 no Minikube...[0m
+[0;32m   registry.k8s.io/metrics-server/metrics-server:v0.8.0 disponivel para o metrics-server.[0m
+[1;37m   Carregando registry.k8s.io/metrics-server/metrics-server@sha256:89258156d0e9af60403eafd44da9676fd66f600c7934d468ccc17e42b199aee2 no Minikube...[0m
+[0;32m   registry.k8s.io/metrics-server/metrics-server@sha256:89258156d0e9af60403eafd44da9676fd66f600c7934d468ccc17e42b199aee2 disponivel para o metrics-server.[0m
+[1;37m   Habilitando storage-provisioner...[0m
+[1;37m   Habilitando metrics-server...[0m
+[1;37m   Habilitando default-storageclass...[0m
+[1;37m   Habilitando dashboard...[0m
+[1;37m   Habilitando ingress...[0m
+[1;37m   Ajustando deployment do metrics-server para usar imagem local (tag)...[0m
+[1;37m   Aguardando Ingress controller...[0m
+[0;32m   Ingress controller pronto![0m
+[1;37m   Aguardando nó Minikube...[0m
+[0;32m   nó Minikube pronto![0m
+[1;37m   Instalando/atualizando rabbitmq (Helm)...[0m
+Release "rabbitmq" has been upgraded. Happy Helming!
+NAME: rabbitmq
+LAST DEPLOYED: Fri Oct  3 11:09:27 2025
+NAMESPACE: default
+STATUS: deployed
+REVISION: 4
+TEST SUITE: None
+[0;32m   rabbitmq pronto via Helm.[0m
+[1;37m   Instalando/atualizando mongodb (Helm)...[0m
+Release "mongodb" has been upgraded. Happy Helming!
+NAME: mongodb
+LAST DEPLOYED: Fri Oct  3 11:09:27 2025
+NAMESPACE: default
+STATUS: deployed
+REVISION: 3
+TEST SUITE: None
+[0;32m   mongodb pronto via Helm.[0m
+[1;37m   Aguardando RabbitMQ...[0m
+[0;36m=====================================================[0m
+[0;32mInicializando ambiente Minikube completo (Linux)[0m
+[0;36m=====================================================[0m
+Projeto detectado em: [1;37m/home/paulo/Downloads/Globo/minikube-devops[0m
+Log: [1;37m/home/paulo/Downloads/Globo/minikube-devops/log/init-linux-20251003.log[0m
+[0;32mVersoes detectadas:[0m
+[1;37m   • kubectl:  v1.34.1[0m
+[1;37m   • minikube: v1.37.0[0m
+[1;37m   • helm:     v3.19.0+g3d8990f[0m
+[0;32mDocker ja esta em execucao.[0m
+[1;33mMinikube detectado com status: * Profile "minikube" not found. Run "minikube profile list" to view all profiles.
+  To start a cluster, run: "minikube start".[0m
+[1;33mIniciando Minikube (driver docker)...[0m
+
+* minikube v1.37.0 on Ubuntu 24.04
+* Using the docker driver based on user configuration
+* Using Docker driver with root privileges
+* Starting "minikube" primary control-plane node in "minikube" cluster
+* Pulling base image v0.0.48 ...
+* Downloading Kubernetes v1.34.0 preload ...
+   1.61 KiB / 488.52 MiB 0.00%
+* Verifying Kubernetes components...
+  - Using image gcr.io/k8s-minikube/storage-provisioner:v5
+* Enabled addons: storage-provisioner, default-storageclass
+* Done! kubectl is now configured to use "minikube" cluster and "default" namespace by default
+[0;32mMinikube iniciado com sucesso.[0m
+[1;33mHabilitando addons essenciais...[0m
+[1;37m   Carregando registry.k8s.io/metrics-server/metrics-server:v0.8.0 no Minikube...[0m
+[0;32m   registry.k8s.io/metrics-server/metrics-server:v0.8.0 disponivel para o metrics-server.[0m
+[1;37m   Carregando registry.k8s.io/metrics-server/metrics-server@sha256:89258156d0e9af60403eafd44da9676fd66f600c7934d468ccc17e42b199aee2 no Minikube...[0m
+[0;32m   registry.k8s.io/metrics-server/metrics-server@sha256:89258156d0e9af60403eafd44da9676fd66f600c7934d468ccc17e42b199aee2 disponivel para o metrics-server.[0m
+[1;37m   Habilitando storage-provisioner...[0m
+[1;37m   Habilitando metrics-server...[0m
+[1;37m   Habilitando default-storageclass...[0m
+[1;37m   Habilitando dashboard...[0m
+[1;37m   Habilitando ingress...[0m
+[1;37m   Ajustando deployment do metrics-server para usar imagem local (tag)...[0m
+[1;37m   Aguardando Ingress controller...[0m
+[1;37m   ...aguardando Ingress controller (5s/300s)[0m
+[0;32m   Ingress controller pronto![0m
+[1;37m   Aguardando nó Minikube...[0m
+[0;32m   nó Minikube pronto![0m
+[1;37m   Instalando/atualizando rabbitmq (Helm)...[0m
+Release "rabbitmq" does not exist. Installing it now.
+Error: 1 error occurred:
+	* Internal error occurred: failed calling webhook "validate.nginx.ingress.kubernetes.io": failed to call webhook: Post "https://ingress-nginx-controller-admission.ingress-nginx.svc:443/networking/v1/ingresses?timeout=10s": dial tcp 10.105.231.89:443: connect: connection refused
+
+
+[0;36m=====================================================[0m
+[0;32mInicializando ambiente Minikube completo (Linux)[0m
+[0;36m=====================================================[0m
+Projeto detectado em: [1;37m/home/paulo/Downloads/Globo/minikube-devops[0m
+Log: [1;37m/home/paulo/Downloads/Globo/minikube-devops/log/init-linux-20251003.log[0m
+[0;32mVersoes detectadas:[0m
+[1;37m   • kubectl:  v1.34.1[0m
+[1;37m   • minikube: v1.37.0[0m
+[1;37m   • helm:     v3.19.0+g3d8990f[0m
+[0;32mDocker ja esta em execucao.[0m
+[0;32mMinikube ja esta rodando.[0m
+[1;33mHabilitando addons essenciais...[0m
+[1;37m   Carregando registry.k8s.io/metrics-server/metrics-server:v0.8.0 no Minikube...[0m
+[0;32m   registry.k8s.io/metrics-server/metrics-server:v0.8.0 disponivel para o metrics-server.[0m
+[1;37m   Carregando registry.k8s.io/metrics-server/metrics-server@sha256:89258156d0e9af60403eafd44da9676fd66f600c7934d468ccc17e42b199aee2 no Minikube...[0m
+[0;32m   registry.k8s.io/metrics-server/metrics-server@sha256:89258156d0e9af60403eafd44da9676fd66f600c7934d468ccc17e42b199aee2 disponivel para o metrics-server.[0m
+[1;37m   Habilitando storage-provisioner...[0m
+[1;37m   Habilitando metrics-server...[0m
+[1;37m   Habilitando default-storageclass...[0m
+[1;37m   Habilitando dashboard...[0m
+[1;37m   Habilitando ingress...[0m
+[1;37m   Ajustando deployment do metrics-server para usar imagem local (tag)...[0m
+[1;37m   Aguardando Ingress controller...[0m
+[0;32m   Ingress controller pronto![0m
+[1;37m   Aguardando nó Minikube...[0m
+[0;32m   nó Minikube pronto![0m
+[1;37m   Instalando/atualizando rabbitmq (Helm)...[0m
+Release "rabbitmq" has been upgraded. Happy Helming!
+NAME: rabbitmq
+LAST DEPLOYED: Fri Oct  3 11:20:13 2025
+NAMESPACE: default
+STATUS: deployed
+REVISION: 2
+TEST SUITE: None
+[0;32m   rabbitmq pronto via Helm.[0m
+[1;37m   Instalando/atualizando mongodb (Helm)...[0m
+Release "mongodb" does not exist. Installing it now.
+NAME: mongodb
+LAST DEPLOYED: Fri Oct  3 11:20:13 2025
+NAMESPACE: default
+STATUS: deployed
+REVISION: 1
+TEST SUITE: None
+[0;32m   mongodb pronto via Helm.[0m
+[1;37m   Aguardando RabbitMQ...[0m
+[0;32m   RabbitMQ pronto![0m
+[1;37m   Aguardando MongoDB...[0m
+[1;37m   ...aguardando MongoDB (5s/100s)[0m
+[1;37m   ...aguardando MongoDB (10s/100s)[0m
+[0;32m   MongoDB pronto![0m
+[1;33mConfigurando port-forwards locais...[0m
+[0;32m   RabbitMQ Management em http://localhost:15672[0m
+[0;32m   RabbitMQ AMQP disponivel em localhost:5672[0m
+[0;32m   MongoDB disponivel em mongodb://localhost:27017[0m
+[0;32m   Dashboard em http://localhost:15671[0m
+[1;33mInstalando/validando KEDA...[0m
+[0;36m=====================================================[0m
+[0;32mKEDA - Kubernetes Event-driven Autoscaling Setup[0m
+[0;32mVersao: 2.15+ (Latest)[0m
+[0;36m=====================================================[0m
+
+[1;33m1. Verificando prerequisitos...[0m
+[0;32m   ✅ kubectl: v1.34.1[0m
+[0;32m   ✅ helm: v3.19.0+g3d8990f[0m
+[0;32m   ✅ minikube: v1.37.0[0m
+
+[1;33m2. Verificando status do Minikube...[0m
+[0;32m   ✅ Minikube esta rodando[0m
+
+[1;33m3. Baixando e carregando imagens do KEDA no Minikube...[0m
+[0;36m   Baixando ghcr.io/kedacore/keda:2.17.2 ...[0m
+2.17.2: Pulling from kedacore/keda
+Digest: sha256:72dc058e478d7743a20f6f2f3af76a67d80b6f748a656a32d42a0ce560cc75c7
+Status: Image is up to date for ghcr.io/kedacore/keda:2.17.2
+ghcr.io/kedacore/keda:2.17.2
+[0;36m   Carregando ghcr.io/kedacore/keda:2.17.2 no Minikube ...[0m
+[0;36m   Baixando ghcr.io/kedacore/keda-admission-webhooks:2.17.2 ...[0m
+2.17.2: Pulling from kedacore/keda-admission-webhooks
+Digest: sha256:c8227c6edb4d9926f7ed366bc8f383e9e461c6dd58d708e97539ad9393caffa8
+Status: Image is up to date for ghcr.io/kedacore/keda-admission-webhooks:2.17.2
+ghcr.io/kedacore/keda-admission-webhooks:2.17.2
+[0;36m   Carregando ghcr.io/kedacore/keda-admission-webhooks:2.17.2 no Minikube ...[0m
+[0;36m   Baixando ghcr.io/kedacore/keda-metrics-apiserver:2.17.2 ...[0m
+2.17.2: Pulling from kedacore/keda-metrics-apiserver
+Digest: sha256:f312f50ddc578ef1629c5a69adeb8672b44c9914383d1eea940245d3f5d18a85
+Status: Image is up to date for ghcr.io/kedacore/keda-metrics-apiserver:2.17.2
+ghcr.io/kedacore/keda-metrics-apiserver:2.17.2
+[0;36m   Carregando ghcr.io/kedacore/keda-metrics-apiserver:2.17.2 no Minikube ...[0m
+[0;32m   ✅ Imagens do KEDA carregadas no Minikube[0m
+
+[1;33m4. Configurando repositorio Helm do KEDA...[0m
+
+[1;33m4. Criando namespace keda...[0m
+namespace/keda created
+[0;32m   ✅ Namespace 'keda' criado/verificado[0m
+
+[1;33m5. Instalando KEDA via Helm...[0m
+[0;36m   Isso pode levar alguns minutos...[0m
+Release "keda" does not exist. Installing it now.
+I1003 11:21:17.227300  106227 warnings.go:110] "Warning: unrecognized format \"int32\""
+I1003 11:21:17.277469  106227 warnings.go:110] "Warning: unrecognized format \"int32\""
+I1003 11:21:17.277484  106227 warnings.go:110] "Warning: unrecognized format \"int64\""
+NAME: keda
+LAST DEPLOYED: Fri Oct  3 11:21:16 2025
+NAMESPACE: keda
+STATUS: deployed
+REVISION: 1
+TEST SUITE: None
+NOTES:
+:::^.     .::::^:     :::::::::::::::    .:::::::::.                   .^.                  
+7???~   .^7????~.     7??????????????.   :?????????77!^.              .7?7.                 
+7???~  ^7???7~.       ~!!!!!!!!!!!!!!.   :????!!!!7????7~.           .7???7.                
+7???~^7????~.                            :????:    :~7???7.         :7?????7.               
+7???7????!.           ::::::::::::.      :????:      .7???!        :7??77???7.              
+7????????7:           7???????????~      :????:       :????:      :???7?5????7.             
+7????!~????^          !77777777777^      :????:       :????:     ^???7?#P7????7.            
+7???~  ^????~                            :????:      :7???!     ^???7J#@J7?????7.           
+7???~   :7???!.                          :????:   .:~7???!.    ~???7Y&@#7777????7.          
+7???~    .7???7:      !!!!!!!!!!!!!!!    :????7!!77????7^     ~??775@@@GJJYJ?????7.         
+7???~     .!????^     7?????????????7.   :?????????7!~:      !????G@@@@@@@@5??????7:        
+::::.       :::::     :::::::::::::::    .::::::::..        .::::JGGGB@@@&7:::::::::        
+                                                                      ?@@#~                  
+                                                                      P@B^                   
+                                                                    :&G:                    
+                                                                    !5.                     
+                                                                    .Kubernetes Event-driven Autoscaling (KEDA) - Application autoscaling made simple.
+
+Get started by deploying Scaled Objects to your cluster:
+    - Information about Scaled Objects : https://keda.sh/docs/latest/concepts/
+    - Samples: https://github.com/kedacore/samples
+
+Get information about the deployed ScaledObjects:
+  kubectl get scaledobject [--namespace <namespace>]
+
+Get details about a deployed ScaledObject:
+  kubectl describe scaledobject <scaled-object-name> [--namespace <namespace>]
+
+Get information about the deployed ScaledObjects:
+  kubectl get triggerauthentication [--namespace <namespace>]
+
+Get details about a deployed ScaledObject:
+  kubectl describe triggerauthentication <trigger-authentication-name> [--namespace <namespace>]
+
+Get an overview of the Horizontal Pod Autoscalers (HPA) that KEDA is using behind the scenes:
+  kubectl get hpa [--all-namespaces] [--namespace <namespace>]
+
+Learn more about KEDA:
+- Documentation: https://keda.sh/
+- Support: https://keda.sh/support/
+- File an issue: https://github.com/kedacore/keda/issues/new/choose
+[0;32m   ✅ KEDA instalado com sucesso![0m
+[1;37m   Ajustando imagePullPolicy dos componentes KEDA...[0m
+
+[1;33m6. Aguardando pods KEDA ficarem prontos...[0m
+[1;37m   ⏱️ 5s - Pods prontos: 0/6[0m
+[1;37m   ⏱️ 10s - Pods prontos: 1/5[0m
+[1;37m   ⏱️ 15s - Pods prontos: 1/5[0m
+[1;37m   ⏱️ 20s - Pods prontos: 1/5[0m
+[1;37m   ⏱️ 25s - Pods prontos: 3/3[0m
+[0;32m   ✅ Todos os pods KEDA estao prontos![0m
+
+[1;33m7. Validando instalacao...[0m
+[0;32m   ✅ Namespace keda existe[0m
+[0;32m   ✅ CRD scaledobjects.keda.sh existe[0m
+[0;32m   ✅ CRD scaledjobs.keda.sh existe[0m
+[0;32m   ✅ CRD triggerauthentications.keda.sh existe[0m
+[0;32m   ✅ CRD clustertriggerauthentications.keda.sh existe[0m
+[0;32m   ✅ KEDA versao: ghcr.io/kedacore/keda:2.17.2[0m
+
+[1;37mStatus dos pods KEDA:[0m
+NAME                                               READY   STATUS    RESTARTS      AGE
+keda-admission-webhooks-b6d7bc9b7-c2htw            1/1     Running   1 (25s ago)   26s
+keda-operator-597fc586bf-mgwft                     1/1     Running   1 (25s ago)   26s
+keda-operator-metrics-apiserver-59bddcb94b-pxv6g   1/1     Running   1 (25s ago)   26s
+
+[0;36m=====================================================[0m
+[0;32m🎉 INSTALACAO KEDA CONCLUIDA![0m
+[0;36m=====================================================[0m
+
+[1;33m📋 COMANDOS UTEIS:[0m
+[1;37m   • Ver pods KEDA: kubectl get pods -n keda[0m
+[1;37m   • Ver ScaledObjects: kubectl get scaledobject -A[0m
+[1;37m   • Ver HPAs: kubectl get hpa -A[0m
+[1;37m   • Logs KEDA: kubectl logs -n keda -l app.kubernetes.io/name=keda-operator[0m
+
+[1;33m📁 EXEMPLOS DISPONIVEIS:[0m
+[1;37m   • Localizacao: /home/paulo/Downloads/Globo/minikube-devops/minikube/configs/keda/examples/[0m
+[1;37m   • Script de teste: /home/paulo/Downloads/Globo/minikube-devops/minikube/scripts/linux/keda/test-keda.sh[0m
+
+[0;32m✅ KEDA pronto para uso![0m
+[1;37m   Ajustando imagePullPolicy dos componentes KEDA para IfNotPresent...[0m
+[1;33mExecutando validacoes rapidas...[0m
+[0;32m   RabbitMQ via Ingress respondeu (http://rabbitmq.local).[0m
+[0;32m   MongoDB respondeu ao ping.[0m
+[0;36m=====================================================[0m
+[0;32mAMBIENTE CONFIGURADO COM SUCESSO![0m
+[0;36m=====================================================[0m
+[1;33mInformacoes de acesso:[0m
+[1;33m**Atenção:** adicione em /etc/hosts: 192.168.49.2 rabbitmq.local[0m
+[1;33m     ou copie o comando:[0m
+[1;33m        sudo sh -c 'cat <<EOF >> /etc/hosts
+        192.168.49.2 rabbitmq.local
+        EOF'[0m
+[1;37m   • RabbitMQ UI:   http://rabbitmq.local  (guest/guest)[0m
+[1;37m   • RabbitMQ AMQP: amqp://guest:guest@localhost:5672[0m
+[1;37m   • MongoDB URI:   mongodb://admin:admin@localhost:27017/admin[0m
+[1;37m   • Dashboard:     http://localhost:15671[0m
+[1;37m   • KEDA:         kubectl get pods -n keda[0m
+[1;33mLog completo:[0m [1;37m/home/paulo/Downloads/Globo/minikube-devops/log/init-linux-20251003.log[0m
+[0;32mAmbiente pronto para uso![0m

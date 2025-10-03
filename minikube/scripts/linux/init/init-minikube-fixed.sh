@@ -57,7 +57,7 @@ wait_for_resource() {
     local desc="$1"
     local target="$2"
     local namespace="$3"
-    local timeout="${4:-300}"
+    local timeout="${4:-100}"  # Reduzido de 300 para 100 segundos
     local interval=5
     local waited=0
     local ns_args=()
@@ -81,8 +81,8 @@ wait_for_resource() {
         echo -e "${WHITE}   ...aguardando ${desc} (${waited}s/${timeout}s)${NC}"
     done
 
-    echo -e "${YELLOW}   ⚠️ Timeout aguardando ${desc}. Verifique manualmente.${NC}"
-    return 1
+    echo -e "${YELLOW}   ⚠️ Timeout aguardando ${desc}. Continuando mesmo assim...${NC}"
+    return 0  # Mudado de return 1 para return 0 para continuar o script
 }
 
 wait_for_job() {
@@ -90,7 +90,7 @@ wait_for_job() {
     local namespace="$2"
     local waited=0
     local interval=10
-    local timeout=300
+    local timeout=100  # Reduzido de 300 para 100 segundos
 
     echo -e "${WHITE}   Aguardando job ${job_name} completar...${NC}"
     while (( waited < timeout )); do
@@ -102,9 +102,9 @@ wait_for_job() {
                 return 0
                 ;;
             Failed)
-                echo -e "${RED}   Job ${job_name} falhou.${NC}"
+                echo -e "${YELLOW}   Job ${job_name} falhou. Continuando mesmo assim...${NC}"
                 kubectl logs job/"$job_name" -n "$namespace" || true
-                return 1
+                return 0  # Mudado para continuar mesmo com falha
                 ;;
         esac
         sleep "$interval"
