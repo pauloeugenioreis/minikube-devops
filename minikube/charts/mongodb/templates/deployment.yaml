@@ -48,16 +48,20 @@ spec:
             - mongosh
             - --eval
             - "db.adminCommand('ping')"
-          initialDelaySeconds: 30
-          periodSeconds: 10
+          initialDelaySeconds: 60   # Aumentado de 30 para 60
+          periodSeconds: 30         # Aumentado de 10 para 30
+          timeoutSeconds: 10        # Adicionado
+          failureThreshold: 5       # Adicionado
         readinessProbe:
           exec:
             command:
             - mongosh
             - --eval
             - "db.adminCommand('ping')"
-          initialDelaySeconds: 5
-          periodSeconds: 5
+          initialDelaySeconds: 30   # Aumentado de 5 para 30
+          periodSeconds: 15         # Aumentado de 5 para 15
+          timeoutSeconds: 10        # Adicionado
+          failureThreshold: 3       # Adicionado
       volumes:
       - name: mongodb-data
         {{- if .Values.persistence.enabled }}

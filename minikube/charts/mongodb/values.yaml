@@ -3,7 +3,7 @@ replicaCount: 1
 
 image:
   repository: mongo
-  tag: "7.0"
+  tag: "8.0.15"
 
 service:
   type: NodePort
@@ -23,8 +23,8 @@ credentials:
 
 resources:
   requests:
-    memory: "512Mi"
-    cpu: "200m"
+    memory: "1Gi"    # Aumentado para MongoDB 8.x
+    cpu: "250m"      # Ligeiramente aumentado
   limits:
-    memory: "1Gi"
+    memory: "2Gi"    # Aumentado para MongoDB 8.x
     cpu: "1000m"
