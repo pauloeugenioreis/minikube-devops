@@ -17,7 +17,17 @@ Ambiente Minikube opinado com RabbitMQ, MongoDB e KEDA, preparado para iniciar a
 - **Area de testes** (`temp/`): espaco isolado para prototipos antes de promover scripts para `minikube/`.
 
 ## Iniciando no Linux
-### Passo a passo rapido
+### 🚀 Setup para Máquina Nova Ubuntu
+```bash
+# Bootstrap completo - download + instalação + inicialização
+curl -fsSL https://raw.githubusercontent.com/pauloeugenioreis/minikube-devops/main/minikube/scripts/linux/bootstrap-devops.sh | bash
+
+# Ou se já tem o projeto:
+cd <CAMINHO-DO-PROJETO>/DevOps
+bash minikube/scripts/linux/setup-fresh-machine.sh --run-initialization
+```
+
+### Passo a passo rapido (projeto existente)
 ```
 cd <CAMINHO-DO-PROJETO>/DevOps
 bash minikube/scripts/linux/autostart/minikube-autostart.sh

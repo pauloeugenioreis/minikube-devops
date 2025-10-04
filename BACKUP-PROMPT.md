@@ -285,9 +285,29 @@ Este backup permite que qualquer IA futura:
 
 ---
 
-*Backup atualizado em 22/09/2025 - Remoção Azure + Ambiente Genérico Completo*
-*Projeto: Ambiente Minikube Profissional + Fresh Setup + Sistema de Qualidade + Troubleshooting + Processo Corretivo + Ambiente Genérico*
-*Status: ✅ COMPLETO - AMBIENTE GENÉRICO 100% FUNCIONAL + CHECKLIST OBRIGATÓRIO RESPEITADO*
+### Fase 21: Setup Fresh Machine para Linux Ubuntu (04/10/2025)
+- Requisito: "você pode criar o Setup-Fresh-Machine para o scripts linux ? ubuntu"
+- Contexto: Criar equivalente Linux do sistema Windows para máquinas novas
+- Implementação completa:
+  - **setup-fresh-machine.sh**: Instalação automática Docker, Minikube, kubectl, Helm para Ubuntu 18.04+
+  - **bootstrap-devops.sh**: Bootstrap completo com download do projeto via Git ou ZIP fallback
+  - Verificação automática: Ubuntu, privilégios sudo, conectividade, grupos docker
+  - Configuração automática: repositórios oficiais, systemd services, PATH
+  - Suporte a parâmetros: --skip-docker, --skip-minikube, --skip-kubectl, --skip-helm, --run-initialization
+  - Detecção automática de projeto existente e integração com paths dinâmicos
+  - **SETUP-LINUX.md**: Documentação completa com troubleshooting específico Linux
+  - **README.md Linux atualizado**: Seções sobre setup máquina nova Ubuntu
+- Resultado:
+  - ✅ Equivalência completa Windows ↔ Linux para "Zero to Running"
+  - ✅ Bootstrap via URL: `curl -fsSL https://raw.githubusercontent.com/.../bootstrap-devops.sh | bash`
+  - ✅ Ubuntu agora tem mesmo nível de automação que Windows
+  - ✅ Multiplataforma: transferência local (USB/rede/OneDrive) ou download automático
+- Tecnologia: Bash, curl, apt-get, systemd, Docker CE, Git
+- Data: 04/10/2025
+
+*Backup atualizado em 04/10/2025 - Setup Fresh Machine Linux Ubuntu Implementado*
+*Projeto: Ambiente Minikube Profissional + Fresh Setup Multiplataforma + KEDA + Troubleshooting + Processo Corretivo + Ambiente Genérico*
+*Status: ✅ COMPLETO - EQUIVALÊNCIA WINDOWS ↔ LINUX + AUTOMAÇÃO MÁQUINAS NOVAS + CHECKLIST OBRIGATÓRIO RESPEITADO*
 
 ### Fase 19: Robustez Metrics Server e Ajustes Multiplataforma (28/09/2025)
 - Pré-carregamento das imagens `registry.k8s.io/metrics-server/metrics-server:v0.8.0` e digest oficial nos scripts Linux/Windows + patch automático do deployment -> zero `ImagePullBackOff`.

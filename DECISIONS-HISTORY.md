@@ -98,6 +98,43 @@
 ---
 
 ### 14. ATUALIZACAO DOCUMENTACAO
+
+**Usuario**: "para uma maquina nova, quais os pre-requisitos pra funcionar ?"
+
+**Resposta**: Analise completa dos pre-requisitos existentes para Windows
+
+---
+
+### 15. CRIACAO SETUP LINUX UBUNTU
+**Usuario**: "você pode criar o Setup-Fresh-Machine para o scripts linux ? ubuntu"
+
+**Contexto**: Solicitacao para equivalencia Linux do sistema Windows
+**Implementacao**: Criacao completa de sistema para Ubuntu:
+
+1. **setup-fresh-machine.sh**: 
+   - Instalacao automatica: Docker, Minikube, kubectl, Helm
+   - Verificacao Ubuntu 18.04+, privilegios sudo, conectividade
+   - Configuracao grupos docker, repositorios oficiais, systemd services
+   - Parametros: --skip-docker, --skip-minikube, --skip-kubectl, --skip-helm, --run-initialization
+
+2. **bootstrap-devops.sh**:
+   - Bootstrap completo: download + setup + inicializacao
+   - Clone Git automatico ou download ZIP como fallback
+   - Deteccao de projeto existente
+   - Configuracao de caminho customizado
+
+3. **SETUP-LINUX.md**:
+   - Guia completo para setup Linux Ubuntu
+   - Troubleshooting especifico para Linux
+   - Casos de uso detalhados
+   - Comandos de diagnostico
+
+4. **README.md atualizado**:
+   - Secoes sobre setup para maquina nova Ubuntu
+   - Integracao com scripts existentes
+
+**Resultado**: Ubuntu agora tem o mesmo nivel de automacao que Windows
+**Data**: 04/10/2025
 **Usuario**: "acho que o arquivo HISTORICO-PROJETO-MINIKUBE.md nao foi atualizado com as modificacoes"
 
 **Acao**: Atualizacao completa do historico com:

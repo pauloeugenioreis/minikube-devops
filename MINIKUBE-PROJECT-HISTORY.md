@@ -447,8 +447,26 @@ kubectl get jobs -n namespace                     # Jobs gerados
 ---
 
 *Projeto completo - Minikube DevOps Environment*
+### Fase 21: Setup Fresh Machine para Linux Ubuntu (04/10/2025)
+- **Requisito**: Criar equivalente Linux do sistema Windows para máquinas novas Ubuntu
+- **Implementação**:
+  - Criado `setup-fresh-machine.sh` para instalação automática: Docker, Minikube, kubectl, Helm
+  - Criado `bootstrap-devops.sh` para bootstrap completo: download + setup + inicialização
+  - Verificação automática Ubuntu 18.04+, privilégios sudo, conectividade
+  - Configuração automática grupos docker, repositórios oficiais, systemd services
+  - Suporte a parâmetros: --skip-docker, --skip-minikube, --skip-kubectl, --skip-helm, --run-initialization
+  - Detecção automática de projeto existente e integração com paths dinâmicos
+  - Clone Git automático ou download ZIP como fallback
+- **Tecnologia**: Bash, curl, apt-get, systemd, Docker CE, Git
+- **Resultado**: 
+  - ✅ Ubuntu agora tem o mesmo nível de automação que Windows
+  - ✅ "Zero to Running" em uma linha para máquinas novas
+  - ✅ Equivalência multiplataforma completa Windows ↔ Linux
+  - ✅ Bootstrap via URL ou transferência local (USB/rede/OneDrive)
+- **Documentação**: `SETUP-LINUX.md`, README.md Linux atualizado, guias de troubleshooting específicos
+
 *Para consulta e referencia futura*
-*Última atualização: 22/09/2025 - Remoção Azure + Ambiente Genérico Completo*
+*Última atualização: 04/10/2025 - Setup Fresh Machine Linux Ubuntu*
 
 ---
 

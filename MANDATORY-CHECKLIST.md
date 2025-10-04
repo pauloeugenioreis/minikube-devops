@@ -19,7 +19,7 @@ Este checklist DEVE ser seguido SEMPRE que criar, modificar ou expandir qualquer
 - [ ] **EXECUTAR**: Teste completo após qualquer mudança
 - [ ] **VALIDAR**: Todos os testes devem PASSAR
 
-### 3. 📚 DOCUMENTAÇÃO (SEMPRE ATUALIZAR)
+### 3. 📚 DOCUMENTAÇÃO (OBRIGATÓRIO)
 - [ ] **DECISIONS-HISTORY.md**: Adicionar nova entrada
 - [ ] **MINIKUBE-PROJECT-HISTORY.md**: Atualizar evolução técnica
 - [ ] **CONTINUITY-PROMPT.md**: Atualizar estrutura e capacidades

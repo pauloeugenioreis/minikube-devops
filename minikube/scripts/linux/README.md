@@ -2,10 +2,35 @@
 
 Este diretório contém todos os scripts necessários para provisionar, validar, manter e monitorar um ambiente DevOps local com Minikube, MongoDB, RabbitMQ, KEDA e Dashboard Kubernetes.
 
+## 🚀 Setup para Máquina Nova (Ubuntu)
+
+### Opção 1: Bootstrap Completo (Recomendado)
+```bash
+# Download automático do projeto + instalação de dependências + inicialização
+curl -fsSL https://raw.githubusercontent.com/pauloeugenioreis/minikube-devops/main/minikube/scripts/linux/bootstrap-devops.sh | bash
+```
+
+### Opção 2: Setup Local (Se já tem o projeto)
+```bash
+# Navegar para a pasta do projeto
+cd /caminho/para/projeto/DevOps
+
+# Instalar dependências e inicializar
+bash minikube/scripts/linux/setup-fresh-machine.sh --run-initialization
+```
+
+### Opção 3: Só Dependências (Sem inicialização)
+```bash
+# Instalar Docker, Minikube, kubectl, Helm
+bash minikube/scripts/linux/setup-fresh-machine.sh
+```
+
 ## Estrutura dos Diretórios
 
 ```
 minikube/scripts/linux/
+├── setup-fresh-machine.sh       # ✨ NOVO: Setup completo para máquina nova
+├── bootstrap-devops.sh           # ✨ NOVO: Bootstrap com download do projeto
 ├── autostart/
 │   └── minikube-autostart.sh
 ├── init/
@@ -26,6 +51,45 @@ minikube/scripts/linux/
 ```
 
 ## Scripts Principais
+
+### 🆕 Scripts de Setup para Máquina Nova
+
+- **setup-fresh-machine.sh**
+  - Instalação automática de todas as dependências para Ubuntu
+  - Instala: Docker, Minikube, kubectl, Helm
+  - Verificação automática de versão do Ubuntu (18.04+)
+  - Configuração de grupos e permissões
+  - Validação completa da instalação
+  - Suporte a parâmetros: `--skip-docker`, `--skip-minikube`, `--skip-kubectl`, `--skip-helm`, `--run-initialization`
+  - Uso:
+    ```bash
+    # Instalação completa com inicialização
+    bash setup-fresh-machine.sh --run-initialization
+    
+    # Só instalar dependências
+    bash setup-fresh-machine.sh
+    
+    # Pular Docker (se já instalado)
+    bash setup-fresh-machine.sh --skip-docker
+    ```
+
+- **bootstrap-devops.sh**
+  - Bootstrap completo: download do projeto + setup + inicialização
+  - Clone via Git ou download ZIP como fallback
+  - Detecção automática de projeto existente
+  - Configuração de caminho customizado
+  - Equivalente Linux do Bootstrap-DevOps.ps1 do Windows
+  - Uso:
+    ```bash
+    # Bootstrap completo (recomendado para máquina nova)
+    bash bootstrap-devops.sh
+    
+    # Customizar localização
+    bash bootstrap-devops.sh --project-path /opt/devops
+    
+    # Só baixar projeto, sem setup
+    bash bootstrap-devops.sh --skip-setup
+    ```
 
 ### autostart/
 - **minikube-autostart.sh**
