@@ -68,8 +68,7 @@ function Test-ProjectStructure {
     $requiredPaths = @(
         "minikube",
         "minikube\\scripts",
-        "minikube\\scripts\\windows",
-        "temp"
+        "minikube\\scripts\\windows"
     )
 
     foreach ($requiredPath in $requiredPaths) {
