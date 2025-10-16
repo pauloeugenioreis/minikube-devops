@@ -57,7 +57,7 @@ wait_for_resource() {
     local desc="$1"
     local target="$2"
     local namespace="$3"
-    local timeout="${4:-100}"  # Reduzido de 300 para 100 segundos
+    local timeout="${4:-100}"  # Timeout padronizado em 100s
     local interval=5
     local waited=0
     local ns_args=()
@@ -132,8 +132,12 @@ deploy_chart() {
     local chart_path="$2"
     local namespace="$3"
     echo -e "${WHITE}   Instalando/atualizando ${release} (Helm)...${NC}"
-    helm upgrade --install "$release" "$chart_path" --namespace "$namespace" --create-namespace
-    echo -e "${GREEN}   ${release} pronto via Helm.${NC}"
+    if ! helm upgrade --install "$release" "$chart_path" --namespace "$namespace" --create-namespace; then
+        echo -e "${YELLOW}   ⚠️ Falha ao instalar/atualizar o chart Helm '${release}'. O script continuará, mas o serviço pode não estar disponível.${NC}"
+        echo -e "${YELLOW}      Isso pode ser um efeito colateral da falha do addon 'ingress'. Verifique os logs do Helm.${NC}"
+    else
+        echo -e "${GREEN}   ${release} pronto via Helm.${NC}"
+    fi
 }
 
 ensure_log_file() {
@@ -236,15 +240,49 @@ import re
 import subprocess
 import sys
 
-cmd = ["minikube", "start", "--driver=docker"]
-pattern = re.compile(r":\s*([0-9.]+\s+[KMGTPE]?i?B\s*/\s*[0-9.]+\s+[KMGTPE]?i?B)\s+([0-9.]+%)")
+cmd = [
+    "minikube", "start",
+    "--driver=docker",
+    "--container-runtime=containerd",
+    "--delete-on-failure",
+    "--cpus=4",
+    "--memory=8g",
+    "-v=3"
+]
+
+# Regex para capturar barras de progresso como:
+# [=================>                               ]  157.1MB/512.2MB (30.6%)
+# ou: 1.61 KiB / 488.52 MiB [--------------------------] ?%
+progress_re = re.compile(r"(\[.+?\])?\s*([\d.]+\s*[KMGTPE]?i?B)\s*/\s*([\d.]+\s*[KMGTPE]?i?B)\s*(\[.+?\])?\s*(\(?.+?%?\)?)?")
+last_progress_line = ""
 
 def emit(line: str) -> None:
+    global last_progress_line
     line = line.rstrip('\n')
-    matches = pattern.search(line)
-    if matches:
-        print(f"   {matches.group(1)} {matches.group(2)}", flush=True)
+    
+    match = progress_re.search(line)
+    if match:
+        # Formata a linha de progresso para ser limpa e consistente
+        current_size = match.group(2).strip()
+        total_size = match.group(3).strip()
+        percentage_str = match.group(5).strip() if match.group(5) else ""
+        
+        # Tenta encontrar a barra de progresso em qualquer um dos grupos
+        progress_bar = ""
+        if match.group(1): progress_bar = match.group(1)
+        elif match.group(4): progress_bar = match.group(4)
+
+        output_line = f"   {current_size} / {total_size} {progress_bar} {percentage_str}".strip()
+        
+        if output_line != last_progress_line:
+            sys.stdout.write("\r" + " " * 100 + "\r") # Limpa a linha
+            sys.stdout.write(output_line)
+            sys.stdout.flush()
+            last_progress_line = output_line
     else:
+        if last_progress_line: # Se a ultima linha foi um progresso, imprime uma nova linha antes da proxima saida
+            sys.stdout.write("\n")
+            last_progress_line = ""
         print(line, flush=True)
 
 with subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1) as proc:
@@ -262,12 +300,12 @@ PY
 
     if command_exists stdbuf; then
         set +e
-        stdbuf -oL -eL minikube start --driver=docker 2>&1 | tr '\r' '\n'
+        stdbuf -oL -eL minikube start --driver=docker --container-runtime=containerd --delete-on-failure --cpus=4 --memory=8g -v=3 2>&1 | tr '\r' '\n'
         status=${PIPESTATUS[0]}
         set -e
     else
         set +e
-        minikube start --driver=docker 2>&1 | tr '\r' '\n'
+        minikube start --driver=docker --container-runtime=containerd --delete-on-failure --cpus=4 --memory=8g -v=3 2>&1 | tr '\r' '\n'
         status=${PIPESTATUS[0]}
         set -e
     fi
@@ -291,10 +329,11 @@ ensure_minikube_running() {
     fi
 
     echo -e "${YELLOW}Iniciando Minikube (driver docker)...${NC}"
-    if ! start_minikube; then
-        echo -e "${RED}Falha ao iniciar o Minikube.${NC}"
-        echo -e "${YELLOW}Verifique com: minikube status && minikube logs --tail=50${NC}"
-        echo -e "${YELLOW}Se necessario execute 'minikube delete --all --purge' e rode o script novamente.${NC}"
+    if ! start_minikube; then # A flag --delete-on-failure ja lida com a limpeza
+        echo -e "${RED}Falha crítica ao iniciar o Minikube.${NC}"
+        echo -e "${YELLOW}A inicialização falhou mesmo com a opção de auto-limpeza.${NC}"
+        echo -e "${YELLOW}Verifique os logs para mais detalhes: ${LOG_FILE}${NC}"
+        echo -e "${YELLOW}Você pode tentar executar 'minikube delete --all --purge' manualmente e rodar o script novamente.${NC}"
         exit 1
     fi
 
@@ -309,21 +348,27 @@ ensure_minikube_running() {
 }
 
 METRICS_SERVER_IMAGES=(
-    "registry.k8s.io/metrics-server/metrics-server:v0.8.0"
-    "registry.k8s.io/metrics-server/metrics-server@sha256:89258156d0e9af60403eafd44da9676fd66f600c7934d468ccc17e42b199aee2"
+    "registry.k8s.io/metrics-server/metrics-server:v0.8.0" # Apenas a tag é necessária, pois o patch força seu uso
 )
 
-ensure_metrics_server_image() {
+INGRESS_IMAGES=(
+    "registry.k8s.io/ingress-nginx/controller:v1.13.2"
+    "registry.k8s.io/ingress-nginx/kube-webhook-certgen:v1.6.2"
+)
+
+preload_images() {
+    local -n images_to_load=$1 # Passa o array de imagens por referência
     if ! command_exists docker; then
-        echo -e "${YELLOW}   ⚠️ Docker nao disponivel para prr-carregar imagens do metrics-server.${NC}"
+        echo -e "${YELLOW}   ⚠️ Docker nao disponivel para pré-carregar imagens.${NC}"
         return
     fi
 
-    for image in "${METRICS_SERVER_IMAGES[@]}"; do
+    for image in "${images_to_load[@]}"; do
         if ! docker image inspect "$image" >/dev/null 2>&1; then
-            echo -e "${WHITE}   Baixando imagem ${image}...${NC}"
+            echo -e "${WHITE}   Baixando imagem localmente: ${image}...${NC}"
+            # Executa o docker pull diretamente para mostrar a saida padrao
             if ! docker pull "$image"; then
-                echo -e "${YELLOW}   ⚠️ Falha ao baixar ${image}. O addon tentara puxar diretamente.${NC}"
+                echo -e "${YELLOW}   ⚠️ Falha ao baixar ${image}. O addon tentará puxar diretamente.${NC}"
                 continue
             fi
         fi
@@ -332,7 +377,7 @@ ensure_metrics_server_image() {
         if ! minikube image load "$image" >/dev/null 2>&1; then
             echo -e "${YELLOW}   ⚠️ Nao foi possivel carregar ${image} no Minikube. Verifique manualmente.${NC}"
         else
-            echo -e "${GREEN}   ${image} disponivel para o metrics-server.${NC}"
+            echo -e "${GREEN}   Imagem ${image} carregada no Minikube.${NC}"
         fi
     done
 }
@@ -463,18 +508,36 @@ if [[ "$SKIP_ADDONS" == false ]]; then
     local_addons=(storage-provisioner metrics-server default-storageclass dashboard ingress)
 
     echo -e "${YELLOW}Habilitando addons essenciais...${NC}"
-    ensure_metrics_server_image
+    preload_images METRICS_SERVER_IMAGES
+    preload_images INGRESS_IMAGES
+
     for addon in "${local_addons[@]}"; do
-        echo -e "${WHITE}   Habilitando $addon...${NC}"
-        minikube addons enable "$addon" >/dev/null 2>&1 || echo -e "${YELLOW}   ⚠️ Falha ao habilitar $addon. Verifique manualmente.${NC}"
+        error_output=""
+        echo -e "${YELLOW}Habilitando addon: ${addon}...${NC}"
+
+        if [[ "$addon" == "ingress" ]]; then
+            # Para o ingress, mostrar a saida em tempo real
+            if ! minikube addons enable "$addon"; then
+                echo -e "${YELLOW}   ⚠️ Falha ao habilitar o addon 'ingress'. O script continuará, mas o acesso via Ingress pode não funcionar. Verifique os pods no namespace 'ingress-nginx' manualmente.${NC}"
+            else
+                echo -e "${GREEN}   Addon ${addon} habilitado com sucesso.${NC}"
+            fi
+        else
+            # Para os outros, manter silencioso
+            if error_output=$(minikube addons enable "$addon" 2>&1); then
+                echo -e "${GREEN}   Addon ${addon} habilitado com sucesso.${NC}"
+            else
+                echo -e "${YELLOW}   ⚠️ Falha ao habilitar $addon. Verifique manualmente.${NC}"
+            fi
+        fi
     done
+
     patch_metrics_server_image
 
-    if kubectl get namespace ingress-nginx >/dev/null 2>&1; then
-        wait_for_resource "Ingress controller" "pod -l app.kubernetes.io/component=controller" "ingress-nginx" 300 || true
-    else
-        echo -e "${YELLOW}   ⚠️ Namespace ingress-nginx nao encontrado apos habilitar o addon ingress.${NC}"
-    fi
+    # Aguardar componentes críticos ficarem prontos
+    # Apenas aguarda o ingress se o addon foi habilitado
+    wait_for_resource "Ingress controller" "pod -l app.kubernetes.io/component=controller" "ingress-nginx" 100
+    wait_for_resource "Metrics Server" "pod -l k8s-app=metrics-server" "kube-system" 100
 fi
 
 wait_for_resource "nó Minikube" "node/minikube" ""

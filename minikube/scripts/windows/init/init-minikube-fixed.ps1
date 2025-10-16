@@ -1,4 +1,5 @@
 ﻿# Script de Inicializacao Completa do Minikube com RabbitMQ, MongoDB e KEDA
+# Script de Inicializacao Completa do Minikube com RabbitMQ, MongoDB e KEDA
 # Este script garante que tudo seja iniciado automaticamente
 
 param(
@@ -11,24 +12,30 @@ param(
 $PSDefaultParameterValues['*:Encoding'] = 'utf8'
 
 $metricsServerImages = @(
-    "registry.k8s.io/metrics-server/metrics-server:v0.8.0"
-    "registry.k8s.io/metrics-server/metrics-server@sha256:89258156d0e9af60403eafd44da9676fd66f600c7934d468ccc17e42b199aee2"
+    "registry.k8s.io/metrics-server/metrics-server:v0.8.0" # Apenas a tag é necessária, pois o patch força seu uso
+)
+
+$ingressImages = @(
+    "registry.k8s.io/ingress-nginx/controller:v1.13.2",
+    "registry.k8s.io/ingress-nginx/kube-webhook-certgen:v1.6.2"
 )
 
 $emoji_success = [char]::ConvertFromUtf32(0x2705)
 $emoji_error = [char]::ConvertFromUtf32(0x274C)
 $emoji_warning = [char]::ConvertFromUtf32(0x26A0)
 
-function Ensure-MetricsServerImage {
+function Preload-Images {
+    param([string[]]$ImagesToLoad)
+
     if (-not (Test-Command "docker")) {
-        Write-Host "   $emoji_warning Docker indisponÃ­vel para prÃ©-carregar imagens do metrics-server" -ForegroundColor Yellow
+        Write-Host "   $emoji_warning Docker indisponível para pré-carregar imagens." -ForegroundColor Yellow
         return
     }
 
-    foreach ($image in $metricsServerImages) {
+    foreach ($image in $ImagesToLoad) {
         $imageExists = $false
         try {
-            docker image inspect $image 2>$null | Out-Null
+            docker image inspect $image | Out-Null
             $imageExists = $LASTEXITCODE -eq 0
         } catch {
             $imageExists = $false
@@ -36,15 +43,15 @@ function Ensure-MetricsServerImage {
 
         if (-not $imageExists) {
             Write-Host "   Baixando imagem $image..." -ForegroundColor White
-            docker pull $image 2>$null | Out-Null
+            docker pull $image # Mostra a saida do pull
             if ($LASTEXITCODE -ne 0) {
-                Write-Host "   $emoji_warning Falha ao baixar $image. O addon tentarÃ¡ buscar diretamente." -ForegroundColor Yellow
+                Write-Host "   $emoji_warning Falha ao baixar $image. O addon tentará buscar diretamente." -ForegroundColor Yellow
                 continue
             }
         }
 
         Write-Host "   Carregando $image no Minikube..." -ForegroundColor White
-        & minikube image load $image 2>$null | Out-Null
+        & minikube image load $image | Out-Null
         if ($LASTEXITCODE -ne 0) {
             Write-Host "   $emoji_warning Nao foi possivel carregar $image no Minikube. Verifique manualmente." -ForegroundColor Yellow
         } else {
@@ -236,24 +243,62 @@ Write-Host ("Versoes: kubectl {0}, minikube {1}" -f $kubectlVersionDisplay, $min
 Write-Host "=====================================================" -ForegroundColor Cyan
 
 
-function Invoke-MinikubeStart {
-    Write-Log -Message "Executando 'minikube start --driver=docker'..." -Level "INFO" -NoConsole
-    Write-Host "Executando 'minikube start --driver=docker' (isso pode levar alguns minutos)..." -ForegroundColor Yellow
+function Invoke-MinikubeStartWithProgress {
+    $startArgs = @(
+        "start",
+        "--driver=docker",
+        "--container-runtime=containerd",
+        "--delete-on-failure",
+        "--cpus=4",
+        "--memory=8g",
+        "-v=3"
+    )
+    $commandString = "minikube " + ($startArgs -join " ")
+    Write-Log -Message "Executando '$commandString'..." -Level "INFO" -NoConsole
+    Write-Host "Executando '$commandString' (isso pode levar alguns minutos)..." -ForegroundColor Yellow
 
-    $exitCode = 0
-    try {
-        $output = & minikube start --driver=docker 2>&1
-        foreach ($line in $output) {
-            if ($null -ne $line) {
-                Write-Log -Message $line -Level "INFO" -NoConsole
-                $line
+    $processInfo = New-Object System.Diagnostics.ProcessStartInfo
+    $processInfo.FileName = "minikube"
+    $processInfo.Arguments = $startArgs
+    $processInfo.RedirectStandardOutput = $true
+    $processInfo.RedirectStandardError = $true
+    $processInfo.UseShellExecute = $false
+    $processInfo.CreateNoWindow = $true
+
+    $process = New-Object System.Diagnostics.Process
+    $process.StartInfo = $processInfo
+
+    $lastProgressLine = ""
+    $progressRegex = '(\[.+?\])?\s*([\d.]+\s*[KMGTPE]?i?B)\s*/\s*([\d.]+\s*[KMGTPE]?i?B)\s*(\[.+?\])?\s*(\(?.+?%?\)?)?'
+
+    $process.add_OutputDataReceived({
+        param($sender, $e)
+        if ($e.Data) {
+            Write-Log -Message $e.Data -Level "INFO" -NoConsole
+            $match = [regex]::Match($e.Data, $progressRegex)
+            if ($match.Success) {
+                $currentSize = $match.Groups[2].Value.Trim()
+                $totalSize = $match.Groups[3].Value.Trim()
+                $percentage = $match.Groups[5].Value.Trim()
+                $progressBar = if ($match.Groups[1].Success) { $match.Groups[1].Value } else { $match.Groups[4].Value }
+                $outputLine = ("   {0} / {1} {2} {3}" -f $currentSize, $totalSize, $progressBar, $percentage).Trim()
+                if ($outputLine -ne $lastProgressLine) {
+                    Write-Host ("`r" + (" " * 100) + "`r" + $outputLine) -NoNewline
+                    $lastProgressLine = $outputLine
+                }
+            } else {
+                if ($lastProgressLine) { Write-Host "" }
+                $lastProgressLine = ""
+                Write-Host $e.Data
             }
         }
-        $exitCode = $LASTEXITCODE
-    } catch {
-        Write-Log -Message "Falha ao executar 'minikube start': $($_.Exception.Message)" -Level "ERROR"
-        $exitCode = 1
-    }
+    })
+
+    $process.Start() | Out-Null
+    $process.BeginOutputReadLine()
+    $process.BeginErrorReadLine()
+    $process.WaitForExit()
+    $exitCode = $process.ExitCode
 
     if ($exitCode -eq 0) {
         Write-Host "Minikube iniciado com sucesso." -ForegroundColor Green
@@ -311,7 +356,7 @@ function Ensure-MinikubeRunning {
     }
 
     Write-Host "Minikube nao esta em execucao. Tentando iniciar..." -ForegroundColor Yellow
-    if (Invoke-MinikubeStart) {
+    if (Invoke-MinikubeStartWithProgress) {
         return
     }
 
@@ -326,12 +371,18 @@ function Ensure-MinikubeRunning {
         }
     }
 
-    if (Invoke-MinikubeStart) {
+    if (Invoke-MinikubeStartWithProgress) {
         return
     }
 
     Write-Host "Erro ao iniciar Minikube mesmo apos tentativa de recuperacao." -ForegroundColor Red
     Write-Host "Execute 'minikube delete --all --purge' manualmente e tente novamente." -ForegroundColor Red
+    
+    # A lógica de recuperação manual foi removida, pois --delete-on-failure cuida disso.
+    # Se chegou aqui, a inicialização falhou de forma definitiva.
+    Write-Host "Erro crítico ao iniciar Minikube. A inicialização falhou mesmo com a opção de auto-limpeza." -ForegroundColor Red
+    Write-Host "Verifique os logs para mais detalhes: $logFile" -ForegroundColor Red
+    Write-Host "Você pode tentar executar 'minikube delete --all --purge' manualmente e rodar o script novamente." -ForegroundColor Yellow
     exit 1
 }
 
@@ -413,26 +464,40 @@ Ensure-MinikubeRunning
 if (-not $SkipAddons) {
     Write-Host "Habilitando addons essenciais..." -ForegroundColor Yellow
 
-    Ensure-MetricsServerImage
+    Preload-Images -ImagesToLoad $metricsServerImages
+    Preload-Images -ImagesToLoad $ingressImages
 
     $addons = @(
         "storage-provisioner",
         "metrics-server", 
         "default-storageclass",
-        "dashboard"
+        "dashboard",
+        "ingress" # Adicionado para consistência com o Linux
     )
 
     foreach ($addon in $addons) {
-        Write-Host "   Habilitando $addon..." -ForegroundColor White
-        minikube addons enable $addon
-        if ($LASTEXITCODE -eq 0) {
-            Write-Host "   $addon habilitado" -ForegroundColor Green
+        Write-Host "Habilitando addon: $addon..." -ForegroundColor Yellow
+        if ($addon -eq "ingress") {
+            # Para o ingress, mostrar a saida em tempo real
+            minikube addons enable $addon
         } else {
-            Write-Host "   Erro ao habilitar $addon" -ForegroundColor Yellow
+            minikube addons enable $addon | Out-Null
+        }
+        if ($LASTEXITCODE -eq 0) {
+            Write-Host "   $emoji_success Addon $addon habilitado com sucesso" -ForegroundColor Green
+        } else {
+            Write-Host "   $emoji_warning Falha ao habilitar o addon '$addon'. O script continuará, mas funcionalidades podem ser afetadas." -ForegroundColor Yellow
         }
     }
 
     Patch-MetricsServerImage
+
+    # Aguardar componentes críticos ficarem prontos
+    Write-Host "   Aguardando Ingress controller..." -ForegroundColor White
+    kubectl wait --for=condition=ready pod -l app.kubernetes.io/component=controller -n ingress-nginx --timeout=100s 2>$null | Out-Null
+
+    Write-Host "   Aguardando Metrics Server..." -ForegroundColor White
+    kubectl wait --for=condition=ready pod -l k8s-app=metrics-server -n kube-system --timeout=100s 2>$null | Out-Null
 }
 
 # Aguardar cluster estar pronto
@@ -454,7 +519,8 @@ $mongodbChartPath = Join-Path $projectPaths.Root "minikube\charts\mongodb"
 Write-Host "   Instalando/Atualizando RabbitMQ chart..." -ForegroundColor White
 helm upgrade --install rabbitmq $rabbitmqChartPath
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "   Erro ao instalar/atualizar RabbitMQ chart" -ForegroundColor Red
+    Write-Host "   $emoji_warning Falha ao instalar/atualizar o chart Helm 'rabbitmq'. O script continuará, mas o serviço pode não estar disponível." -ForegroundColor Yellow
+    Write-Host "     Isso pode ser um efeito colateral da falha do addon 'ingress'. Verifique os logs do Helm." -ForegroundColor Yellow
 } else {
     Write-Host "   RabbitMQ chart aplicado com sucesso" -ForegroundColor Green
 }
@@ -463,7 +529,7 @@ if ($LASTEXITCODE -ne 0) {
 Write-Host "   Instalando/Atualizando MongoDB chart..." -ForegroundColor White
 helm upgrade --install mongodb $mongodbChartPath
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "   Erro ao instalar/atualizar MongoDB chart" -ForegroundColor Red
+    Write-Host "   $emoji_warning Falha ao instalar/atualizar o chart Helm 'mongodb'." -ForegroundColor Yellow
 } else {
     Write-Host "   MongoDB chart aplicado com sucesso" -ForegroundColor Green
 }
@@ -471,10 +537,10 @@ if ($LASTEXITCODE -ne 0) {
 # Aguardar pods ficarem prontos
 Write-Host "Aguardando pods ficarem prontos..." -ForegroundColor Yellow
 Write-Host "   Aguardando RabbitMQ..." -ForegroundColor White
-kubectl wait --for=condition=ready pod -l app=rabbitmq --timeout=300s
+kubectl wait --for=condition=ready pod -l app=rabbitmq --timeout=100s
 
 Write-Host "   Aguardando MongoDB..." -ForegroundColor White  
-kubectl wait --for=condition=ready pod -l app=mongodb --timeout=300s
+kubectl wait --for=condition=ready pod -l app=mongodb --timeout=100s
 
 # Verificar status dos pods
 Write-Host "Status dos pods:" -ForegroundColor Yellow
@@ -498,7 +564,7 @@ Write-Host "   Criando port-forward para Dashboard K8s (15671)..." -ForegroundCo
 
 # Aguardar Dashboard estar totalmente pronto antes de criar port-forward
 Write-Host "   Aguardando Dashboard estar pronto..." -ForegroundColor Yellow
-kubectl wait --for=condition=ready pod -l k8s-app=kubernetes-dashboard -n kubernetes-dashboard --timeout=120s
+kubectl wait --for=condition=ready pod -l k8s-app=kubernetes-dashboard -n kubernetes-dashboard --timeout=100s
 
 # Verificar se Dashboard esta respondendo internamente
 $dashboardReady = $false
@@ -566,7 +632,7 @@ if ($InstallKeda -and -not $SkipRabbitMQConfig) {
     
     # Aguardar KEDA estar completamente pronto
     Write-Host "   Aguardando KEDA estar pronto..." -ForegroundColor White
-    kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=keda-operator -n keda --timeout=120s 2>$null
+    kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=keda-operator -n keda --timeout=100s 2>$null
     
     # Verificar se existem ScaledObjects
     $existingScaledObjects = kubectl get scaledobjects --all-namespaces --no-headers 2>$null
