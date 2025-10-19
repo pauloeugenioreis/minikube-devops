@@ -356,6 +356,12 @@ INGRESS_IMAGES=(
     "registry.k8s.io/ingress-nginx/kube-webhook-certgen:v1.6.2"
 )
 
+SERVICE_IMAGES=(
+    "rabbitmq:4.1"
+    "mongo:8.0.15"
+    "redis:7.2"
+)
+
 preload_images() {
     local -n images_to_load=$1 # Passa o array de imagens por referência
     if ! command_exists docker; then
@@ -510,6 +516,7 @@ if [[ "$SKIP_ADDONS" == false ]]; then
     echo -e "${YELLOW}Habilitando addons essenciais...${NC}"
     preload_images METRICS_SERVER_IMAGES
     preload_images INGRESS_IMAGES
+    preload_images SERVICE_IMAGES
 
     for addon in "${local_addons[@]}"; do
         error_output=""
@@ -542,29 +549,40 @@ fi
 
 wait_for_resource "nó Minikube" "node/minikube" ""
 
-if [[ ! -d "$CHARTS_DIR/rabbitmq" || ! -d "$CHARTS_DIR/mongodb" ]]; then
+if [[ ! -d "$CHARTS_DIR/rabbitmq" || ! -d "$CHARTS_DIR/mongodb" || ! -d "$CHARTS_DIR/redis" ]]; then
     echo -e "${RED}Charts Helm nao encontrados em $CHARTS_DIR. Verifique a estrutura.${NC}"
     exit 1
 fi
 
 deploy_chart rabbitmq "$CHARTS_DIR/rabbitmq" default
 deploy_chart mongodb "$CHARTS_DIR/mongodb" default
+deploy_chart redis "$CHARTS_DIR/redis" default
 
 wait_for_resource "RabbitMQ" "pod -l app=rabbitmq" "default"
 wait_for_resource "MongoDB" "pod -l app=mongodb" "default"
+wait_for_resource "Redis" "pod -l app=redis" "default"
 
 echo -e "${YELLOW}Configurando port-forwards locais...${NC}"
-kill_port_forward "rabbitmq-service.*15672"
-start_port_forward "default" "service/rabbitmq-service" "15672:15672"
+kill_port_forward "rabbitmq.*15672"
+start_port_forward "default" "service/rabbitmq" "15672:15672"
 check_port 15672 && echo -e "${GREEN}   RabbitMQ Management em http://localhost:15672${NC}" || echo -e "${YELLOW}   ⚠️ RabbitMQ Management nao respondeu (porta 15672).${NC}"
 
-kill_port_forward "rabbitmq-service.*5672"
-start_port_forward "default" "service/rabbitmq-service" "5672:5672"
+kill_port_forward "rabbitmq.*5672"
+start_port_forward "default" "service/rabbitmq" "5672:5672"
 check_port 5672 && echo -e "${GREEN}   RabbitMQ AMQP disponivel em localhost:5672${NC}" || echo -e "${YELLOW}   ⚠️ RabbitMQ AMQP nao respondeu (porta 5672).${NC}"
 
-kill_port_forward "mongodb-service.*27017"
-start_port_forward "default" "service/mongodb-service" "27017:27017"
+kill_port_forward "mongodb.*27017"
+start_port_forward "default" "service/mongodb" "27017:27017"
 check_port 27017 && echo -e "${GREEN}   MongoDB disponivel em mongodb://localhost:27017${NC}" || echo -e "${YELLOW}   ⚠️ MongoDB nao respondeu (porta 27017).${NC}"
+
+kill_port_forward "redis-service.*6379"
+# Redis usa NodePort (porta 30679) em vez de port-forward
+MINIKUBE_IP=$(minikube ip 2>/dev/null || echo "")
+if [[ -n "$MINIKUBE_IP" ]]; then
+    timeout 5 bash -c "echo -e 'PING\r\n' | nc $MINIKUBE_IP 30679 | grep -q '+PONG'" 2>/dev/null && echo -e "${GREEN}   Redis disponivel em redis://$MINIKUBE_IP:30679${NC}" || echo -e "${YELLOW}   ⚠️ Redis nao respondeu (porta 30679).${NC}"
+else
+    echo -e "${YELLOW}   ⚠️ Redis nao respondeu (porta 30679).${NC}"
+fi
 
 kill_port_forward "kubernetes-dashboard"
 start_port_forward "kubernetes-dashboard" "service/kubernetes-dashboard" "15671:80"
@@ -622,6 +640,7 @@ ${YELLOW}${HOSTS_COMMAND_DISPLAY}${NC}
 ${WHITE}   • RabbitMQ UI:   http://rabbitmq.local  (guest/guest)${NC}
 ${WHITE}   • RabbitMQ AMQP: amqp://guest:guest@localhost:5672${NC}
 ${WHITE}   • MongoDB URI:   mongodb://admin:admin@localhost:27017/admin${NC}
+${WHITE}   • Redis URI:     redis://$MINIKUBE_IP:30679${NC}
 ${WHITE}   • Dashboard:     http://localhost:15671${NC}
 SUMMARY
 

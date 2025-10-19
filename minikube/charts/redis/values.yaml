@@ -1,0 +1,57 @@
+# Default values for redis chart.
+replicaCount: 1
+
+image:
+  repository: redis
+  tag: "7.2"
+
+service:
+  type: NodePort
+  ports:
+    redis:
+      port: 6379
+      nodePort: 30679
+
+ingress:
+  enabled: true
+  host: redis.local
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+
+persistence:
+  enabled: true
+  size: 1Gi
+  storageClassName: standard
+  hostPath: /mnt/data/redis
+
+auth:
+  enabled: false
+  password: ""
+
+master:
+  persistence:
+    enabled: true
+    size: 1Gi
+    storageClassName: standard
+    hostPath: /mnt/data/redis-master
+
+slave:
+  replicaCount: 0  # Single node setup
+  persistence:
+    enabled: false
+
+resources:
+  requests:
+    memory: "256Mi"
+    cpu: "100m"
+  limits:
+    memory: "512Mi"
+    cpu: "500m"
+
+redis:
+  config:
+    maxmemory: "256mb"
+    maxmemory-policy: "allkeys-lru"
+    tcp-keepalive: 300
+    timeout: 0
+    databases: 16

@@ -20,6 +20,12 @@ $ingressImages = @(
     "registry.k8s.io/ingress-nginx/kube-webhook-certgen:v1.6.2"
 )
 
+$serviceImages = @(
+    "rabbitmq:4.1",
+    "mongo:8.0.15", 
+    "redis:7.2"
+)
+
 $emoji_success = [char]::ConvertFromUtf32(0x2705)
 $emoji_error = [char]::ConvertFromUtf32(0x274C)
 $emoji_warning = [char]::ConvertFromUtf32(0x26A0)
@@ -466,6 +472,7 @@ if (-not $SkipAddons) {
 
     Preload-Images -ImagesToLoad $metricsServerImages
     Preload-Images -ImagesToLoad $ingressImages
+    Preload-Images -ImagesToLoad $serviceImages
 
     $addons = @(
         "storage-provisioner",
@@ -508,12 +515,13 @@ if ($LASTEXITCODE -ne 0) {
     exit 1
 }
 
-# Aplicar configuracoes do RabbitMQ e MongoDB com Helm
+# Aplicar configuracoes do RabbitMQ, MongoDB e Redis com Helm
 Write-Host "Aplicando configuracoes dos servicos com Helm..." -ForegroundColor Yellow
 
 # Definir caminhos para os charts
 $rabbitmqChartPath = Join-Path $projectPaths.Root "minikube\charts\rabbitmq"
 $mongodbChartPath = Join-Path $projectPaths.Root "minikube\charts\mongodb"
+$redisChartPath = Join-Path $projectPaths.Root "minikube\charts\redis"
 
 # Instalar RabbitMQ
 Write-Host "   Instalando/Atualizando RabbitMQ chart..." -ForegroundColor White
@@ -534,6 +542,15 @@ if ($LASTEXITCODE -ne 0) {
     Write-Host "   MongoDB chart aplicado com sucesso" -ForegroundColor Green
 }
 
+# Instalar Redis
+Write-Host "   Instalando/Atualizando Redis chart..." -ForegroundColor White
+helm upgrade --install redis $redisChartPath
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "   $emoji_warning Falha ao instalar/atualizar o chart Helm 'redis'." -ForegroundColor Yellow
+} else {
+    Write-Host "   Redis chart aplicado com sucesso" -ForegroundColor Green
+}
+
 # Aguardar pods ficarem prontos
 Write-Host "Aguardando pods ficarem prontos..." -ForegroundColor Yellow
 Write-Host "   Aguardando RabbitMQ..." -ForegroundColor White
@@ -541,6 +558,9 @@ kubectl wait --for=condition=ready pod -l app=rabbitmq --timeout=100s
 
 Write-Host "   Aguardando MongoDB..." -ForegroundColor White  
 kubectl wait --for=condition=ready pod -l app=mongodb --timeout=100s
+
+Write-Host "   Aguardando Redis..." -ForegroundColor White
+kubectl wait --for=condition=ready pod -l app=redis --timeout=100s
 
 # Verificar status dos pods
 Write-Host "Status dos pods:" -ForegroundColor Yellow
@@ -552,13 +572,31 @@ Get-Process | Where-Object {$_.ProcessName -eq "kubectl" -and $_.CommandLine -li
 
 # Criar port-forwards
 Write-Host "   Criando port-forward para RabbitMQ Management (15672)..." -ForegroundColor White
-Start-Process -FilePath "kubectl" -ArgumentList "port-forward", "service/rabbitmq-service", "15672:15672" -WindowStyle Hidden
+Start-Process -FilePath "kubectl" -ArgumentList "port-forward", "service/rabbitmq", "15672:15672" -WindowStyle Hidden
 
 Write-Host "   Criando port-forward para RabbitMQ AMQP (5672)..." -ForegroundColor White
-Start-Process -FilePath "kubectl" -ArgumentList "port-forward", "service/rabbitmq-service", "5672:5672" -WindowStyle Hidden
+Start-Process -FilePath "kubectl" -ArgumentList "port-forward", "service/rabbitmq", "5672:5672" -WindowStyle Hidden
 
 Write-Host "   Criando port-forward para MongoDB (27017)..." -ForegroundColor White
-Start-Process -FilePath "kubectl" -ArgumentList "port-forward", "service/mongodb-service", "27017:27017" -WindowStyle Hidden
+Start-Process -FilePath "kubectl" -ArgumentList "port-forward", "service/mongodb", "27017:27017" -WindowStyle Hidden
+
+# Redis usa NodePort (porta 30679) em vez de port-forward
+$minikubeIP = minikube ip 2>$null
+if ($minikubeIP) {
+    Write-Host "   Testando Redis via NodePort ($minikubeIP`:30679)..." -ForegroundColor White
+    try {
+        $redisTest = Test-NetConnection -ComputerName $minikubeIP -Port 30679 -InformationLevel Quiet -WarningAction SilentlyContinue
+        if ($redisTest) {
+            Write-Host "   $emoji_success Redis disponivel em redis://$minikubeIP`:30679" -ForegroundColor Green
+        } else {
+            Write-Host "   $emoji_error Redis nao respondeu (porta 30679)." -ForegroundColor Yellow
+        }
+    } catch {
+        Write-Host "   $emoji_error Redis nao respondeu (porta 30679)." -ForegroundColor Yellow
+    }
+} else {
+    Write-Host "   $emoji_error Redis nao respondeu (porta 30679)." -ForegroundColor Yellow
+}
 
 Write-Host "   Criando port-forward para Dashboard K8s (15671)..." -ForegroundColor White
 
@@ -689,6 +727,18 @@ function Test-FinalValidation {
         $issues += "MongoDB pod nao esta rodando corretamente"
     }
     
+    $total++
+    $redisPod = kubectl get pods -l app=redis --no-headers 2>$null
+    $redisReady = $redisPod | Where-Object { $_ -match "1/1.*Running" }
+    if ($redisReady) {
+        Write-Host "     $emoji_success Redis pod rodando" -ForegroundColor Green
+        $success++
+    } else {
+        Write-Host "     $emoji_error Redis pod com problemas" -ForegroundColor Red
+        Write-Host "       Debug: $redisPod" -ForegroundColor Gray
+        $issues += "Redis pod nao esta rodando corretamente"
+    }
+    
     if ($InstallKeda) {
         $total++
         $allKedaPods = kubectl get pods -n keda --no-headers 2>$null
@@ -732,6 +782,22 @@ function Test-FinalValidation {
     } else {
         Write-Host "     $emoji_error MongoDB inacessivel" -ForegroundColor Red
         $issues += "MongoDB nao esta acessivel na porta 27017"
+    }
+    
+    $total++
+    $minikubeIP = minikube ip 2>$null
+    if ($minikubeIP) {
+        $redisTest = Test-NetConnection -ComputerName $minikubeIP -Port 30679 -InformationLevel Quiet -WarningAction SilentlyContinue
+        if ($redisTest) {
+            Write-Host "     $emoji_success Redis acessivel ($minikubeIP`:30679)" -ForegroundColor Green
+            $success++
+        } else {
+            Write-Host "     $emoji_error Redis inacessivel" -ForegroundColor Red
+            $issues += "Redis nao esta acessivel na porta 30679"
+        }
+    } else {
+        Write-Host "     $emoji_error Redis inacessivel (IP Minikube nao encontrado)" -ForegroundColor Red
+        $issues += "Redis nao esta acessivel (IP Minikube nao encontrado)"
     }
     
     $total++
@@ -780,6 +846,12 @@ Start-Sleep -Seconds 10 # Adicionando espera para estabilizacao dos port-forward
 
 $rabbitTest = Test-NetConnection -ComputerName localhost -Port 15672 -InformationLevel Quiet
 $mongoTest = Test-NetConnection -ComputerName localhost -Port 27017 -InformationLevel Quiet
+$minikubeIP = minikube ip 2>$null
+if ($minikubeIP) {
+    $redisTest = Test-NetConnection -ComputerName $minikubeIP -Port 30679 -InformationLevel Quiet
+} else {
+    $redisTest = $false
+}
 
 # Teste especial para Dashboard com mais tentativas
 $dashboardTest = $false
@@ -804,6 +876,12 @@ if ($mongoTest) {
     Write-Host "   MongoDB acessivel" -ForegroundColor Green
 } else {
     Write-Host "   MongoDB nao acessivel" -ForegroundColor Red
+}
+
+if ($redisTest) {
+    Write-Host "   Redis acessivel" -ForegroundColor Green
+} else {
+    Write-Host "   Redis nao acessivel" -ForegroundColor Red
 }
 
 if ($dashboardTest) {
@@ -857,6 +935,17 @@ Write-Host "MongoDB:" -ForegroundColor Cyan
 Write-Host "   Connection String: mongodb://admin:admin@localhost:27017/admin" -ForegroundColor White
 Write-Host "   Host: localhost:27017" -ForegroundColor White
 Write-Host "   Usuario/Senha: admin/admin" -ForegroundColor White
+Write-Host ""
+Write-Host "Redis:" -ForegroundColor Cyan
+$minikubeIP = minikube ip 2>$null
+if ($minikubeIP) {
+    Write-Host "   Connection String: redis://$minikubeIP`:30679" -ForegroundColor White
+    Write-Host "   Host: $minikubeIP`:30679" -ForegroundColor White
+} else {
+    Write-Host "   Connection String: redis://[MINIKUBE_IP]:30679" -ForegroundColor White
+    Write-Host "   Host: [MINIKUBE_IP]:30679" -ForegroundColor White
+}
+Write-Host "   CLI: redis-cli -h $minikubeIP -p 30679" -ForegroundColor White
 Write-Host ""
 Write-Host "Componentes Instalados:" -ForegroundColor Yellow
 Write-Host "   - storage-provisioner" -ForegroundColor White

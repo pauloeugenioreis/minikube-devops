@@ -1,7 +1,7 @@
 ﻿# Minikube DevOps Environment
 
 ## Visao Geral
-Ambiente Minikube opinado com RabbitMQ, MongoDB e KEDA, preparado para iniciar automaticamente em Windows e Linux. Os scripts validam dependencias, aplicam charts Helm, configuram ingress e exibem endpoints uteis.
+Ambiente Minikube opinado com RabbitMQ, MongoDB, Redis e KEDA, preparado para iniciar automaticamente em Windows e Linux. Os scripts validam dependencias, aplicam charts Helm, configuram ingress e exibem endpoints uteis.
 
 ## Requisitos Minimos
 - Windows 10/11 com PowerShell 5.1+, Docker Desktop, Minikube >= 1.37.0, kubectl >= 1.34.0.
@@ -12,7 +12,7 @@ Ambiente Minikube opinado com RabbitMQ, MongoDB e KEDA, preparado para iniciar a
 ## Estrutura Principal
 - **Scripts Windows** (`minikube/scripts/windows`): bootstrap completo, inicializacao, automacoes de KEDA, manutencao e monitoramento.
 - **Scripts Linux** (`minikube/scripts/linux`): equivalente em Bash com autostart, instalacao de dependencias e ferramentas de validacao.
-- **Charts Helm** (`minikube/charts`): pacotes Helm para RabbitMQ e MongoDB com valores padrao versionados.
+- **Charts Helm** (`minikube/charts`): pacotes Helm para RabbitMQ, MongoDB e Redis com valores padrao versionados.
 - **Documentacao** (`minikube/docs`): guias complementares como `fresh-machine/SETUP.md` e `KEDA.md`.
 - **Area de testes** (`temp/`): espaco isolado para prototipos antes de promover scripts para `minikube/`.
 
@@ -43,6 +43,7 @@ bash minikube/scripts/linux/monitoring/open-dashboard.sh
 
 ### Endpoints principais
 - RabbitMQ Management: `http://rabbitmq.local` (requer entrada em `/etc/hosts`, adicionada pelo autostart).
+- Redis: `redis://localhost:6379` via port-forward configurado automaticamente.
 - Kubernetes Dashboard: `http://localhost:15671` via port-forward configurado automaticamente.
 
 ## Iniciando no Windows
@@ -82,12 +83,15 @@ Os servicos principais sao instalados via `helm upgrade --install` a partir de `
 Scripts novos devem nascer em `temp/`, passar por validacoes e so entao serem promovidos para `minikube/`. Assim a base consolidada permanece estavel, enquanto experimentos ficam isolados.
 
 ## Componentes Instalados
-- RabbitMQ 3.12 com painel em `http://localhost:15672`, usuario `guest/guest`, storage persistente de 1Gi.
-- MongoDB 7.0 com `admin/admin`, exposto em `localhost:27017`, limite de memoria em 1Gi e storage de 2Gi.
+
+- RabbitMQ 4.1 com painel em `http://localhost:15672`, usuario `guest/guest`, storage persistente de 1Gi.
+- MongoDB 8.0.15 com `admin/admin`, exposto em `localhost:27017`, limite de memoria em 1Gi e storage de 2Gi.
+- Redis 7.2 com cache otimizado, exposto em `localhost:6379`, limite de memoria em 256Mi e storage de 1Gi.
 - Kubernetes Dashboard publicado em `http://127.0.0.1:15671`.
 - KEDA 2.17+ no namespace `keda`, com triggers para CPU, memoria, RabbitMQ e outros.
 
 ## Troubleshooting
+
 - `.\minikube\scripts\windows\maintenance\fix-kubectl-final.ps1`: corrige incompatibilidade de `kubectl`.
 - `.\minikube\scripts\windows\maintenance\fix-dashboard.ps1`: reconfigura o dashboard quando nao abre.
 - `.\minikube\scripts\windows\maintenance\fix-dashboard-cronjob.ps1`: contorna erro 404 ao listar CronJobs na versao 2.7.0 do dashboard.
@@ -95,25 +99,31 @@ Scripts novos devem nascer em `temp/`, passar por validacoes e so entao serem pr
 - MongoDB com alerta de memoria? Os charts ja definem 1Gi reservado.
 
 ## Credenciais de Acesso
+
 - Kubernetes Dashboard: `http://127.0.0.1:15671` (token nao requerido, acesso direto).
 - RabbitMQ Management: `http://localhost:15672` com `guest/guest`.
 - MongoDB: `admin/admin` em `localhost:27017`, banco `admin`.
+- Redis: `redis://localhost:6379` (sem senha).
 
 ## Comandos Uteis
-```
+
+```bash
 kubectl get pods,svc,pv,pvc
 kubectl logs -l app=rabbitmq
 kubectl logs -l app=mongodb
+kubectl logs -l app=redis
 minikube stop
 minikube delete
 ```
 
 ## Documentacao Adicional
+
 - `minikube/docs/fresh-machine/SETUP.md`: guia completo para preparar maquinas novas e ambientes offline.
 - `minikube/docs/KEDA.md`: detalhes sobre escalonamento orientado a eventos.
 - `minikube/scripts/linux/README.md`: referencia especifica dos scripts Bash.
 
 ## Notas Finais
+
 - Dados ficam em volumes persistentes, sobrevivendo a reinicializacoes do Minikube.
 - O host recebe ajustes e port-forward automaticamente durante a inicializacao.
 - Os scripts assumem permissao administrativa para instalar dependencias e editar hosts quando necessario.

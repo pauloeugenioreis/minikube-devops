@@ -1,14 +1,14 @@
 ﻿# Minikube DevOps Environment
 
-Ambiente profissional para desenvolvimento, testes e automacao DevOps local usando Minikube, RabbitMQ, MongoDB e KEDA. Inclui scripts prontos para Windows e Linux.
+Ambiente profissional para desenvolvimento, testes e automacao DevOps local usando Minikube, RabbitMQ, MongoDB, Redis e KEDA. Inclui scripts prontos para Windows e Linux.
 
-Professional environment for local DevOps automation, development, and testing with Minikube, RabbitMQ, MongoDB, and KEDA. PowerShell and Bash scripts are provided out of the box.
+Professional environment for local DevOps automation, development, and testing with Minikube, RabbitMQ, MongoDB, Redis, and KEDA. PowerShell and Bash scripts are provided out of the box.
 
 ---
 
 ## Visao Geral (PT-BR)
 - Automacao completa do setup Kubernetes local com Minikube
-- RabbitMQ e MongoDB configurados automaticamente com persistencia de dados
+- RabbitMQ, MongoDB e Redis configurados automaticamente com persistencia de dados
 - KEDA para autoscaling baseado em eventos (RabbitMQ, CPU, memoria, etc.)
 - Scripts PowerShell e Bash para inicializacao, manutencao, monitoramento e troubleshooting
 - Estrutura profissional: desenvolvimento em `temp/`, codigo consolidado em `minikube/`
@@ -16,7 +16,7 @@ Professional environment for local DevOps automation, development, and testing w
 
 ## Overview (EN)
 - Full automation of local Kubernetes setup with Minikube
-- RabbitMQ and MongoDB provisioned automatically with persistent storage
+- RabbitMQ, MongoDB, and Redis provisioned automatically with persistent storage
 - KEDA for event-driven autoscaling (RabbitMQ, CPU, memory, and more)
 - PowerShell and Bash tooling for initialization, maintenance, monitoring, and troubleshooting
 - Professional repo layout: experiments live in `temp/`, stable code in `minikube/`
