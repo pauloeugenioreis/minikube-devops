@@ -575,14 +575,9 @@ kill_port_forward "mongodb.*27017"
 start_port_forward "default" "service/mongodb" "27017:27017"
 check_port 27017 && echo -e "${GREEN}   MongoDB disponivel em mongodb://localhost:27017${NC}" || echo -e "${YELLOW}   ⚠️ MongoDB nao respondeu (porta 27017).${NC}"
 
-kill_port_forward "redis-service.*6379"
-# Redis usa NodePort (porta 30679) em vez de port-forward
-MINIKUBE_IP=$(minikube ip 2>/dev/null || echo "")
-if [[ -n "$MINIKUBE_IP" ]]; then
-    timeout 5 bash -c "echo -e 'PING\r\n' | nc $MINIKUBE_IP 30679 | grep -q '+PONG'" 2>/dev/null && echo -e "${GREEN}   Redis disponivel em redis://$MINIKUBE_IP:30679${NC}" || echo -e "${YELLOW}   ⚠️ Redis nao respondeu (porta 30679).${NC}"
-else
-    echo -e "${YELLOW}   ⚠️ Redis nao respondeu (porta 30679).${NC}"
-fi
+kill_port_forward "redis.*30679"
+start_port_forward "default" "service/redis" "30679:30679"
+check_port 30679 && echo -e "${GREEN}   Redis URI: redis://localhost:30679${NC}" || echo -e "${YELLOW}   ⚠️ Redis nao respondeu (porta 30679).${NC}"
 
 kill_port_forward "kubernetes-dashboard"
 start_port_forward "kubernetes-dashboard" "service/kubernetes-dashboard" "15671:80"
@@ -640,7 +635,7 @@ ${YELLOW}${HOSTS_COMMAND_DISPLAY}${NC}
 ${WHITE}   • RabbitMQ UI:   http://rabbitmq.local  (guest/guest)${NC}
 ${WHITE}   • RabbitMQ AMQP: amqp://guest:guest@localhost:5672${NC}
 ${WHITE}   • MongoDB URI:   mongodb://admin:admin@localhost:27017/admin${NC}
-${WHITE}   • Redis URI:     redis://$MINIKUBE_IP:30679${NC}
+${WHITE}   • Redis URI:     redis://localhost:30679${NC}
 ${WHITE}   • Dashboard:     http://localhost:15671${NC}
 SUMMARY
 
