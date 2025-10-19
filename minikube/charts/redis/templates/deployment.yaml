@@ -30,11 +30,13 @@ spec:
           value: {{ .Values.auth.password }}
         {{- end }}
         volumeMounts:
-        - name: redis-data
-          mountPath: /data
         - name: redis-config
           mountPath: /etc/redis
           readOnly: true
+        {{- if .Values.persistence.enabled }}
+        - name: redis-data
+          mountPath: /data
+        {{- end }}
         livenessProbe:
           exec:
             command:
@@ -54,9 +56,11 @@ spec:
         resources:
 {{ toYaml .Values.resources | indent 10 }}
       volumes:
-      - name: redis-data
-        persistentVolumeClaim:
-          claimName: redis-pvc
       - name: redis-config
         configMap:
           name: redis-config
+      {{- if .Values.persistence.enabled }}
+      - name: redis-data
+        persistentVolumeClaim:
+          claimName: redis-pvc
+      {{- end }}

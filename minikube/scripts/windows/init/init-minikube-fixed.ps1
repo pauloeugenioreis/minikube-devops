@@ -12,7 +12,7 @@ param(
 $PSDefaultParameterValues['*:Encoding'] = 'utf8'
 
 $metricsServerImages = @(
-    "registry.k8s.io/metrics-server/metrics-server:v0.8.0" # Apenas a tag é necessária, pois o patch força seu uso
+    # Removido pois nao forçamos mais a versao e a imagem v0.8.0 nao existe
 )
 
 $ingressImages = @(
@@ -63,16 +63,6 @@ function Preload-Images {
         } else {
             Write-Host "   $emoji_success $image disponivel para o metrics-server." -ForegroundColor Green
         }
-    }
-}
-
-function Patch-MetricsServerImage {
-    Write-Host "   Ajustando deployment do metrics-server para usar imagem com tag..." -ForegroundColor White
-    kubectl patch deployment metrics-server -n kube-system `
-        --type=json `
-        -p '[{"op":"replace","path":"/spec/template/spec/containers/0/image","value":"registry.k8s.io/metrics-server/metrics-server:v0.8.0"}]' 2>$null | Out-Null
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host "   $emoji_warning Nao foi possivel ajustar a imagem do metrics-server. Verifique manualmente." -ForegroundColor Yellow
     }
 }
 
@@ -135,6 +125,21 @@ if ($env:PATH -notlike "*$userBinPath*") {
 # Funcao para verificar se um comando existe
 function Test-Command($cmdname) {
     return [bool](Get-Command -Name $cmdname -ErrorAction SilentlyContinue)
+}
+
+# Funcao para instalar kubectl
+function Install-Kubectl($version) {
+    if (!(Test-Path $userBinPath)) {
+        New-Item -ItemType Directory -Path $userBinPath -Force | Out-Null
+    }
+    $url = "https://dl.k8s.io/release/$version/bin/windows/amd64/kubectl.exe"
+    $exePath = Join-Path $userBinPath "kubectl.exe"
+    try {
+        Invoke-WebRequest -Uri $url -OutFile $exePath -UseBasicParsing
+        Write-Host "kubectl $version instalado em $exePath" -ForegroundColor Green
+    } catch {
+        Write-Host "Falha ao instalar kubectl: $($_.Exception.Message)" -ForegroundColor Red
+    }
 }
 
 # Funcao para verificar se Docker esta rodando
@@ -250,68 +255,22 @@ Write-Host "=====================================================" -ForegroundCo
 
 
 function Invoke-MinikubeStartWithProgress {
-    $startArgs = @(
-        "start",
-        "--driver=docker",
-        "--container-runtime=containerd",
-        "--delete-on-failure",
-        "--cpus=4",
-        "--memory=8g",
-        "-v=3"
-    )
-    $commandString = "minikube " + ($startArgs -join " ")
-    Write-Log -Message "Executando '$commandString'..." -Level "INFO" -NoConsole
-    Write-Host "Executando '$commandString' (isso pode levar alguns minutos)..." -ForegroundColor Yellow
+    $command = "minikube start --driver=docker --container-runtime=containerd --delete-on-failure --cpus=4 --memory=8g -v=3"
+    Write-Host "Executando '$command' (isso pode levar alguns minutos)..." -ForegroundColor Yellow
 
-    $processInfo = New-Object System.Diagnostics.ProcessStartInfo
-    $processInfo.FileName = "minikube"
-    $processInfo.Arguments = $startArgs
-    $processInfo.RedirectStandardOutput = $true
-    $processInfo.RedirectStandardError = $true
-    $processInfo.UseShellExecute = $false
-    $processInfo.CreateNoWindow = $true
+    & minikube start --driver=docker --container-runtime=containerd --delete-on-failure --cpus=4 --memory=8g -v=3
 
-    $process = New-Object System.Diagnostics.Process
-    $process.StartInfo = $processInfo
-
-    $lastProgressLine = ""
-    $progressRegex = '(\[.+?\])?\s*([\d.]+\s*[KMGTPE]?i?B)\s*/\s*([\d.]+\s*[KMGTPE]?i?B)\s*(\[.+?\])?\s*(\(?.+?%?\)?)?'
-
-    $process.add_OutputDataReceived({
-        param($sender, $e)
-        if ($e.Data) {
-            Write-Log -Message $e.Data -Level "INFO" -NoConsole
-            $match = [regex]::Match($e.Data, $progressRegex)
-            if ($match.Success) {
-                $currentSize = $match.Groups[2].Value.Trim()
-                $totalSize = $match.Groups[3].Value.Trim()
-                $percentage = $match.Groups[5].Value.Trim()
-                $progressBar = if ($match.Groups[1].Success) { $match.Groups[1].Value } else { $match.Groups[4].Value }
-                $outputLine = ("   {0} / {1} {2} {3}" -f $currentSize, $totalSize, $progressBar, $percentage).Trim()
-                if ($outputLine -ne $lastProgressLine) {
-                    Write-Host ("`r" + (" " * 100) + "`r" + $outputLine) -NoNewline
-                    $lastProgressLine = $outputLine
-                }
-            } else {
-                if ($lastProgressLine) { Write-Host "" }
-                $lastProgressLine = ""
-                Write-Host $e.Data
-            }
-        }
-    })
-
-    $process.Start() | Out-Null
-    $process.BeginOutputReadLine()
-    $process.BeginErrorReadLine()
-    $process.WaitForExit()
-    $exitCode = $process.ExitCode
-
-    if ($exitCode -eq 0) {
+    if ($LASTEXITCODE -eq 0) {
         Write-Host "Minikube iniciado com sucesso." -ForegroundColor Green
+        Write-Host "Aguardando cluster ficar pronto..." -ForegroundColor Yellow
+        kubectl wait --for=condition=Ready nodes --all --timeout=300s 2>$null | Out-Null
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "Aviso: Cluster pode ainda nao estar totalmente pronto." -ForegroundColor Yellow
+        }
         return $true
     }
 
-    Write-Host "Falha ao iniciar Minikube (codigo $exitCode)." -ForegroundColor Yellow
+    Write-Host "Falha ao iniciar Minikube (codigo $LASTEXITCODE)." -ForegroundColor Yellow
     return $false
 }
 
@@ -435,32 +394,29 @@ try {
     Write-Host "Problema na verificacao do Docker, mas continuando..." -ForegroundColor Yellow
 }
 
-# Verificar compatibilidade de versoes
-Write-Host "Verificando compatibilidade kubectl/Kubernetes..." -ForegroundColor Yellow
-try {
-    $kubectlVersion = Get-K8sClientVersion -Executable 'kubectl'
-    $minikubeK8sVersion = Get-K8sClientVersion -Executable 'minikube' -Arguments @('kubectl','--')
+# Verificar kubectl
+Write-Host "Verificando kubectl..." -ForegroundColor Yellow
 
-    if ($kubectlVersion -and $minikubeK8sVersion) {
-        if ($kubectlVersion -ne $minikubeK8sVersion) {
-            Write-Host "AVISO: Versoes incompativeis detectadas!" -ForegroundColor Yellow
-            Write-Host "kubectl: $kubectlVersion | Kubernetes: $minikubeK8sVersion" -ForegroundColor Yellow
-            Write-Host "Executando atualizacao automatica..." -ForegroundColor Yellow
-            $fixScriptPath = Join-Path (Split-Path $PSScriptRoot -Parent) 'maintenance\fix-kubectl-final.ps1'
-            if (Test-Path $fixScriptPath) {
-                & $fixScriptPath
-            } else {
-                Write-Host "Script de atualizacao nao encontrado em $fixScriptPath. Use 'minikube kubectl -- version --client' se houver problemas." -ForegroundColor Yellow
-            }
+$requiredVersion = "1.34.0"
+$requiredVersionFull = "v$requiredVersion"
+
+if (Test-Command "kubectl") {
+    $kubectlVersion = Get-K8sClientVersion -Executable 'kubectl'
+    if ($kubectlVersion) {
+        $versionNum = [version]($kubectlVersion -replace '^v', '')
+        if ($versionNum -ge [version]$requiredVersion) {
+            Write-Host "[OK] kubectl $kubectlVersion ja esta instalado" -ForegroundColor Green
         } else {
-            Write-Host "[OK] Versoes compativeis: $kubectlVersion" -ForegroundColor Green
+            Write-Host "kubectl $kubectlVersion e menor que $requiredVersionFull. Atualizando..." -ForegroundColor Yellow
+            Install-Kubectl $requiredVersionFull
         }
     } else {
-        Write-Host "AVISO: Nao foi possivel determinar versoes do kubectl/Kubernetes." -ForegroundColor Yellow
-        Write-Host "kubectl: $kubectlVersion | Kubernetes: $minikubeK8sVersion" -ForegroundColor Yellow
+        Write-Host "Nao foi possivel obter versao do kubectl. Instalando..." -ForegroundColor Yellow
+        Install-Kubectl $requiredVersionFull
     }
-} catch {
-    Write-Host "AVISO: Nao foi possivel verificar compatibilidade. Continuando..." -ForegroundColor Yellow
+} else {
+    Write-Host "kubectl nao encontrado. Instalando..." -ForegroundColor Yellow
+    Install-Kubectl $requiredVersionFull
 }
 
 # Iniciar Minikube
@@ -496,8 +452,6 @@ if (-not $SkipAddons) {
             Write-Host "   $emoji_warning Falha ao habilitar o addon '$addon'. O script continuará, mas funcionalidades podem ser afetadas." -ForegroundColor Yellow
         }
     }
-
-    Patch-MetricsServerImage
 
     # Aguardar componentes críticos ficarem prontos
     Write-Host "   Aguardando Ingress controller..." -ForegroundColor White
@@ -580,23 +534,8 @@ Start-Process -FilePath "kubectl" -ArgumentList "port-forward", "service/rabbitm
 Write-Host "   Criando port-forward para MongoDB (27017)..." -ForegroundColor White
 Start-Process -FilePath "kubectl" -ArgumentList "port-forward", "service/mongodb", "27017:27017" -WindowStyle Hidden
 
-# Redis usa NodePort (porta 30679) em vez de port-forward
-$minikubeIP = minikube ip 2>$null
-if ($minikubeIP) {
-    Write-Host "   Testando Redis via NodePort ($minikubeIP`:30679)..." -ForegroundColor White
-    try {
-        $redisTest = Test-NetConnection -ComputerName $minikubeIP -Port 30679 -InformationLevel Quiet -WarningAction SilentlyContinue
-        if ($redisTest) {
-            Write-Host "   $emoji_success Redis disponivel em redis://$minikubeIP`:30679" -ForegroundColor Green
-        } else {
-            Write-Host "   $emoji_error Redis nao respondeu (porta 30679)." -ForegroundColor Yellow
-        }
-    } catch {
-        Write-Host "   $emoji_error Redis nao respondeu (porta 30679)." -ForegroundColor Yellow
-    }
-} else {
-    Write-Host "   $emoji_error Redis nao respondeu (porta 30679)." -ForegroundColor Yellow
-}
+Write-Host "   Criando port-forward para Redis (30679)..." -ForegroundColor White
+Start-Process -FilePath "kubectl" -ArgumentList "port-forward", "service/redis", "30679:30679" -WindowStyle Hidden
 
 Write-Host "   Criando port-forward para Dashboard K8s (15671)..." -ForegroundColor White
 
@@ -785,19 +724,13 @@ function Test-FinalValidation {
     }
     
     $total++
-    $minikubeIP = minikube ip 2>$null
-    if ($minikubeIP) {
-        $redisTest = Test-NetConnection -ComputerName $minikubeIP -Port 30679 -InformationLevel Quiet -WarningAction SilentlyContinue
-        if ($redisTest) {
-            Write-Host "     $emoji_success Redis acessivel ($minikubeIP`:30679)" -ForegroundColor Green
-            $success++
-        } else {
-            Write-Host "     $emoji_error Redis inacessivel" -ForegroundColor Red
-            $issues += "Redis nao esta acessivel na porta 30679"
-        }
+    $redisTest = Test-NetConnection -ComputerName localhost -Port 30679 -InformationLevel Quiet -WarningAction SilentlyContinue
+    if ($redisTest) {
+        Write-Host "     $emoji_success Redis acessivel (30679)" -ForegroundColor Green
+        $success++
     } else {
-        Write-Host "     $emoji_error Redis inacessivel (IP Minikube nao encontrado)" -ForegroundColor Red
-        $issues += "Redis nao esta acessivel (IP Minikube nao encontrado)"
+        Write-Host "     $emoji_error Redis inacessivel" -ForegroundColor Red
+        $issues += "Redis nao esta acessivel na porta 30679"
     }
     
     $total++
@@ -846,12 +779,7 @@ Start-Sleep -Seconds 10 # Adicionando espera para estabilizacao dos port-forward
 
 $rabbitTest = Test-NetConnection -ComputerName localhost -Port 15672 -InformationLevel Quiet
 $mongoTest = Test-NetConnection -ComputerName localhost -Port 27017 -InformationLevel Quiet
-$minikubeIP = minikube ip 2>$null
-if ($minikubeIP) {
-    $redisTest = Test-NetConnection -ComputerName $minikubeIP -Port 30679 -InformationLevel Quiet
-} else {
-    $redisTest = $false
-}
+$redisTest = Test-NetConnection -ComputerName localhost -Port 30679 -InformationLevel Quiet
 
 # Teste especial para Dashboard com mais tentativas
 $dashboardTest = $false
@@ -937,15 +865,9 @@ Write-Host "   Host: localhost:27017" -ForegroundColor White
 Write-Host "   Usuario/Senha: admin/admin" -ForegroundColor White
 Write-Host ""
 Write-Host "Redis:" -ForegroundColor Cyan
-$minikubeIP = minikube ip 2>$null
-if ($minikubeIP) {
-    Write-Host "   Connection String: redis://$minikubeIP`:30679" -ForegroundColor White
-    Write-Host "   Host: $minikubeIP`:30679" -ForegroundColor White
-} else {
-    Write-Host "   Connection String: redis://[MINIKUBE_IP]:30679" -ForegroundColor White
-    Write-Host "   Host: [MINIKUBE_IP]:30679" -ForegroundColor White
-}
-Write-Host "   CLI: redis-cli -h $minikubeIP -p 30679" -ForegroundColor White
+Write-Host "   Connection String: redis://localhost:30679" -ForegroundColor White
+Write-Host "   Host: localhost:30679" -ForegroundColor White
+Write-Host "   CLI: redis-cli -h localhost -p 30679" -ForegroundColor White
 Write-Host ""
 Write-Host "Componentes Instalados:" -ForegroundColor Yellow
 Write-Host "   - storage-provisioner" -ForegroundColor White
