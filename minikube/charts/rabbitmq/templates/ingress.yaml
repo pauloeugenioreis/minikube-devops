@@ -14,7 +14,7 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: rabbitmq-service
+                name: rabbitmq
                 port:
                   number: {{ .Values.service.ports.management.port }}
 {{- end }}
