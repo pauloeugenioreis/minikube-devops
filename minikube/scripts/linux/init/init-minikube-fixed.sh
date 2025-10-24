@@ -26,6 +26,11 @@ else
     NC=''
 fi
 
+MINIKUBE_DRIVER=${MINIKUBE_DRIVER:-docker}
+MINIKUBE_CONTAINER_RUNTIME=${MINIKUBE_CONTAINER_RUNTIME:-containerd}
+MINIKUBE_CPUS=${MINIKUBE_CPUS:-4}
+MINIKUBE_MEMORY=${MINIKUBE_MEMORY:-8g}
+
 # --- Funcoes utilitarias ---
 command_exists() {
     command -v "$1" >/dev/null 2>&1
@@ -37,6 +42,25 @@ check_port() {
         ss -tulwn 2>/dev/null | grep -q ":${port} "
     else
         netstat -tuln 2>/dev/null | grep -q ":${port} "
+    fi
+}
+
+ensure_hosts_entry() {
+    local ip="$1"
+    local host="$2"
+
+    [[ -z "$ip" || -z "$host" ]] && return 1
+
+    if grep -qE "^${ip}[[:space:]]+${host}(\\s|$)" /etc/hosts 2>/dev/null; then
+        return 0
+    fi
+
+    echo -e "${YELLOW}Garantindo entrada em /etc/hosts para ${host} (${ip})...${NC}"
+    if sudo sh -c "echo '${ip} ${host}' >> /etc/hosts"; then
+        echo -e "${GREEN}   Entrada '${ip} ${host}' adicionada.${NC}"
+    else
+        echo -e "${YELLOW}   ⚠️ Não foi possível adicionar ${host} automaticamente. Adicione manualmente.${NC}"
+        return 1
     fi
 }
 
@@ -236,17 +260,23 @@ start_minikube() {
     if command_exists python3; then
         set +e
         python3 - <<'PY'
+import os
 import re
 import subprocess
 import sys
 
+driver = os.environ.get("MINIKUBE_DRIVER", "docker")
+container_runtime = os.environ.get("MINIKUBE_CONTAINER_RUNTIME", "containerd")
+cpus = os.environ.get("MINIKUBE_CPUS", "4")
+memory = os.environ.get("MINIKUBE_MEMORY", "8g")
+
 cmd = [
     "minikube", "start",
-    "--driver=docker",
-    "--container-runtime=containerd",
+    f"--driver={driver}",
+    f"--container-runtime={container_runtime}",
     "--delete-on-failure",
-    "--cpus=4",
-    "--memory=8g",
+    f"--cpus={cpus}",
+    f"--memory={memory}",
     "-v=3"
 ]
 
@@ -300,12 +330,12 @@ PY
 
     if command_exists stdbuf; then
         set +e
-        stdbuf -oL -eL minikube start --driver=docker --container-runtime=containerd --delete-on-failure --cpus=4 --memory=8g -v=3 2>&1 | tr '\r' '\n'
+        stdbuf -oL -eL minikube start --driver="${MINIKUBE_DRIVER}" --container-runtime="${MINIKUBE_CONTAINER_RUNTIME}" --delete-on-failure --cpus="${MINIKUBE_CPUS}" --memory="${MINIKUBE_MEMORY}" -v=3 2>&1 | tr '\r' '\n'
         status=${PIPESTATUS[0]}
         set -e
     else
         set +e
-        minikube start --driver=docker --container-runtime=containerd --delete-on-failure --cpus=4 --memory=8g -v=3 2>&1 | tr '\r' '\n'
+        minikube start --driver="${MINIKUBE_DRIVER}" --container-runtime="${MINIKUBE_CONTAINER_RUNTIME}" --delete-on-failure --cpus="${MINIKUBE_CPUS}" --memory="${MINIKUBE_MEMORY}" -v=3 2>&1 | tr '\r' '\n'
         status=${PIPESTATUS[0]}
         set -e
     fi
@@ -328,7 +358,7 @@ ensure_minikube_running() {
         echo -e "${YELLOW}Minikube nao respondeu ao status. Tentando iniciar...${NC}"
     fi
 
-    echo -e "${YELLOW}Iniciando Minikube (driver docker)...${NC}"
+    echo -e "${YELLOW}Iniciando Minikube (driver ${MINIKUBE_DRIVER})...${NC}"
     if ! start_minikube; then # A flag --delete-on-failure ja lida com a limpeza
         echo -e "${RED}Falha crítica ao iniciar o Minikube.${NC}"
         echo -e "${YELLOW}A inicialização falhou mesmo com a opção de auto-limpeza.${NC}"
@@ -484,25 +514,59 @@ Projeto detectado em: ${WHITE}${PROJECT_ROOT}${NC}
 Log: ${WHITE}${LOG_FILE}${NC}
 INFO
 
-REQUIRED_CMDS=(minikube kubectl helm docker)
+ensure_cmd_or_install() {
+    local cmd="$1"
+    case "$cmd" in
+        minikube)
+            echo -e "${YELLOW}Instalando Minikube...${NC}"
+            curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+            sudo install minikube-linux-amd64 /usr/local/bin/minikube
+            rm -f minikube-linux-amd64
+            ;;
+        kubectl)
+            echo -e "${YELLOW}Instalando kubectl (binário oficial)...${NC}"
+            local kubectl_version
+            kubectl_version=$(curl -Ls https://dl.k8s.io/release/stable.txt)
+            if [[ -z "$kubectl_version" ]]; then
+                echo -e "${RED}Não foi possível obter a versão estável do kubectl.${NC}"
+                return 1
+            fi
+            curl -LO "https://dl.k8s.io/release/${kubectl_version}/bin/linux/amd64/kubectl"
+            sudo install -m 0755 kubectl /usr/local/bin/kubectl
+            rm -f kubectl
+            ;;
+        helm)
+            echo -e "${YELLOW}Instalando Helm...${NC}"
+            curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+            ;;
+        docker)
+            echo -e "${YELLOW}Instalando Docker...${NC}"
+            sudo apt update
+            sudo apt install -y docker.io
+            sudo usermod -aG docker "$USER"
+            echo -e "${YELLOW}   ⚠️ Faça logout/login para aplicar o grupo docker.${NC}"
+            ;;
+        curl)
+            echo -e "${YELLOW}Instalando curl...${NC}"
+            sudo apt update
+            sudo apt install -y curl
+            ;;
+        *)
+            echo -e "${RED}Dependência desconhecida: $cmd${NC}"
+            return 1
+            ;;
+    esac
+}
+
+REQUIRED_CMDS=(curl minikube kubectl helm docker)
 for cmd in "${REQUIRED_CMDS[@]}"; do
     if ! command_exists "$cmd"; then
-        echo -e "${RED}Dependencia ausente: $cmd${NC}"
-        case "$cmd" in
-            minikube)
-                echo -e "${YELLOW}Instale com: curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64 && sudo install minikube-linux-amd64 /usr/local/bin/minikube${NC}"
-                ;;
-            kubectl)
-                echo -e "${YELLOW}Instale com: sudo snap install kubectl --classic${NC}"
-                ;;
-            helm)
-                echo -e "${YELLOW}Instale com: curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash${NC}"
-                ;;
-            docker)
-                echo -e "${YELLOW}Instale com: sudo apt install -y docker.io && sudo usermod -aG docker $USER${NC}"
-                ;;
-        esac
-        exit 1
+        echo -e "${YELLOW}Dependência ausente: $cmd${NC}"
+        ensure_cmd_or_install "$cmd"
+        if ! command_exists "$cmd"; then
+            echo -e "${RED}Não foi possível instalar automaticamente $cmd.${NC}"
+            exit 1
+        fi
     fi
 done
 
@@ -586,7 +650,11 @@ check_port 15671 && echo -e "${GREEN}   Dashboard em http://localhost:15671${NC}
 MINIKUBE_IP=$(minikube ip 2>/dev/null || true)
 if [[ -n "$MINIKUBE_IP" ]]; then
     HOSTS_LINE="${MINIKUBE_IP} rabbitmq.local"
-    HOSTS_MESSAGE="**Atenção:** adicione em /etc/hosts: ${HOSTS_LINE}"
+    if ensure_hosts_entry "$MINIKUBE_IP" "rabbitmq.local"; then
+        HOSTS_MESSAGE="Entrada garantida em /etc/hosts: ${HOSTS_LINE}"
+    else
+        HOSTS_MESSAGE="**Atenção:** adicione em /etc/hosts: ${HOSTS_LINE}"
+    fi
 else
     HOSTS_LINE="<IP_DO_MINIKUBE> rabbitmq.local"
     HOSTS_MESSAGE="**Atenção:** execute 'minikube ip' e adicione em /etc/hosts: ${HOSTS_LINE}"
@@ -624,14 +692,15 @@ else
     echo -e "${YELLOW}   ⚠️ MongoDB ainda nao respondeu ao ping.${NC}"
 fi
 
+# ${YELLOW}${HOSTS_MESSAGE}${NC}
+# ${YELLOW}     ou copie o comando:${NC}
+# ${YELLOW}${HOSTS_COMMAND_DISPLAY}${NC}
+
 cat <<SUMMARY
 ${CYAN}=====================================================${NC}
 ${GREEN}AMBIENTE CONFIGURADO COM SUCESSO!${NC}
 ${CYAN}=====================================================${NC}
 ${YELLOW}Informacoes de acesso:${NC}
-${YELLOW}${HOSTS_MESSAGE}${NC}
-${YELLOW}     ou copie o comando:${NC}
-${YELLOW}${HOSTS_COMMAND_DISPLAY}${NC}
 ${WHITE}   • RabbitMQ UI:   http://rabbitmq.local  (guest/guest)${NC}
 ${WHITE}   • RabbitMQ AMQP: amqp://guest:guest@localhost:5672${NC}
 ${WHITE}   • MongoDB URI:   mongodb://admin:admin@localhost:27017/admin${NC}
