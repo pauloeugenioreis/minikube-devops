@@ -174,10 +174,16 @@ echo -e "\n${YELLOW}4. Configurando repositorio Helm do KEDA...${NC}"
 
 if [ "$SKIP_HELM" = false ]; then
     echo -e "${CYAN}   Adicionando repositorio kedacore...${NC}"
-    helm repo add kedacore https://kedacore.github.io/charts
+    if ! helm repo add kedacore https://kedacore.github.io/charts; then
+        echo -e "${RED}   ❌ Erro ao adicionar repositorio kedacore${NC}"
+        exit 1
+    fi
     
     echo -e "${CYAN}   Atualizando repositorios Helm...${NC}"
-    helm repo update
+    if ! helm repo update; then
+        echo -e "${RED}   ❌ Erro ao atualizar repositorios Helm${NC}"
+        exit 1
+    fi
     
     echo -e "${GREEN}   ✅ Repositorio KEDA configurado${NC}"
 fi
