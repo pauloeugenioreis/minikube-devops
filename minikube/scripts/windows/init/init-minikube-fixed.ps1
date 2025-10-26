@@ -5,7 +5,10 @@
 param(
     [switch]$SkipAddons,
     [switch]$InstallKeda = $true,  # KEDA agora e instalado por padrao
-    [switch]$SkipRabbitMQConfig
+    [switch]$SkipRabbitMQConfig,
+    [string]$Driver,
+    [int]$Cpus,
+    [string]$Memory
 )
 
 # Forcar a codificacao UTF-8 para exibir icones corretamente
@@ -255,10 +258,43 @@ Write-Host "=====================================================" -ForegroundCo
 
 
 function Invoke-MinikubeStartWithProgress {
-    $command = "minikube start --driver=docker --container-runtime=containerd --delete-on-failure --cpus=4 --memory=8g -v=3"
+    # Definir configuracoes com suporte a parametros e variaveis de ambiente
+    $driverValue = $Driver
+    if (-not $driverValue -or [string]::IsNullOrWhiteSpace($driverValue)) { $driverValue = $env:MINIKUBE_DRIVER }
+    if (-not $driverValue -or [string]::IsNullOrWhiteSpace($driverValue)) { $driverValue = 'docker' }
+
+    # Normalizar driver para Windows (sem uso de '??' por compatibilidade)
+    $driverKey = if ($null -ne $driverValue) { $driverValue } else { '' }
+    switch -Regex ($driverKey.ToLower()) {
+        '^docker$' { $driverValue = 'docker' }
+        '^(hyper-?v)$' { $driverValue = 'hyperv' }
+        '^kvm$' {
+            Write-Host "Aviso: 'kvm' nao e suportado no Windows. Usando 'hyperv'." -ForegroundColor Yellow
+            $driverValue = 'hyperv'
+        }
+        default {
+            Write-Host "Driver invalido '$driverValue'. Use 'docker' ou 'hyperv'." -ForegroundColor Red
+            exit 1
+        }
+    }
+
+    $cpusValue = $Cpus
+    if (-not $cpusValue -or $cpusValue -le 0) {
+        if ($env:MINIKUBE_CPUS -and ($env:MINIKUBE_CPUS -as [int])) { $cpusValue = [int]$env:MINIKUBE_CPUS }
+    }
+    if (-not $cpusValue -or $cpusValue -le 0) { $cpusValue = 4 }
+
+    $memoryValue = $Memory
+    if (-not $memoryValue -or [string]::IsNullOrWhiteSpace($memoryValue)) { $memoryValue = $env:MINIKUBE_MEMORY }
+    if (-not $memoryValue -or [string]::IsNullOrWhiteSpace($memoryValue)) { $memoryValue = '8g' }
+    if ($memoryValue -match '^[0-9]+$') { $memoryValue = "$memoryValue" + 'g' }
+
+    $containerRuntime = 'containerd'
+
+    $command = "minikube start --driver=$driverValue --container-runtime=$containerRuntime --delete-on-failure --cpus=$cpusValue --memory=$memoryValue -v=3"
     Write-Host "Executando '$command' (isso pode levar alguns minutos)..." -ForegroundColor Yellow
 
-    & minikube start --driver=docker --container-runtime=containerd --delete-on-failure --cpus=4 --memory=8g -v=3
+    & minikube start --driver=$driverValue --container-runtime=$containerRuntime --delete-on-failure --cpus=$cpusValue --memory=$memoryValue -v=3
 
     if ($LASTEXITCODE -eq 0) {
         Write-Host "Minikube iniciado com sucesso." -ForegroundColor Green
@@ -362,36 +398,147 @@ if (-not (Test-Command "kubectl")) {
     exit 1
 }
 
-# Verificar Docker Desktop
-Write-Host "Verificando Docker Desktop..." -ForegroundColor Yellow
-if (-not (Test-Command "docker")) {
-    Write-Host "Docker nao encontrado! Instale o Docker Desktop primeiro." -ForegroundColor Red
-    exit 1
+# Descobrir configuracao de driver/cpus/memoria antes dos checks
+$resolvedDriver = $Driver
+if (-not $resolvedDriver -or [string]::IsNullOrWhiteSpace($resolvedDriver)) { $resolvedDriver = $env:MINIKUBE_DRIVER }
+
+# Se nao foi informado via parametro nem via variavel, perguntar ao usuario
+if ((-not $PSBoundParameters.ContainsKey('Driver')) -and ([string]::IsNullOrWhiteSpace($env:MINIKUBE_DRIVER))) {
+    Write-Host "Escolha o driver do Minikube:" -ForegroundColor Cyan
+    Write-Host "  1) docker (padrao)" -ForegroundColor White
+    Write-Host "  2) hyperv (requer Hyper-V habilitado)" -ForegroundColor White
+    $choice = Read-Host -Prompt "Selecao [1/2]"
+    switch ($choice) {
+        '2' { $resolvedDriver = 'hyperv' }
+        default { $resolvedDriver = 'docker' }
+    }
+    # Persistir para a execucao atual, para que a funcao de start use o mesmo valor
+    $env:MINIKUBE_DRIVER = $resolvedDriver
 }
 
-if (-not (Test-DockerRunning)) {
-    Write-Host "Docker nao esta rodando. Tentando iniciar..." -ForegroundColor Yellow
-    if (-not (Start-DockerDesktop)) {
-        Write-Host "Falha ao iniciar Docker Desktop!" -ForegroundColor Red
-        Write-Host "Por favor, inicie o Docker Desktop manualmente e tente novamente." -ForegroundColor Yellow
+if (-not $resolvedDriver -or [string]::IsNullOrWhiteSpace($resolvedDriver)) { $resolvedDriver = 'docker' }
+
+# Prompt interativo para CPUs e Memoria (estilo Linux) quando nao especificados
+$needCpus = (-not $PSBoundParameters.ContainsKey('Cpus')) -and [string]::IsNullOrWhiteSpace($env:MINIKUBE_CPUS)
+$needMemory = (-not $PSBoundParameters.ContainsKey('Memory')) -and [string]::IsNullOrWhiteSpace($env:MINIKUBE_MEMORY)
+if ($needCpus -or $needMemory) {
+    $DEFAULT_CPUS = 4
+    $DEFAULT_MEMORY = '8g'
+    Write-Host "Configuracao de recursos para o Minikube:" -ForegroundColor Cyan
+    Write-Host ("  CPUs padrao : {0}" -f $DEFAULT_CPUS) -ForegroundColor White
+    Write-Host ("  Memoria padrao: {0}" -f $DEFAULT_MEMORY) -ForegroundColor White
+    $resChoice = Read-Host -Prompt "Deseja alterar? [1=Sim / 2=Nao]"
+    switch ($resChoice) {
+        '1' { $change = $true }
+        's' { $change = $true }
+        'S' { $change = $true }
+        default { $change = $false }
+    }
+
+    if ($change) {
+        if ($needCpus) {
+            $cpus_input = Read-Host -Prompt ("Informe o numero de CPUs [{0}]" -f $DEFAULT_CPUS)
+            if (-not [string]::IsNullOrWhiteSpace($cpus_input)) {
+                if ($cpus_input -match '^[0-9]+$' -and [int]$cpus_input -gt 0) {
+                    $env:MINIKUBE_CPUS = $cpus_input
+                } else {
+                    Write-Host "Valor de CPUs invalido. Mantendo padrao." -ForegroundColor Yellow
+                    $env:MINIKUBE_CPUS = $DEFAULT_CPUS
+                }
+            } else {
+                $env:MINIKUBE_CPUS = $DEFAULT_CPUS
+            }
+        }
+
+        if ($needMemory) {
+            $mem_input = Read-Host -Prompt ("Informe a memoria (ex.: 8g) [{0}]" -f $DEFAULT_MEMORY)
+            if (-not [string]::IsNullOrWhiteSpace($mem_input)) {
+                if ($mem_input -match '^[0-9]+$') { $mem_input = "$mem_input" + 'g' }
+                $env:MINIKUBE_MEMORY = $mem_input
+            } else {
+                $env:MINIKUBE_MEMORY = $DEFAULT_MEMORY
+            }
+        }
+    } else {
+        if ($needCpus) { $env:MINIKUBE_CPUS = $DEFAULT_CPUS }
+        if ($needMemory) { $env:MINIKUBE_MEMORY = $DEFAULT_MEMORY }
+        Write-Host "Mantendo valores padrao." -ForegroundColor White
+    }
+
+    $cpusDisplay = if ($env:MINIKUBE_CPUS) { $env:MINIKUBE_CPUS } else { $DEFAULT_CPUS }
+    $memDisplay = if ($env:MINIKUBE_MEMORY) { $env:MINIKUBE_MEMORY } else { $DEFAULT_MEMORY }
+    Write-Host ("Recursos definidos: CPUs={0}, Memoria={1}" -f $cpusDisplay, $memDisplay) -ForegroundColor Green
+}
+switch -Regex ($resolvedDriver.ToLower()) {
+    '^docker$' { $resolvedDriver = 'docker' }
+    '^(hyper-?v)$' { $resolvedDriver = 'hyperv' }
+    '^kvm$' {
+        Write-Host "Aviso: 'kvm' nao e suportado no Windows. Usando 'hyperv'." -ForegroundColor Yellow
+        $resolvedDriver = 'hyperv'
+    }
+    default {
+        Write-Host "Driver invalido '$resolvedDriver'. Use 'docker' ou 'hyperv'." -ForegroundColor Red
         exit 1
     }
-} else {
-    Write-Host "Docker Desktop ja esta rodando!" -ForegroundColor Green
 }
 
-# Verificar conectividade do Docker
-Write-Host "Verificando conectividade Docker..." -ForegroundColor Yellow
-try {
-    $dockerInfo = docker info 2>$null
-    if ($LASTEXITCODE -eq 0) {
-        Write-Host "Docker funcionando corretamente!" -ForegroundColor Green
-    } else {
-        Write-Host "Docker com problemas. Aguardando estabilizar..." -ForegroundColor Yellow
-        Start-Sleep -Seconds 10
+$cpusPrint = if ($PSBoundParameters.ContainsKey('Cpus') -and $Cpus) { $Cpus } elseif ($env:MINIKUBE_CPUS) { $env:MINIKUBE_CPUS } else { 4 }
+$memoryPrint = if ($PSBoundParameters.ContainsKey('Memory') -and $Memory) { $Memory } elseif ($env:MINIKUBE_MEMORY) { $env:MINIKUBE_MEMORY } else { '8g' }
+Write-Host ("Configuracao: driver={0}, cpus={1}, memory={2}" -f $resolvedDriver, $cpusPrint, $memoryPrint) -ForegroundColor Cyan
+
+function Test-HyperVEnabled {
+    try {
+        $feature = Get-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V-All -ErrorAction SilentlyContinue
+        if ($feature -and $feature.State -eq 'Enabled') { return $true }
+    } catch { }
+    try {
+        $svc = Get-Service -Name vmms -ErrorAction SilentlyContinue
+        if ($svc) { return $true }
+    } catch { }
+    return $false
+}
+
+if ($resolvedDriver -eq 'docker') {
+    # Verificar Docker Desktop
+    Write-Host "Verificando Docker Desktop..." -ForegroundColor Yellow
+    if (-not (Test-Command "docker")) {
+        Write-Host "Docker nao encontrado! Instale o Docker Desktop primeiro ou use -Driver hyperv." -ForegroundColor Red
+        exit 1
     }
-} catch {
-    Write-Host "Problema na verificacao do Docker, mas continuando..." -ForegroundColor Yellow
+
+    if (-not (Test-DockerRunning)) {
+        Write-Host "Docker nao esta rodando. Tentando iniciar..." -ForegroundColor Yellow
+        if (-not (Start-DockerDesktop)) {
+            Write-Host "Falha ao iniciar Docker Desktop!" -ForegroundColor Red
+            Write-Host "Por favor, inicie o Docker Desktop manualmente ou escolha -Driver hyperv." -ForegroundColor Yellow
+            exit 1
+        }
+    } else {
+        Write-Host "Docker Desktop ja esta rodando!" -ForegroundColor Green
+    }
+
+    # Verificar conectividade do Docker
+    Write-Host "Verificando conectividade Docker..." -ForegroundColor Yellow
+    try {
+        $dockerInfo = docker info 2>$null
+        if ($LASTEXITCODE -eq 0) {
+            Write-Host "Docker funcionando corretamente!" -ForegroundColor Green
+        } else {
+            Write-Host "Docker com problemas. Aguardando estabilizar..." -ForegroundColor Yellow
+            Start-Sleep -Seconds 10
+        }
+    } catch {
+        Write-Host "Problema na verificacao do Docker, mas continuando..." -ForegroundColor Yellow
+    }
+} elseif ($resolvedDriver -eq 'hyperv') {
+    Write-Host "Verificando Hyper-V..." -ForegroundColor Yellow
+    if (-not (Test-HyperVEnabled)) {
+        Write-Host "Hyper-V nao habilitado. Habilite com administrador e reinicie:" -ForegroundColor Red
+        Write-Host "  Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V -All" -ForegroundColor White
+        Write-Host "Ou utilize -Driver docker (com Docker Desktop instalado)." -ForegroundColor Yellow
+        exit 1
+    }
+    Write-Host "Hyper-V detectado." -ForegroundColor Green
 }
 
 # Verificar kubectl

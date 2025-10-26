@@ -33,7 +33,10 @@ Apenas inicializacao, sem instalar dependencias
 param(
     [string]$ProjectPath,
     [switch]$SkipSetup,
-    [switch]$SkipInit
+    [switch]$SkipInit,
+    [string]$Driver,
+    [int]$Cpus,
+    [string]$Memory
 )
 
 $ErrorActionPreference = "Stop"
@@ -140,7 +143,12 @@ function Run-Initialization {
     Write-Status "Executando inicializacao do ambiente..."
 
     try {
-        & $initScript -InstallKeda
+        $argsList = @('-InstallKeda')
+        if ($PSBoundParameters.ContainsKey('Driver') -and $Driver) { $argsList += @('-Driver', $Driver) }
+        if ($PSBoundParameters.ContainsKey('Cpus') -and $Cpus) { $argsList += @('-Cpus', $Cpus) }
+        if ($PSBoundParameters.ContainsKey('Memory') -and $Memory) { $argsList += @('-Memory', $Memory) }
+
+        & $initScript @argsList
         Write-Success "Ambiente inicializado com sucesso!"
     } catch {
         Write-Error "Erro na inicializacao: $($_.Exception.Message)"
