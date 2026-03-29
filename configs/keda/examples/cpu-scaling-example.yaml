@@ -1,0 +1,45 @@
+# Exemplo ScaledObject - CPU Autoscaling
+# Este exemplo escala baseado no uso de CPU
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: cpu-scaledobject
+  namespace: default
+spec:
+  scaleTargetRef:
+    name: nginx-deployment
+  minReplicaCount: 1
+  maxReplicaCount: 10
+  triggers:
+  - type: cpu
+    metadata:
+      type: Utilization
+      value: "70"  # Escala quando CPU > 70%
+---
+# Deployment de exemplo para testar
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 256Mi

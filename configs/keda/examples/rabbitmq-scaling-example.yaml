@@ -1,0 +1,63 @@
+# Exemplo ScaledObject - RabbitMQ Queue Autoscaling
+# Este exemplo escala baseado no tamanho da fila RabbitMQ
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: rabbitmq-scaledobject
+  namespace: default
+spec:
+  scaleTargetRef:
+    name: rabbitmq-consumer-deployment
+  minReplicaCount: 0  # Scale to zero quando nao ha mensagens
+  maxReplicaCount: 10
+  triggers:
+  - type: rabbitmq
+    metadata:
+      host: "amqp://guest:guest@rabbitmq:5672/vhost"
+      queueName: "task-queue"
+      queueLength: "5"  # Escala quando fila tem > 5 mensagens
+---
+# Deployment consumer RabbitMQ de exemplo
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rabbitmq-consumer-deployment
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: rabbitmq-consumer
+  template:
+    metadata:
+      labels:
+        app: rabbitmq-consumer
+    spec:
+      containers:
+      - name: consumer
+        image: python:3.9-slim
+        command: 
+        - /bin/sh
+        - -c
+        - |
+          pip install pika
+          python -c "
+          import pika
+          import time
+          connection = pika.BlockingConnection(pika.ConnectionParameters('rabbitmq'))
+          channel = connection.channel()
+          channel.queue_declare(queue='task-queue', durable=True)
+          def callback(ch, method, properties, body):
+              print(f'Received {body}')
+              time.sleep(10)  # Simula processamento
+              ch.basic_ack(delivery_tag=method.delivery_tag)
+          channel.basic_qos(prefetch_count=1)
+          channel.basic_consume(queue='task-queue', on_message_callback=callback)
+          channel.start_consuming()
+          "
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
