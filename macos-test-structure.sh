@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =====================================================
-# Teste de Estrutura - Versão Linux
+# Teste de Estrutura - Versão macOS
 # Valida a organização principal do projeto Minikube
 # =====================================================
 set -u
@@ -34,13 +34,14 @@ print_divider() {
 
 print_header() {
     print_divider
-    echo -e "${GREEN}TESTANDO ESTRUTURA PROFISSIONAL MINIKUBE (LINUX)${NC}"
+    echo -e "${GREEN}TESTANDO ESTRUTURA PROFISSIONAL MINIKUBE (macOS)${NC}"
     print_divider
 }
 
 find_project_root() {
     local current_dir
-    current_dir="$(dirname "$(readlink -f "$0")")"
+    # macOS: readlink -f nao existe nativamente; usamos alternativa
+    current_dir="$(cd "$(dirname "$0")" && pwd)"
     for _ in {1..10}; do
         if [[ ( -d "$current_dir/minikube/scripts" && -d "$current_dir/minikube/charts" ) || ( -d "$current_dir/scripts" && -d "$current_dir/charts" ) ]]; then
             echo "$current_dir"
@@ -106,34 +107,32 @@ test_root_files() {
 
 print_header
 
-# Scripts Linux
-test_files "Scripts de Manutenção (Linux)" "scripts/linux/maintenance" \
+# Scripts macOS
+test_files "Scripts de Manutenção (macOS)" "scripts/macOs/maintenance" \
     "fix-dashboard.sh" "validate-rabbitmq-config.sh"
-test_files "Scripts de Monitoramento (Linux)" "scripts/linux/monitoring" \
+test_files "Scripts de Monitoramento (macOS)" "scripts/macOs/monitoring" \
     "open-dashboard.sh" "change-dashboard-port.sh"
-test_files "Scripts KEDA (Linux)" "scripts/linux/keda" \
+test_files "Scripts KEDA (macOS)" "scripts/macOs/keda" \
     "install-helm-fixed.sh" "install-keda.sh" "test-keda.sh"
-test_files "Scripts Autostart (Linux)" "scripts/linux/autostart" \
+test_files "Scripts Autostart (macOS)" "scripts/macOs/autostart" \
     "minikube-autostart.sh"
-test_files "Script de Teste de Estrutura (Linux)" "" "linux-test-structure.sh"
+test_files "Scripts Drivers (macOS)" "scripts/macOs/drivers/containers" \
+    "docker-prep.sh"
+test_files "Scripts Hypervisor (macOS)" "scripts/macOs/drivers/hypervisors" \
+    "hyperkit-prep.sh"
+test_files "Scripts raiz (macOS)" "scripts/macOs" \
+    "setup-fresh-machine.sh" "bootstrap-devops.sh" "README.md"
 
 # Estrutura comum
 test_files "Configs KEDA" "configs/keda/examples" \
     "cpu-scaling-example.yaml" "memory-scaling-example.yaml" "rabbitmq-scaling-example.yaml"
 test_files "Documentação" "docs" "README.md" "KEDA.md"
 
+# Scripts Linux (garantir que ainda existem)
+test_files "Scripts Linux essenciais" "scripts/linux" \
+    "setup-fresh-machine.sh" "bootstrap-devops.sh"
 test_files "Scripts Windows essenciais" "scripts/windows" \
     "Setup-Fresh-Machine.ps1" "Bootstrap-DevOps.ps1"
-test_files "Scripts Autostart (Windows)" "scripts/windows/autostart" \
-    "minikube-autostart.bat"
-test_files "Scripts Windows - Init" "scripts/windows/init" \
-    "init-minikube-fixed.ps1" "apply-rabbitmq-config.ps1" "install-keda.ps1"
-test_files "Scripts Windows - Manutenção" "scripts/windows/maintenance" \
-    "fix-dashboard.ps1" "quick-status.ps1" "fix-kubectl-final.ps1" "validate-rabbitmq-config.ps1" "fix-dashboard-cronjob.ps1"
-test_files "Scripts Windows - Monitoring" "scripts/windows/monitoring" \
-    "open-dashboard.ps1" "change-dashboard-port.ps1"
-test_files "Scripts Windows - KEDA" "scripts/windows/keda" \
-    "install-helm-fixed.ps1" "install-helm.ps1" "install-keda.ps1" "test-keda.ps1"
 
 # Helm Charts
 echo -e "\n${YELLOW}Testando estrutura de Helm Charts...${NC}"
@@ -180,8 +179,8 @@ echo -e "${CYAN}Total de verificações: ${total_checks} | Sucessos: ${success_c
 print_divider
 
 echo -e "\n${YELLOW}Próximos passos sugeridos:${NC}"
-echo -e "1. ${GREEN}Inicializar ambiente:${NC} bash $MINIKUBE_PATH/scripts/linux/autostart/minikube-autostart.sh"
-echo -e "2. ${GREEN}Abrir Dashboard:${NC}     bash $MINIKUBE_PATH/scripts/linux/monitoring/open-dashboard.sh"
+echo -e "1. ${GREEN}Inicializar ambiente:${NC} bash $MINIKUBE_PATH/scripts/macOs/autostart/minikube-autostart.sh"
+echo -e "2. ${GREEN}Abrir Dashboard:${NC}     bash $MINIKUBE_PATH/scripts/macOs/monitoring/open-dashboard.sh"
 echo -e "3. ${GREEN}Consultar docs:${NC}      cat $MINIKUBE_PATH/docs/README.md"
 
 echo -e "\n${GREEN}Teste concluído!${NC}"

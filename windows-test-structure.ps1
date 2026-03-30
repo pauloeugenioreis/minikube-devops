@@ -70,8 +70,7 @@ $fileChecks = @(
     @{ Category = "Scripts Autostart"; Directory = "scripts\windows\autostart"; Files = @("minikube-autostart.bat") },
     @{ Category = "Setup de Maquina Nova"; Directory = "scripts\windows"; Files = @("Setup-Fresh-Machine.ps1", "Bootstrap-DevOps.ps1") },
     @{ Category = "Configs KEDA"; Directory = "configs\keda\examples"; Files = @("cpu-scaling-example.yaml", "memory-scaling-example.yaml", "rabbitmq-scaling-example.yaml") },
-    @{ Category = "Documentacao"; Directory = "docs"; Files = @("README.md", "KEDA.md") },
-    @{ Category = "Documentacao Fresh Machine"; Directory = "docs\fresh-machine"; Files = @("SETUP.md", "DEMO.md", "CHECKLIST.md") }
+    @{ Category = "Documentacao"; Directory = "docs"; Files = @("README.md", "KEDA.md") }
 )
 
 # --- Execucao dos Testes ---
@@ -161,10 +160,8 @@ Write-Host "5. Documentacao:" -ForegroundColor White
 Write-Host "   $basePath\docs\README.md" -ForegroundColor Gray
 Write-Host "6. Documentacao KEDA:" -ForegroundColor White
 Write-Host "   $basePath\docs\KEDA.md" -ForegroundColor Gray
-Write-Host "7. Fresh Machine Setup:" -ForegroundColor White
-Write-Host "   $basePath\docs\fresh-machine\SETUP.md" -ForegroundColor Gray
 if ($projectPaths) {
-    Write-Host "7. Scripts Linux (desenvolvimento):" -ForegroundColor White
+    Write-Host "7. Scripts Linux:" -ForegroundColor White
     Write-Host "   $($projectPaths.TempLinuxScripts)\README.md" -ForegroundColor Gray
 }
 

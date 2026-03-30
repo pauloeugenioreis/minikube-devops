@@ -1,133 +1,166 @@
-﻿# Minikube DevOps Environment
-
+# Minikube DevOps Environment — Documentação
 
 ## Visão Geral
-Ambiente Minikube predefinido com RabbitMQ, MongoDB, Redis e KEDA, preparado para iniciar automaticamente em Windows e Linux. Os scripts validam dependências, aplicam charts Helm, configuram ingress e exibem endpoints úteis.
 
+Ambiente Minikube com RabbitMQ, MongoDB, Redis e KEDA para desenvolvimento local. Os scripts validam dependências, aplicam charts Helm, configuram ingress e port-forwards e exibem endpoints de acesso. Suportado em **Windows**, **Linux** e **macOS**.
+
+---
 
 ## Requisitos Mínimos
-- Windows 10/11 com PowerShell 5.1+, Docker Desktop, Minikube >= 1.37.0, kubectl >= 1.34.0.
-- Linux com Bash, Docker, Minikube, kubectl e Helm instalados (os scripts verificam e instalam quando possível).
-- Pelo menos 8 GB de RAM e 30 GB livres recomendados para rodar os serviços de forma confortável.
-- Acesso administrativo para permitir alterações em hosts e instalação de dependências.
 
+| Plataforma | Requisitos |
+|---|---|
+| **Windows** | Windows 10/11, PowerShell 5.1+, Docker Desktop, Minikube ≥ 1.37, kubectl ≥ 1.34 |
+| **Linux** | Ubuntu 18.04+, Bash, Docker, Minikube, kubectl, Helm |
+| **macOS** | macOS 12+, Homebrew, Docker Desktop, Minikube, kubectl, Helm |
+
+- Mínimo 8 GB RAM e 30 GB livres recomendados
+- Acesso administrativo para edição de `/etc/hosts` e instalação de dependências
+
+---
 
 ## Estrutura Principal
-- **Scripts Windows** (`scripts/windows`): bootstrap completo, inicialização, automações de KEDA, manutenção e monitoramento.
-- **Scripts Linux** (`scripts/linux`): equivalente em Bash com autostart, instalação de dependências e ferramentas de validação.
-- **Charts Helm** (`charts`): pacotes Helm para RabbitMQ, MongoDB e Redis com valores padrão versionados.
-- **Documentação** (`docs`): guias complementares como `fresh-machine/SETUP.md` e `KEDA.md`.
-- **Área de testes** (`temp/`): espaço isolado para protótipos antes de promover scripts para a estrutura principal.
 
-## Iniciando no Linux
-### 🚀 Setup para Máquina Nova Ubuntu
-```bash
-# Bootstrap completo - download + instalação + inicialização
-curl -fsSL https://raw.githubusercontent.com/pauloeugenioreis/minikube-devops/main/scripts/linux/bootstrap-devops.sh | bash
+- **[scripts/windows/](../scripts/windows/README.md)** — Bootstrap, inicialização, KEDA, manutenção e monitoramento (PowerShell)
+- **[scripts/linux/](../scripts/linux/README.md)** — Equivalente em Bash com autostart, drivers (Docker/KVM) e validação
+- **[scripts/macOs/](../scripts/macOs/README.md)** — Equivalente em Bash para macOS via Homebrew (Docker Desktop, Hyperkit)
+- **[charts/](../charts/)** — Helm charts para RabbitMQ, MongoDB e Redis (valores padrão versionados)
+- **[configs/](../configs/)** — Exemplos KEDA: CPU, memória, RabbitMQ
 
-# Ou se já tem o projeto:
-cd <CAMINHO-DO-PROJETO>/DevOps
-bash scripts/linux/setup-fresh-machine.sh --run-initialization
-```
-
-### Passo a passo rapido (projeto existente)
-```
-cd <CAMINHO-DO-PROJETO>/DevOps
-bash scripts/linux/autostart/minikube-autostart.sh
-```
-O script valida Docker, Minikube e kubectl, inicia o cluster, aplica charts, configura ingress/port-forward e exibe URLs de acesso. Tambem atualiza automaticamente o arquivo `/etc/hosts` com o IP do Minikube.
-
-### Comandos uteis
-```
-bash scripts/linux/keda/install-keda.sh
-bash linux-test-structure.sh
-bash scripts/linux/monitoring/open-dashboard.sh
-```
-
-### Endpoints principais
-- RabbitMQ Management: `http://rabbitmq.local` (requer entrada em `/etc/hosts`, adicionada pelo autostart).
-- Redis: `redis://localhost:6379` via port-forward configurado automaticamente.
-- Kubernetes Dashboard: `http://localhost:15671` via port-forward configurado automaticamente.
+---
 
 ## Iniciando no Windows
-### Opcao recomendada (bootstrap completo)
-```
+
+### Bootstrap Completo (Recomendado)
+```powershell
+cd <CAMINHO-DO-PROJETO>
 .\scripts\windows\Bootstrap-DevOps.ps1
 ```
-Executa validacao/instalacao de Docker, Minikube, kubectl e Helm, inicializa o cluster com KEDA e aplica os charts.
+Instala Docker Desktop, Minikube, kubectl e Helm; inicializa o cluster com KEDA e aplica os charts.
 
-### Inicializacao manual
-```
+### Inicialização Manual
+```powershell
 .\scripts\windows\init\init-minikube-fixed.ps1
+# Para pular KEDA:
+.\scripts\windows\init\init-minikube-fixed.ps1 -InstallKeda:$false
 ```
-O script instala e valida o KEDA por padrao; para pular essa etapa execute com `-InstallKeda:$false`.
 
-### Instalar dependencias sem subir o cluster
-```
+### Instalar Dependências Sem Subir o Cluster
+```powershell
 .\scripts\windows\Setup-Fresh-Machine.ps1
-```
-Ideal para preparar maquinas offline antes de iniciar o ambiente.
-
-### Ferramentas adicionais
-```
-.\scripts\windows\maintenance\quick-status.ps1
-.\scripts\windows\monitoring\open-dashboard.ps1
-.\scripts\windows\maintenance\fix-dashboard.ps1
-.\scripts\windows\maintenance\fix-kubectl-final.ps1
 ```
 
 ### Autostart no Windows
-Copie `scripts\windows\autostart\minikube-autostart.bat` para `%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\`. A janela permanece aberta ate o usuario confirmar com uma tecla, facilitando acompanhar o progresso.
+Copie `scripts\windows\autostart\minikube-autostart.bat` para:
+```
+%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\
+```
 
-## Gerenciamento com Helm
-Os servicos principais sao instalados via `helm upgrade --install` a partir de `charts`. Ajuste configuracoes editando os arquivos `values.yaml` de cada chart. O script `init-minikube-fixed` garante que as versoes declaradas sejam aplicadas em cada execucao.
+---
 
-## Fluxo de Desenvolvimento
-Scripts novos devem nascer em `temp/`, passar por validacoes e so entao serem promovidos para a estrutura principal. Assim a base consolidada permanece estavel, enquanto experimentos ficam isolados.
+## Iniciando no Linux
+
+### Bootstrap Completo (Máquina Nova)
+```bash
+curl -fsSL https://raw.githubusercontent.com/pauloeugenioreis/minikube-devops/main/scripts/linux/bootstrap-devops.sh | bash
+```
+
+### Com Projeto Clonado
+```bash
+cd <CAMINHO-DO-PROJETO>
+bash scripts/linux/autostart/minikube-autostart.sh
+```
+
+### Ferramentas Úteis
+```bash
+bash scripts/linux/keda/install-keda.sh
+bash scripts/linux/monitoring/open-dashboard.sh
+bash linux-test-structure.sh
+```
+
+---
+
+## Iniciando no macOS
+
+### Bootstrap Completo (Máquina Nova)
+```bash
+curl -fsSL https://raw.githubusercontent.com/pauloeugenioreis/minikube-devops/main/scripts/macOs/bootstrap-devops.sh | bash
+```
+
+### Com Projeto Clonado
+```bash
+cd <CAMINHO-DO-PROJETO>
+bash scripts/macOs/autostart/minikube-autostart.sh
+```
+
+### Ferramentas Úteis
+```bash
+bash scripts/macOs/keda/install-keda.sh
+bash scripts/macOs/monitoring/open-dashboard.sh
+bash macos-test-structure.sh
+```
+
+---
 
 ## Componentes Instalados
 
-- RabbitMQ 4.1 com painel em `http://localhost:15672`, usuario `guest/guest`, storage persistente de 1Gi.
-- MongoDB 8.0.15 com `admin/admin`, exposto em `localhost:27017`, limite de memoria em 1Gi e storage de 2Gi.
-- Redis 7.2 com cache otimizado, exposto em `localhost:6379`, limite de memoria em 256Mi e storage de 1Gi.
-- Kubernetes Dashboard publicado em `http://127.0.0.1:15671`.
-- KEDA 2.17+ no namespace `keda`, com triggers para CPU, memoria, RabbitMQ e outros.
+| Componente | Versão | Porta | Credenciais |
+|---|---|---|---|
+| RabbitMQ | 4.1 | 15672 (UI), 5672 (AMQP) | guest / guest |
+| MongoDB | 8.0.15 | 27017 | admin / admin |
+| Redis | 7.2 | 30679 | — |
+| Kubernetes Dashboard | — | 15671 | — (acesso direto) |
+| KEDA | 2.17+ | (namespace `keda`) | — |
+
+> **Redis**: exposto na porta `30679` via port-forward (NodePort).
+
+---
+
+## Gerenciamento com Helm
+
+Os serviços são instalados via `helm upgrade --install` a partir de `charts/`. Ajuste valores editando os `values.yaml` de cada chart. O script `init-minikube-fixed` garante que as versões declaradas sejam aplicadas a cada execução.
+
+---
 
 ## Troubleshooting
 
-- `.\scripts\windows\maintenance\fix-kubectl-final.ps1`: corrige incompatibilidade de `kubectl`.
-- `.\scripts\windows\maintenance\fix-dashboard.ps1`: reconfigura o dashboard quando nao abre.
-- `.\scripts\windows\maintenance\fix-dashboard-cronjob.ps1`: contorna erro 404 ao listar CronJobs na versao 2.7.0 do dashboard.
-- Docker parou? Os scripts verificam e iniciam o servico automaticamente.
-- MongoDB com alerta de memoria? Os charts ja definem 1Gi reservado.
+| Problema | Solução |
+|---|---|
+| kubectl incompatível | `scripts/windows/maintenance/fix-kubectl-final.ps1` |
+| Dashboard não abre | `scripts/windows/maintenance/fix-dashboard.ps1` |
+| Erro 404 em CronJobs | `scripts/windows/maintenance/fix-dashboard-cronjob.ps1` |
+| Docker não responde | Scripts verificam e iniciam o serviço automaticamente |
+| Minikube não inicia | `minikube delete --all --purge` e execute o init novamente |
 
-## Credenciais de Acesso
+Para Linux/macOS, use os scripts equivalentes em `scripts/linux/maintenance/` ou `scripts/macOs/maintenance/`.
 
-- Kubernetes Dashboard: `http://127.0.0.1:15671` (token nao requerido, acesso direto).
-- RabbitMQ Management: `http://localhost:15672` com `guest/guest`.
-- MongoDB: `admin/admin` em `localhost:27017`, banco `admin`.
-- Redis: `redis://localhost:6379` (sem senha).
+---
 
-## Comandos Uteis
+## Comandos Úteis
 
 ```bash
 kubectl get pods,svc,pv,pvc
 kubectl logs -l app=rabbitmq
 kubectl logs -l app=mongodb
-kubectl logs -l app=redis
 minikube stop
 minikube delete
 ```
 
-## Documentacao Adicional
+---
 
-- `docs/fresh-machine/SETUP.md`: guia completo para preparar maquinas novas e ambientes offline.
-- `docs/KEDA.md`: detalhes sobre escalonamento orientado a eventos.
-- `scripts/linux/README.md`: referencia especifica dos scripts Bash.
+## Documentação Adicional
+
+| Arquivo | Conteúdo |
+|---|---|
+| [KEDA.md](KEDA.md) | Autoscaling orientado a eventos |
+| [scripts/windows/README.md](../scripts/windows/README.md) | Referência dos scripts Windows |
+| [scripts/linux/README.md](../scripts/linux/README.md) | Referência dos scripts Linux |
+| [scripts/macOs/README.md](../scripts/macOs/README.md) | Referência dos scripts macOS |
+
+---
 
 ## Notas Finais
 
-- Dados ficam em volumes persistentes, sobrevivendo a reinicializacoes do Minikube.
-- O host recebe ajustes e port-forward automaticamente durante a inicializacao.
-- Os scripts assumem permissao administrativa para instalar dependencias e editar hosts quando necessario.
-
+- Dados ficam em volumes persistentes, sobrevivendo a reinicializações do Minikube.
+- O `/etc/hosts` e os port-forwards são configurados automaticamente durante a inicialização.
+- Os scripts assumem permissão administrativa para instalar dependências quando necessário.

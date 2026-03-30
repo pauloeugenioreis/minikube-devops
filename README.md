@@ -1,101 +1,131 @@
-﻿# Minikube DevOps Environment
+# Minikube DevOps Environment
 
+Ambiente profissional para desenvolvimento, testes e automação DevOps local usando Minikube, RabbitMQ, MongoDB, Redis e KEDA. Scripts prontos para **Windows**, **Linux** e **macOS**.
 
-Ambiente profissional para desenvolvimento, testes e automação DevOps local usando Minikube, RabbitMQ, MongoDB, Redis e KEDA. Inclui scripts prontos para Windows e Linux.
-
-Professional environment for local DevOps automation, development, and testing with Minikube, RabbitMQ, MongoDB, Redis, and KEDA. PowerShell and Bash scripts are provided out of the box.
+Professional environment for local DevOps automation, development, and testing with Minikube, RabbitMQ, MongoDB, Redis, and KEDA. Scripts provided for **Windows**, **Linux**, and **macOS**.
 
 ---
 
+## Visão Geral | Overview
 
-## Visão Geral (PT-BR)
 - Automação completa do setup Kubernetes local com Minikube
 - RabbitMQ, MongoDB e Redis configurados automaticamente com persistência de dados
 - KEDA para autoscaling baseado em eventos (RabbitMQ, CPU, memória, etc.)
-- Scripts PowerShell e Bash para inicialização, manutenção, monitoramento e troubleshooting
-- Estrutura profissional: desenvolvimento em `temp/`, código consolidado na raiz do repositório
-- Aplicações empacotadas como charts Helm para garantir versionamento
-
-## Overview (EN)
-- Full automation of local Kubernetes setup with Minikube
-- RabbitMQ, MongoDB, and Redis provisioned automatically with persistent storage
-- KEDA for event-driven autoscaling (RabbitMQ, CPU, memory, and more)
-- PowerShell and Bash tooling for initialization, maintenance, monitoring, and troubleshooting
-- Professional repo layout: experiments live in `temp/`, stable code lives at repository root
-- Workloads delivered via Helm charts for repeatable installs
+- Scripts PowerShell, Bash (Linux e macOS) para inicialização, manutenção e monitoramento
+- Workloads entregues como Helm charts para instalações reproduzíveis
 
 ---
 
 ## Estrutura do Projeto | Project Structure
+
 ```
-DevOps/
-  temp/                       # Area de desenvolvimento | Development area
-  charts/                     # Helm charts das aplicacoes | App charts
-  docs/                       # Documentacao             | Documentation
-  scripts/                    # Scripts Windows e Linux  | Scripts
-  windows-test-structure.ps1
-  linux-test-structure.sh
-  ...
+minikube-devops/
+├── charts/                      # Helm charts (RabbitMQ, MongoDB, Redis)
+├── configs/                     # Configurações KEDA e exemplos
+├── docs/                        # Documentação completa
+│   ├── README.md                # Este guia principal
+│   └── KEDA.md                  # KEDA: autoscaling orientado a eventos
+├── scripts/
+│   ├── windows/                 # Scripts PowerShell
+│   │   └── README.md
+│   ├── linux/                   # Scripts Bash (Ubuntu/Debian)
+│   │   └── README.md
+│   └── macOs/                   # Scripts Bash (macOS via Homebrew)
+│       └── README.md
+├── linux-test-structure.sh      # Valida estrutura no Linux
+├── macos-test-structure.sh      # Valida estrutura no macOS
+└── windows-test-structure.ps1   # Valida estrutura no Windows
 ```
 
 ---
-
 
 ## Como Usar | How to Use
-1. Clone o repositório | Clone the repository
-  ```bash
-  git clone https://github.com/pauloeugenioreis/minikube-devops.git
-  ```
-2. Revise a documentação em `docs/` antes de qualquer mudança | Review documentation in `docs/` before changing anything
-3. Inicialize o ambiente | Initialize the environment
-  - Windows: execute os scripts em `scripts/windows/`
-  - Linux: use os scripts em `scripts/linux/`
-4. Configure autostart se desejar | Optionally configure autostart (`scripts/windows/autostart/`)
-5. Consulte `docs/` para detalhes, troubleshooting e exemplos | See docs for details, troubleshooting, and examples
+
+### 1. Clonar o repositório | Clone the repository
+```bash
+git clone https://github.com/pauloeugenioreis/minikube-devops.git
+cd minikube-devops
+```
+
+### 2. Escolher a plataforma | Choose your platform
+
+#### 🪟 Windows
+```powershell
+# Bootstrap completo (recomendado)
+.\scripts\windows\Bootstrap-DevOps.ps1
+
+# Ou inicialização direta
+.\scripts\windows\init\init-minikube-fixed.ps1
+```
+
+#### 🐧 Linux (Ubuntu/Debian)
+```bash
+# Bootstrap completo (recomendado para máquina nova)
+curl -fsSL https://raw.githubusercontent.com/pauloeugenioreis/minikube-devops/main/scripts/linux/bootstrap-devops.sh | bash
+
+# Ou com o projeto clonado
+bash scripts/linux/autostart/minikube-autostart.sh
+```
+
+#### 🍎 macOS
+```bash
+# Bootstrap completo (recomendado para máquina nova)
+curl -fsSL https://raw.githubusercontent.com/pauloeugenioreis/minikube-devops/main/scripts/macOs/bootstrap-devops.sh | bash
+
+# Ou com o projeto clonado
+bash scripts/macOs/autostart/minikube-autostart.sh
+```
 
 ---
 
+## Endpoints após inicialização | Endpoints after init
 
-## Principais Comandos | Main Commands
+| Serviço | URL / Endereço | Credenciais |
+|---|---|---|
+| RabbitMQ Management | http://localhost:15672 | guest / guest |
+| RabbitMQ AMQP | amqp://localhost:5672 | guest / guest |
+| MongoDB | mongodb://localhost:27017/admin | admin / admin |
+| Redis | redis://localhost:30679 | — |
+| Kubernetes Dashboard | http://localhost:15671 | — |
 
-### Windows
-```powershell
-# Inicialização completa (KEDA habilitado por padrão)
-./scripts/windows/init/init-minikube-fixed.ps1
-# Para pular o KEDA use:
-./scripts/windows/init/init-minikube-fixed.ps1 -InstallKeda:$false
+---
 
-# Teste de estrutura
-./windows-test-structure.ps1
+## Verificar estrutura | Validate structure
 
-# Status rápido
-./scripts/windows/maintenance/quick-status.ps1
-```
-
-### Linux
 ```bash
-# Inicialização completa
-bash scripts/linux/init/init-minikube-fixed.sh
-
-# Teste de estrutura
+# Linux
 bash linux-test-structure.sh
 
-# Status rápido
-bash scripts/linux/quick-status.sh
+# macOS
+bash macos-test-structure.sh
+```
+```powershell
+# Windows
+.\windows-test-structure.ps1
 ```
 
 ---
 
+## Documentação | Documentation
+
+| Arquivo | Conteúdo |
+|---|---|
+| [docs/README.md](docs/README.md) | Guia detalhado por plataforma |
+| [docs/KEDA.md](docs/KEDA.md) | Autoscaling orientado a eventos |
+| [scripts/windows/README.md](scripts/windows/README.md) | Referência dos scripts Windows |
+| [scripts/linux/README.md](scripts/linux/README.md) | Referência dos scripts Linux |
+| [scripts/macOs/README.md](scripts/macOs/README.md) | Referência dos scripts macOS |
+
+---
 
 ## Licença | License
+
 Este projeto é aberto para uso pessoal ou profissional.
 This project is open for personal or commercial usage.
 
 ---
 
 ## Imagens do Projeto
-
-Imagens ilustrativas do ambiente e dos principais componentes:
 
 <p align="center">
   <img src="docs/assets/1.png" alt="Imagem 1" width="600" />
