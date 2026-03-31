@@ -10,7 +10,8 @@ param(
     [switch]$SkipKubectlInstall,
     [switch]$SkipHelmInstall,
     [switch]$SkipValidation,
-    [switch]$RunInitialization
+    [switch]$RunInitialization,
+    [switch]$ForceUpdate
 )
 
 # Forcar a codificacao UTF-8 para exibir icones corretamente
@@ -18,9 +19,9 @@ $PSDefaultParameterValues['*:Encoding'] = 'utf8'
 
 
 # Importar funcoes de deteccao de paths se disponivel
-$getProjectRootScript = Join-Path $PSScriptRoot "Get-ProjectRoot.ps1"
-if (Test-Path $getProjectRootScript) {
-    . $getProjectRootScript
+$commonScript = Join-Path $PSScriptRoot "utils\common.ps1"
+if (Test-Path $commonScript) {
+    . $commonScript
     Write-Host "Detectando pasta raiz do projeto..." -ForegroundColor Yellow
     try {
         $projectPaths = Get-ProjectPaths
@@ -30,7 +31,7 @@ if (Test-Path $getProjectRootScript) {
         $projectPaths = $null
     }
 } else {
-    Write-Warning "Get-ProjectRoot.ps1 nao encontrado. Setup independente."
+    Write-Warning "utils\common.ps1 nao encontrado. Setup independente."
     $projectPaths = $null
 }
 
@@ -208,7 +209,7 @@ Write-Host "`n1 DOCKER DESKTOP" -ForegroundColor Cyan
 
 if ($SkipDockerInstall) {
     Write-Host "Pulando instalacao do Docker Desktop (parametro -SkipDockerInstall)" -ForegroundColor Yellow
-} elseif (Test-Command "docker") {
+} elseif (-not $ForceUpdate -and (Test-Command "docker")) {
     Write-Host " Docker Desktop ja esta instalado" -ForegroundColor Green
     $dockerVersion = docker --version 2>$null
     Write-Host "Versao: $dockerVersion" -ForegroundColor White
@@ -278,12 +279,12 @@ Write-Host "`n2 MINIKUBE" -ForegroundColor Cyan
 
 if ($SkipMinikubeInstall) {
     Write-Host "Pulando instalacao do Minikube (parametro -SkipMinikubeInstall)" -ForegroundColor Yellow
-} elseif (Test-Command "minikube") {
+} elseif (-not $ForceUpdate -and (Test-Command "minikube")) {
     Write-Host " Minikube ja esta instalado" -ForegroundColor Green
     $minikubeVersion = minikube version --short 2>$null
     Write-Host "Versao: $minikubeVersion" -ForegroundColor White
 } else {
-    Write-Host "Minikube nao encontrado. Instalando..." -ForegroundColor Yellow
+    Write-Host "Instalando/Atualizando Minikube..." -ForegroundColor Yellow
     
     # Download Minikube
     $minikubeUrl = "https://github.com/kubernetes/minikube/releases/latest/download/minikube-windows-amd64.exe"
@@ -305,12 +306,12 @@ Write-Host "`n3 KUBECTL" -ForegroundColor Cyan
 
 if ($SkipKubectlInstall) {
     Write-Host "Pulando instalacao do kubectl (parametro -SkipKubectlInstall)" -ForegroundColor Yellow
-} elseif (Test-Command "kubectl") {
+} elseif (-not $ForceUpdate -and (Test-Command "kubectl")) {
     Write-Host " kubectl ja esta instalado" -ForegroundColor Green
     $kubectlVersion = kubectl version --client --short 2>$null
     Write-Host "Versao: $kubectlVersion" -ForegroundColor White
 } else {
-    Write-Host "kubectl nao encontrado. Instalando..." -ForegroundColor Yellow
+    Write-Host "Instalando/Atualizando kubectl..." -ForegroundColor Yellow
     
     # Download kubectl
     try {
@@ -338,12 +339,12 @@ Write-Host "`n4 HELM" -ForegroundColor Cyan
 
 if ($SkipHelmInstall) {
     Write-Host "Pulando instalacao do Helm (parametro -SkipHelmInstall)" -ForegroundColor Yellow
-} elseif (Test-Command "helm") {
+} elseif (-not $ForceUpdate -and (Test-Command "helm")) {
     Write-Host " Helm ja esta instalado" -ForegroundColor Green
     $helmVersion = helm version --short 2>$null
     Write-Host "Versao: $helmVersion" -ForegroundColor White
 } else {
-    Write-Host "Helm nao encontrado. Instalando..." -ForegroundColor Yellow
+    Write-Host "Instalando/Atualizando Helm..." -ForegroundColor Yellow
     
     try {
         # Obter ultima versao do Helm
@@ -434,7 +435,7 @@ if (-not $SkipValidation) {
         
         if ($RunInitialization -and $projectPaths) {
             Write-Host "`n EXECUTANDO INICIALIZACAO AUTOMATICA" -ForegroundColor Yellow
-            $initScript = Join-Path $projectPaths.Scripts.Windows.Init "init-minikube-fixed.ps1"
+            $initScript = Join-Path $projectPaths.Scripts.Windows.Init "start.ps1"
             if (Test-Path $initScript) {
                 Write-Host "Executando: $initScript" -ForegroundColor White
                 & $initScript
@@ -446,9 +447,9 @@ if (-not $SkipValidation) {
         Write-Host "`n< PROXIMOS PASSOS:" -ForegroundColor Yellow
         if ($projectPaths) {
             Write-Host "1. Inicializar ambiente:" -ForegroundColor White
-            Write-Host "   $($projectPaths.Scripts.Windows.Init)\init-minikube-fixed.ps1" -ForegroundColor Gray
+            Write-Host "   $($projectPaths.Scripts.Windows.Init)\start.ps1" -ForegroundColor Gray
             Write-Host "2. Testar estrutura:" -ForegroundColor White
-            Write-Host "   $($projectPaths.Minikube)\windows-test-structure.ps1" -ForegroundColor Gray
+            Write-Host "   $($projectPaths.Scripts.Windows.Root)\test-structure.ps1" -ForegroundColor Gray
         } else {
             Write-Host "1. Reinicie o PowerShell para atualizar PATH" -ForegroundColor White
             Write-Host "2. Execute: minikube start --driver=docker" -ForegroundColor White

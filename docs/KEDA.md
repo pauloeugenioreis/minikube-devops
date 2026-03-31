@@ -17,7 +17,7 @@ KEDA (Kubernetes Event-driven Autoscaling) permite escalar workloads Kubernetes 
 ### 🪟 Windows
 ```powershell
 # Junto com a inicialização completa (padrão)
-.\scripts\windows\init\init-minikube-fixed.ps1
+.\scripts\windows\init\start.ps1
 
 # Apenas o KEDA em ambiente já configurado
 .\scripts\windows\keda\install-keda.ps1
@@ -53,7 +53,7 @@ configs/keda/examples/
 
 scripts/
   ├── windows/keda/
-  │   ├── install-helm-fixed.ps1
+  │   ├── install-helm.ps1
   │   ├── install-keda.ps1
   │   └── test-keda.ps1
   ├── linux/keda/

@@ -5,12 +5,6 @@ $emoji_success = [char]::ConvertFromUtf32(0x2705)
 $emoji_error = [char]::ConvertFromUtf32(0x274C)
 $emoji_warning = [char]::ConvertFromUtf32(0x26A0)
 $emoji_info = [char]::ConvertFromUtf32(0x1F4A1)
-$emoji_book = [char]::ConvertFromUtf32(0x1F4DA)
-$emoji_party = [char]::ConvertFromUtf32(0x1F389)
-$emoji_pin = [char]::ConvertFromUtf32(0x1F4CC)
-$emoji_wrench = [char]::ConvertFromUtf32(0x1F527)
-$emoji_note = [char]::ConvertFromUtf32(0x1F4DD)
-$emoji_rocket = [char]::ConvertFromUtf32(0x1F680)
 
 Write-Host "=====================================================" -ForegroundColor Cyan
 Write-Host "Instalando Helm - Package Manager para Kubernetes" -ForegroundColor Green
@@ -24,7 +18,7 @@ function Test-Command($cmdname) {
 # Verificar se Helm ja esta instalado
 if (Test-Command "helm") {
     $helmVersion = helm version --short 2>$null
-    Write-Host "$emoji_success Helm ja esta instalado: $helmVersion" -ForegroundColor Green
+    Write-Host "OK Helm ja esta instalado: $helmVersion" -ForegroundColor Green
     exit 0
 }
 
@@ -32,10 +26,10 @@ Write-Host "`n1. Verificando prerequisitos..." -ForegroundColor Yellow
 
 # Verificar se temos acesso a internet
 try {
-    $response = Invoke-WebRequest -Uri "https://get.helm.sh" -Method Head -TimeoutSec 10
-    Write-Host "   $emoji_success Conectividade com internet OK" -ForegroundColor Green
+    Invoke-WebRequest -Uri "https://get.helm.sh" -Method Head -TimeoutSec 10 | Out-Null
+    Write-Host "   OK Conectividade com internet OK" -ForegroundColor Green
 } catch {
-    Write-Host "   $emoji_error Sem conectividade com internet!" -ForegroundColor Red
+    Write-Host "   ERRO Sem conectividade com internet!" -ForegroundColor Red
     Write-Host "   Verifique sua conexao e tente novamente" -ForegroundColor Yellow
     exit 1
 }
@@ -60,9 +54,9 @@ New-Item -ItemType Directory -Path $tempDir -Force | Out-Null
 Write-Host "   Baixando de: $downloadUrl" -ForegroundColor Cyan
 try {
     Invoke-WebRequest -Uri $downloadUrl -OutFile $zipFile -TimeoutSec 120
-    Write-Host "   $emoji_success Download concluido" -ForegroundColor Green
+    Write-Host "   OK Download concluido" -ForegroundColor Green
 } catch {
-    Write-Host "   $emoji_error Falha no download do Helm!" -ForegroundColor Red
+    Write-Host "   ERRO Falha no download do Helm!" -ForegroundColor Red
     Write-Host "   Erro: $($_.Exception.Message)" -ForegroundColor Yellow
     exit 1
 }
@@ -71,9 +65,9 @@ Write-Host "`n3. Extraindo Helm..." -ForegroundColor Yellow
 
 try {
     Expand-Archive -Path $zipFile -DestinationPath $tempDir -Force
-    Write-Host "   $emoji_success Arquivos extraidos" -ForegroundColor Green
+    Write-Host "   OK Arquivos extraidos" -ForegroundColor Green
 } catch {
-    Write-Host "   $emoji_error Falha ao extrair arquivos!" -ForegroundColor Red
+    Write-Host "   ERRO Falha ao extrair arquivos!" -ForegroundColor Red
     exit 1
 }
 
@@ -92,9 +86,9 @@ $helmDestination = "$userBinPath\helm.exe"
 
 if (Test-Path $helmSource) {
     Copy-Item $helmSource $helmDestination -Force
-    Write-Host "   $emoji_success helm.exe copiado para $userBinPath" -ForegroundColor Green
+    Write-Host "   OK helm.exe copiado para $userBinPath" -ForegroundColor Green
 } else {
-    Write-Host "   $emoji_error Arquivo helm.exe nao encontrado!" -ForegroundColor Red
+    Write-Host "   ERRO Arquivo helm.exe nao encontrado!" -ForegroundColor Red
     exit 1
 }
 
@@ -105,31 +99,31 @@ $currentPath = [Environment]::GetEnvironmentVariable("PATH", "User")
 if ($currentPath -notlike "*$userBinPath*") {
     $newPath = "$userBinPath;$currentPath"
     [Environment]::SetEnvironmentVariable("PATH", $newPath, "User")
-    Write-Host "   $emoji_success PATH atualizado (persistente)" -ForegroundColor Green
+    Write-Host "   OK PATH atualizado (persistente)" -ForegroundColor Green
 } else {
-    Write-Host "   $emoji_success PATH ja configurado" -ForegroundColor Green
+    Write-Host "   OK PATH ja configurado" -ForegroundColor Green
 }
 
 # Atualizar PATH da sessao atual
 if ($env:PATH -notlike "*$userBinPath*") {
     $env:PATH = "$userBinPath;$env:PATH"
-    Write-Host "   $emoji_success PATH da sessao atual atualizado" -ForegroundColor Green
+    Write-Host "   OK PATH da sessao atual atualizado" -ForegroundColor Green
 }
 
 Write-Host "`n6. Verificando instalacao..." -ForegroundColor Yellow
 
 # Verificar se helm funciona
 try {
-    $helmVersion = & "$helmDestination" version --short 2>$null
-    if ($helmVersion) {
-        Write-Host "   $emoji_success Helm instalado com sucesso!" -ForegroundColor Green
-        Write-Host "   Versao: $helmVersion" -ForegroundColor Cyan
+    $helmVersionOutput = & "$helmDestination" version --short 2>$null
+    if ($helmVersionOutput) {
+        Write-Host "   OK Helm instalado com sucesso!" -ForegroundColor Green
+        Write-Host "   Versao: $helmVersionOutput" -ForegroundColor Cyan
     } else {
-        Write-Host "   $emoji_error Helm nao responde corretamente" -ForegroundColor Red
+        Write-Host "   ERRO Helm nao responde corretamente" -ForegroundColor Red
         exit 1
     }
 } catch {
-    Write-Host "   $emoji_error Erro ao verificar instalacao Helm" -ForegroundColor Red
+    Write-Host "   ERRO ao verificar instalacao Helm" -ForegroundColor Red
     Write-Host "   Erro: $($_.Exception.Message)" -ForegroundColor Yellow
     exit 1
 }
@@ -141,30 +135,30 @@ try {
     & "$helmDestination" repo add stable https://charts.helm.sh/stable 2>$null
     & "$helmDestination" repo add bitnami https://charts.bitnami.com/bitnami 2>$null
     & "$helmDestination" repo update 2>$null
-    Write-Host "   $emoji_success Repositorios basicos configurados" -ForegroundColor Green
+    Write-Host "   OK Repositorios basicos configurados" -ForegroundColor Green
 } catch {
-    Write-Host "   $emoji_warning Repositorios podem precisar ser configurados manualmente" -ForegroundColor Yellow
+    Write-Host "   AVISO Repositorios podem precisar ser configurados manualmente" -ForegroundColor Yellow
 }
 
 Write-Host "`n8. Limpeza..." -ForegroundColor Yellow
 Remove-Item $tempDir -Recurse -Force -ErrorAction SilentlyContinue
-Write-Host "   $emoji_success Arquivos temporarios removidos" -ForegroundColor Green
+Write-Host "   OK Arquivos temporarios removidos" -ForegroundColor Green
 
 Write-Host "`n=====================================================" -ForegroundColor Cyan
-Write-Host "   $emoji_party HELM INSTALADO COM SUCESSO!" -ForegroundColor Green
+Write-Host "HELM INSTALADO COM SUCESSO!" -ForegroundColor Green
 Write-Host "=====================================================" -ForegroundColor Cyan
 
-Write-Host "`n$emoji_book INFORMACOES IMPORTANTES:" -ForegroundColor Yellow
-Write-Host "   $emoji_pin Localização: $helmDestination" -ForegroundColor Cyan
-Write-Host "   $emoji_wrench Comando: helm" -ForegroundColor Cyan
-Write-Host "   $emoji_note PATH: $userBinPath" -ForegroundColor Cyan
+Write-Host "`nINFORMACOES IMPORTANTES:" -ForegroundColor Yellow
+Write-Host "   Localizacao: $helmDestination" -ForegroundColor Cyan
+Write-Host "   Comando: helm" -ForegroundColor Cyan
+Write-Host "   PATH: $userBinPath" -ForegroundColor Cyan
 
-Write-Host "`n$emoji_rocket PROXIMOS PASSOS:" -ForegroundColor Yellow
+Write-Host "`nPROXIMOS PASSOS:" -ForegroundColor Yellow
 Write-Host "   1. Reinicie o PowerShell para garantir PATH atualizado" -ForegroundColor Cyan
 Write-Host "   2. Teste: helm version" -ForegroundColor Cyan
-Write-Host "   3. Continue com a instalacao KEDA: .\install-keda.ps1" -ForegroundColor Cyan
+Write-Host "   3. Continue com a instalacao KEDA" -ForegroundColor Cyan
 
-Write-Host "`n$emoji_wrench COMANDOS HELM UTEIS:" -ForegroundColor Yellow
+Write-Host "`nCOMANDOS HELM UTEIS:" -ForegroundColor Yellow
 Write-Host "   - helm version" -ForegroundColor Cyan
 Write-Host "   - helm repo list" -ForegroundColor Cyan
 Write-Host "   - helm search repo nome" -ForegroundColor Cyan

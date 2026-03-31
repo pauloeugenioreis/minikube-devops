@@ -1,0 +1,176 @@
+#!/usr/bin/env bash
+# =====================================================
+# Inicializacao completa do Minikube - Linux
+# Mantem paridade com o fluxo do Windows (Helm + KEDA)
+# =====================================================
+set -euo pipefail
+
+# Sourcing common utilities
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+UTILS_COMMON="$SCRIPT_DIR/../utils/common.sh"
+if [[ -f "$UTILS_COMMON" ]]; then
+    source "$UTILS_COMMON"
+else
+    # Fallback
+    log_info() { echo -e "\e[36m$1\e[0m"; }
+    log_success() { echo -e "\e[32m$1\e[0m"; }
+    log_warning() { echo -e "\e[33m$1\e[0m"; }
+    log_error() { echo -e "\e[31m$1\e[0m"; }
+    command_exists() { command -v "$1" >/dev/null 2>&1; }
+fi
+
+# Configurações do Cluster
+MINIKUBE_DRIVER=${MINIKUBE_DRIVER:-docker}
+MINIKUBE_CONTAINER_RUNTIME=${MINIKUBE_CONTAINER_RUNTIME:-containerd}
+MINIKUBE_CPUS=${MINIKUBE_CPUS:-4}
+MINIKUBE_MEMORY=${MINIKUBE_MEMORY:-8g}
+REQUIRED_KUBECTL_VERSION="1.35.0"
+
+# --- Funcoes utilitarias locais ---
+check_port() {
+    local port="$1"
+    if command_exists ss; then
+        ss -tulwn 2>/dev/null | grep -q ":${port} "
+    else
+        netstat -tuln 2>/dev/null | grep -q ":${port} "
+    fi
+}
+
+ensure_hosts_entry() {
+    local ip="$1"
+    local host="$2"
+    [[ -z "$ip" || -z "$host" ]] && return 1
+    if grep -qE "^${ip}[[:space:]]+${host}(\\s|$)" /etc/hosts 2>/dev/null; then
+        return 0
+    fi
+    log_warning "Garantindo entrada em /etc/hosts para ${host} (${ip})..."
+    if sudo sh -c "echo '${ip} ${host}' >> /etc/hosts"; then
+        log_success "Entrada '${ip} ${host}' adicionada."
+    else
+        log_warning "Não foi possível adicionar ${host} automaticamente. Adicione manualmente."
+        return 1
+    fi
+}
+
+kill_port_forward() {
+    local pattern="$1"
+    pkill -f "kubectl.*port-forward.*${pattern}" 2>/dev/null || true
+}
+
+start_port_forward() {
+    local namespace="$1"
+    local resource="$2"
+    local mapping="$3"
+    kubectl port-forward -n "$namespace" "$resource" "$mapping" >/dev/null 2>&1 &
+    sleep 3
+}
+
+wait_for_resource() {
+    local desc="$1"
+    local target="$2"
+    local namespace="$3"
+    local timeout="${4:-100}"
+    local interval=5
+    local waited=0
+    local ns_args=()
+    local -a target_parts
+    read -r -a target_parts <<< "$target"
+    [[ -n "$namespace" ]] && ns_args=(-n "$namespace")
+
+    log_info "Aguardando ${desc}..."
+    while (( waited < timeout )); do
+        if kubectl get "${target_parts[@]}" "${ns_args[@]}" >/dev/null 2>&1; then
+            if kubectl wait "${ns_args[@]}" --for=condition=ready "${target_parts[@]}" --timeout="${interval}s" >/dev/null 2>&1; then
+                log_success "${desc} pronto!"
+                return 0
+            fi
+        fi
+        sleep "$interval"
+        waited=$((waited + interval))
+        echo -e "   ...aguardando ${desc} (${waited}s/${timeout}s)"
+    done
+    log_warning "Timeout aguardando ${desc}. Continuando..."
+    return 0
+}
+
+deploy_chart() {
+    local release="$1"
+    local chart_path="$2"
+    local namespace="$3"
+    log_info "Instalando/atualizando ${release} (Helm)..."
+    if ! helm upgrade --install "$release" "$chart_path" --namespace "$namespace" --create-namespace; then
+        log_warning "Falha ao instalar o chart '${release}'."
+    else
+        log_success "${release} pronto via Helm."
+    fi
+}
+
+ensure_docker_running() {
+    if ! docker info >/dev/null 2>&1; then
+        log_warning "Iniciando servico Docker..."
+        sudo systemctl start docker || true
+        local elapsed=0
+        while ! docker info >/dev/null 2>&1 && (( elapsed < 60 )); do
+            sleep 5
+            elapsed=$((elapsed + 5))
+        done
+    fi
+}
+
+# --- Main Logic ---
+
+log_info "Verificando dependencias..."
+log_versions() {
+    local kv=$(kubectl version --client --short 2>/dev/null || echo "v0.0.0")
+    local mv=$(minikube version --short 2>/dev/null || echo "v0.0.0")
+    log_info "Versoes: kubectl $kv, minikube $mv"
+}
+log_versions
+
+# Check required version
+CURRENT_KUBECTL=$(kubectl version --client --short 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1 || echo "0.0.0")
+if [[ "$CURRENT_KUBECTL" < "$REQUIRED_KUBECTL_VERSION" ]]; then
+    log_error "kubectl versao $CURRENT_KUBECTL detectada. Minimo requerido: $REQUIRED_KUBECTL_VERSION"
+    log_info "Execute o setup-fresh-machine.sh --force-update para atualizar."
+    exit 1
+fi
+
+ensure_docker_running
+log_info "Iniciando Minikube cluster..."
+minikube start --driver="${MINIKUBE_DRIVER}" --container-runtime="${MINIKUBE_CONTAINER_RUNTIME}" --cpus="${MINIKUBE_CPUS}" --memory="${MINIKUBE_MEMORY}"
+
+log_info "Habilitando addons..."
+minikube addons enable metrics-server
+minikube addons enable dashboard
+minikube addons enable ingress
+
+wait_for_resource "Ingress controller" "pod -l app.kubernetes.io/component=controller" "ingress-nginx"
+wait_for_resource "Metrics Server" "pod -l k8s-app=metrics-server" "kube-system"
+
+log_info "Instalando Services (RabbitMQ, MongoDB, Redis)..."
+deploy_chart rabbitmq "$CHARTS_DIR/rabbitmq" default
+deploy_chart mongodb "$CHARTS_DIR/mongodb" default
+deploy_chart redis "$CHARTS_DIR/redis" default
+
+wait_for_resource "RabbitMQ" "pod -l app=rabbitmq" "default"
+wait_for_resource "MongoDB" "pod -l app=mongodb" "default"
+wait_for_resource "Redis" "pod -l app=redis" "default"
+
+log_info "Configurando port-forwards..."
+kill_port_forward "rabbitmq.*15672"
+start_port_forward "default" "service/rabbitmq" "15672:15672"
+kill_port_forward "mongodb.*27017"
+start_port_forward "default" "service/mongodb" "27017:27017"
+kill_port_forward "kubernetes-dashboard"
+start_port_forward "kubernetes-dashboard" "service/kubernetes-dashboard" "15671:80"
+
+log_info "Instalando KEDA..."
+KEDA_INSTALLER="$SCRIPTS_LINUX_DIR/keda/install-keda.sh"
+if [[ -f "$KEDA_INSTALLER" ]]; then
+    bash "$KEDA_INSTALLER" --skip-helm
+fi
+
+log_success "AMBIENTE CONFIGURADO COM SUCESSO!"
+log_info "RabbitMQ UI: http://localhost:15672"
+log_info "Dashboard:   http://localhost:15671"
+log_info "MongoDB:     localhost:27017"

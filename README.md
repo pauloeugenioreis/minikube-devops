@@ -27,14 +27,17 @@ minikube-devops/
 │   └── KEDA.md                  # KEDA: autoscaling orientado a eventos
 ├── scripts/
 │   ├── windows/                 # Scripts PowerShell
+│   │   ├── utils/               # Bibliotecas globais DRy
+│   │   ├── test-structure.ps1   # Valida estrutura no Windows
 │   │   └── README.md
 │   ├── linux/                   # Scripts Bash (Ubuntu/Debian)
 │   │   └── README.md
 │   └── macOs/                   # Scripts Bash (macOS via Homebrew)
 │       └── README.md
-├── linux-test-structure.sh      # Valida estrutura no Linux
-├── macos-test-structure.sh      # Valida estrutura no macOS
-└── windows-test-structure.ps1   # Valida estrutura no Windows
+├── init-minikube-windows.ps1    # Atalho para inicializar no Windows
+├── init-minikube-linux.sh      # Atalho para inicializar no Linux
+├── init-minikube-macos.sh      # Atalho para inicializar no macOS
+└── . (demais arquivos e pastas)
 ```
 
 ---
@@ -55,25 +58,19 @@ cd minikube-devops
 .\scripts\windows\Bootstrap-DevOps.ps1
 
 # Ou inicialização direta
-.\scripts\windows\init\init-minikube-fixed.ps1
+.\scripts\windows\init\start.ps1
 ```
 
 #### 🐧 Linux (Ubuntu/Debian)
 ```bash
-# Bootstrap completo (recomendado para máquina nova)
-curl -fsSL https://raw.githubusercontent.com/pauloeugenioreis/minikube-devops/main/scripts/linux/bootstrap-devops.sh | bash
-
-# Ou com o projeto clonado
-bash scripts/linux/autostart/minikube-autostart.sh
+# Inicialização direta
+./init-minikube-linux.sh
 ```
 
 #### 🍎 macOS
 ```bash
-# Bootstrap completo (recomendado para máquina nova)
-curl -fsSL https://raw.githubusercontent.com/pauloeugenioreis/minikube-devops/main/scripts/macOs/bootstrap-devops.sh | bash
-
-# Ou com o projeto clonado
-bash scripts/macOs/autostart/minikube-autostart.sh
+# Inicialização direta
+./init-minikube-macos.sh
 ```
 
 ---
@@ -101,7 +98,7 @@ bash macos-test-structure.sh
 ```
 ```powershell
 # Windows
-.\windows-test-structure.ps1
+.\scripts\windows\test-structure.ps1
 ```
 
 ---

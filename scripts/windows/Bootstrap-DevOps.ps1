@@ -134,19 +134,19 @@ function Run-Initialization {
         return
     }
 
-    $getProjectRootScript = Join-Path $layoutBase "scripts\\windows\\Get-ProjectRoot.ps1"
+    $commonScript = Join-Path $layoutBase "scripts\\windows\\utils\\common.ps1"
 
-    if (Test-Path $getProjectRootScript) {
+    if (Test-Path $commonScript) {
         Write-Status "Carregando sistema de paths dinamicos..."
-        . $getProjectRootScript
+        . $commonScript
         $projectPaths = Get-ProjectPaths
         if ($projectPaths -and $projectPaths.Scripts -and $projectPaths.Scripts.Windows -and $projectPaths.Scripts.Windows.Init) {
-            $initScript = Join-Path $projectPaths.Scripts.Windows.Init "init-minikube-fixed.ps1"
+            $initScript = Join-Path $projectPaths.Scripts.Windows.Init "start.ps1"
         } else {
-            $initScript = Join-Path $layoutBase "scripts\\windows\\init\\init-minikube-fixed.ps1"
+            $initScript = Join-Path $layoutBase "scripts\\windows\\init\\start.ps1"
         }
     } else {
-        $initScript = Join-Path $layoutBase "scripts\\windows\\init\\init-minikube-fixed.ps1"
+        $initScript = Join-Path $layoutBase "scripts\\windows\\init\\start.ps1"
     }
 
     if (-not (Test-Path $initScript)) {
@@ -182,9 +182,9 @@ function Show-FinalInstructions {
     Write-Host "==========================================" -ForegroundColor Green
 
     Write-Host "`nComandos uteis:" -ForegroundColor Cyan
-    Write-Host "Dashboard:  .\\$($cmdPrefix)scripts\\windows\\monitoring\\open-dashboard.ps1" -ForegroundColor Yellow
-    Write-Host "Status:     .\\$($cmdPrefix)scripts\\windows\\maintenance\\quick-status.ps1" -ForegroundColor Yellow
-    Write-Host "Teste:      .\\$($cmdPrefix)windows-test-structure.ps1" -ForegroundColor Yellow
+    Write-Host "Dashboard:  .\\$($cmdPrefix)scripts\\windows\\monitoring\\dashboard-open.ps1" -ForegroundColor Yellow
+    Write-Host "Status:     .\\$($cmdPrefix)scripts\\windows\\maintenance\\status.ps1" -ForegroundColor Yellow
+    Write-Host "Teste:      .\\$($cmdPrefix)scripts\\windows\\test-structure.ps1" -ForegroundColor Yellow
 
     Write-Host "`nAcessos:" -ForegroundColor Cyan
     Write-Host "RabbitMQ:   http://localhost:15672 (guest/guest)" -ForegroundColor Yellow

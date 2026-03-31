@@ -212,7 +212,7 @@ print_final_status() {
         echo "$emoji_info Ambiente nao inicializado (--skip-init usado)"
         echo "$emoji_gear Para inicializar ambiente:"
         echo "  cd $PROJECT_PATH"
-        echo "  bash ${cmd_prefix}scripts/macOs/init/init-minikube-fixed.sh --install-keda"
+        echo "  bash ${cmd_prefix}scripts/macOs/init/start.sh --install-keda"
         echo ""
     fi
 

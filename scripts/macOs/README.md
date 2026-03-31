@@ -1,125 +1,60 @@
-
 # Scripts macOS para Automação do Minikube
 
-Este diretório contém todos os scripts necessários para provisionar, validar, manter e monitorar um ambiente DevOps local com Minikube no macOS.
+Este diretório contém a suíte de automação para macOS (v12 Monterey ou superior).
 
-## 🍎 Pré-requisitos
+## 🚀 Como Iniciar
 
-- macOS 12 (Monterey) ou superior
-- [Homebrew](https://brew.sh) (será instalado automaticamente pelo setup)
-
-## 🚀 Setup para Máquina Nova (macOS)
-
-### Opção 1: Bootstrap Completo (Recomendado)
-
+### 1. Preparar a Máquina (Novos usuários)
+Usa Homebrew para instalar Docker Desktop, Minikube, kubectl e Helm.
 ```bash
-# Download automático do projeto + instalação de dependências + inicialização
-curl -fsSL https://raw.githubusercontent.com/pauloeugenioreis/minikube-devops/main/scripts/macOs/bootstrap-devops.sh | bash
-```
-
-### Opção 2: Setup Local (Se já tem o projeto)
-
-```bash
-# Navegar para a pasta do projeto
-cd /caminho/para/projeto/DevOps
-
-# Instalar dependências e inicializar
+# Setup inicial
 bash scripts/macOs/setup-fresh-machine.sh --run-initialization
+
+# Forçar atualização das ferramentas (brew upgrade)
+bash scripts/macOs/setup-fresh-machine.sh --force-update
 ```
 
-### Opção 3: Só Dependências (Sem inicialização)
-
+### 2. Inicializar o Ambiente
+Use o atalho na raiz do projeto ou o script de inicialização.
 ```bash
-# Instalar Homebrew, Docker Desktop, Minikube, kubectl, Helm
-bash scripts/macOs/setup-fresh-machine.sh
+# Atalho na raiz
+./init-minikube-macos.sh
+
+# Script direto
+bash scripts/macOs/init/start.sh
 ```
 
+## 🛠️ Manutenção e Diagnóstico
 
-## Estrutura dos Diretórios
+- **Status Rápido**: `bash scripts/macOs/maintenance/status.sh`
+- **Corrigir Dashboard**: `bash scripts/macOs/maintenance/dashboard.sh`
+- **Testar RabbitMQ**: `bash scripts/macOs/maintenance/test-rabbitmq.sh`
+
+---
+
+## Estrutura de Arquivos
 
 ```text
 scripts/macOs/
-├── setup-fresh-machine.sh       # Setup completo para máquina nova
-├── bootstrap-devops.sh          # Bootstrap com download do projeto
-├── autostart/
-│   └── minikube-autostart.sh    # Prompt driver + inicialização
-├── drivers/
-│   ├── containers/
-│   │   └── docker-prep.sh       # Instala/verifica Docker Desktop
-│   └── hypervisors/
-│       └── hyperkit-prep.sh     # Instala/verifica Hyperkit
+├── setup-fresh-machine.sh   # Instalador via Homebrew
+├── utils/
+│   └── common.sh            # Lógica compartilhada (LOGS, Emojis, Paths)
 ├── init/
-│   └── init-minikube-fixed.sh   # Inicialização completa do cluster
-├── keda/
-│   ├── install-helm-fixed.sh    # Instalação robusta do Helm
-│   ├── install-keda.sh          # Instalação do KEDA
-│   └── test-keda.sh             # Validação do KEDA
+│   └── start.sh             # Orquestrador de inicialização do cluster
 ├── maintenance/
-│   ├── fix-dashboard.sh         # Corrige problemas do Dashboard
-│   ├── validate-rabbitmq-config.sh
-│   └── placeholder.sh
-└── monitoring/
-    ├── open-dashboard.sh         # Abre Dashboard no navegador
-    ├── change-dashboard-port.sh
-    └── placeholder.sh
+│   ├── status.sh            # Verificação de saúde do ambiente
+│   ├── dashboard.sh         # Correção de problemas do Dashboard
+│   └── test-rabbitmq.sh     # Validação do RabbitMQ
+└── keda/
+    └── install-keda.sh      # Instalador automatizado do KEDA
 ```
 
-## Diferenças em relação ao Linux
+## Requisitos Mínimos
+- **macOS**: v12+ (Monterey)
+- **Homebrew**: Instalado (o script tenta instalar se estiver ausente)
+- **Minikube**: v1.38+
+- **kubectl**: v1.35+
 
-| Linux | macOS |
-|-------|-------|
-| `apt-get` | `brew` |
-| `systemctl` (Docker) | Docker Desktop app |
-| `kvm2` driver | `hyperkit` driver |
-| `xdg-open` | `open` |
-| `ss -tulwn` | `lsof -i :PORT` |
-| `/etc/os-release` | `sw_vers` |
-
-## Scripts Principais
-
-### `setup-fresh-machine.sh`
-- Instala Homebrew se ausente
-- Instala Docker Desktop, Minikube, kubectl, Helm via `brew`
-- Verifica macOS 12+
-- Parâmetros: `--skip-docker`, `--skip-minikube`, `--skip-kubectl`, `--skip-helm`, `--run-initialization`
-
-### `bootstrap-devops.sh`
-- Bootstrap completo: download do projeto + setup + inicialização
-- Clone via Git ou download ZIP como fallback
-- Parâmetros: `--project-path`, `--skip-setup`, `--skip-init`
-
-### `autostart/minikube-autostart.sh`
-- Prompt para driver: **docker** (padrão) ou **hyperkit**
-- Configura CPUs e memória para o Minikube
-- Encaminha para `init/init-minikube-fixed.sh --install-keda`
-
-### `init/init-minikube-fixed.sh`
-- Inicialização completa do cluster com Helm charts locais
-- Habilita addons essenciais, cria port-forwards
-- Parâmetros: `--install-keda`, `--skip-keda`, `--skip-addons`, `--skip-rabbitmq-config`
-
-## Exemplos de Execução
-
-```bash
-# Inicializar ambiente completo
-bash autostart/minikube-autostart.sh
-
-# Instalar KEDA separadamente
-bash keda/install-keda.sh
-
-# Abrir Dashboard
-bash monitoring/open-dashboard.sh
-
-# Validar estrutura
-bash ../../macos-test-structure.sh
-```
-
-## Endpoints após Inicialização
-
-- **RabbitMQ Management**: http://localhost:15672 (guest/guest)
-- **RabbitMQ AMQP**: amqp://guest:guest@localhost:5672
-- **MongoDB**: mongodb://admin:admin@localhost:27017/admin
-- **Redis**: redis://localhost:30679
-- **Kubernetes Dashboard**: http://localhost:15671
-
-> Os logs gerados pelos scripts de inicializacao sao registrados em `log/` (com fallback para `${TMPDIR:-/tmp}/minikube-log`).
+---
+> [!IMPORTANT]
+> Garanta que o **Docker Desktop** esteja aberto e o ícone na barra de tarefas esteja verde antes de rodar os scripts de inicialização.

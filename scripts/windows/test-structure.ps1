@@ -11,18 +11,18 @@ $emoji_warning = [char]::ConvertFromUtf32(0x26A0)
 $emoji_info = [char]::ConvertFromUtf32(0x1F4A1)
 
 # Importar funcoes de deteccao de paths
-$getProjectRootScript = Join-Path $PSScriptRoot "scripts\windows\Get-ProjectRoot.ps1"
-if (Test-Path $getProjectRootScript) {
-    . $getProjectRootScript
-    Write-Host "Detectando pasta raiz do projeto..." -ForegroundColor Yellow
+$commonScript = Join-Path $PSScriptRoot "utils\common.ps1"
+if (Test-Path $commonScript) {
+    . $commonScript
+    Write-Status "Detectando pasta raiz do projeto..."
     $projectPaths = Get-ProjectPaths
     $basePath = $projectPaths.Minikube
-    Write-Host "Pasta base detectada: $basePath" -ForegroundColor Green
+    Write-Success "Pasta base detectada: $basePath"
 } else {
-    Write-Warning "Get-ProjectRoot.ps1 nao encontrado. Usando deteccao baseada no script atual."
+    Write-Warning "utils\common.ps1 nao encontrado. Usando deteccao baseada no script atual."
     # Assumir que o script esta em minikube/
     $basePath = $PSScriptRoot
-    Write-Host "Pasta base (relativa): $basePath" -ForegroundColor Yellow
+    Write-Status "Pasta base (relativa): $basePath"
 }
 
 Write-Host "=====================================" -ForegroundColor Cyan
@@ -63,12 +63,12 @@ function Test-Files {
 
 # --- Definicao de todas as verificacoes de arquivos ---
 $fileChecks = @(
-    @{ Category = "Script de Inicializacao"; Directory = "scripts\windows\init"; Files = @("init-minikube-fixed.ps1", "apply-rabbitmq-config.ps1", "install-keda.ps1") },
-    @{ Category = "Scripts de Manutencao"; Directory = "scripts\windows\maintenance"; Files = @("fix-dashboard.ps1", "quick-status.ps1", "fix-kubectl-final.ps1", "validate-rabbitmq-config.ps1", "fix-dashboard-cronjob.ps1") },
-    @{ Category = "Scripts de Monitoramento"; Directory = "scripts\windows\monitoring"; Files = @("open-dashboard.ps1", "change-dashboard-port.ps1") },
-    @{ Category = "Scripts KEDA"; Directory = "scripts\windows\keda"; Files = @("install-helm-fixed.ps1", "install-keda.ps1", "test-keda.ps1") },
-    @{ Category = "Scripts Autostart"; Directory = "scripts\windows\autostart"; Files = @("minikube-autostart.bat") },
-    @{ Category = "Setup de Maquina Nova"; Directory = "scripts\windows"; Files = @("Setup-Fresh-Machine.ps1", "Bootstrap-DevOps.ps1") },
+    @{ Category = "Script de Inicializacao"; Directory = "scripts\windows\init"; Files = @("start.ps1", "set-rabbitmq.ps1") },
+    @{ Category = "Scripts de Manutencao"; Directory = "scripts\windows\maintenance"; Files = @("dashboard.ps1", "status.ps1", "kubectl.ps1", "test-rabbitmq.ps1") },
+    @{ Category = "Scripts de Monitoramento"; Directory = "scripts\windows\monitoring"; Files = @("dashboard-open.ps1", "dashboard-port.ps1") },
+    @{ Category = "Scripts KEDA (Windows)"; Directory = "scripts\windows\keda"; Files = @("install-helm.ps1", "install-keda.ps1", "test-keda.ps1") },
+    @{ Category = "Utils"; Directory = "scripts\windows\utils"; Files = @("common.ps1") },
+    @{ Category = "Setup de Maquina Nova"; Directory = "scripts\windows"; Files = @("Setup-Fresh-Machine.ps1", "Bootstrap-DevOps.ps1", "test-structure.ps1") },
     @{ Category = "Configs KEDA"; Directory = "configs\keda\examples"; Files = @("cpu-scaling-example.yaml", "memory-scaling-example.yaml", "rabbitmq-scaling-example.yaml") },
     @{ Category = "Documentacao"; Directory = "docs"; Files = @("README.md", "KEDA.md") }
 )
@@ -121,19 +121,29 @@ if (Test-Path $chartsPath) {
     $global:failureCount++
 }
 
-# --- Teste Especefico para Estrutura Linux ---
+# --- Teste Especifico para Estrutura Linux ---
 $linuxChecks = @(
-    @{ Category = "Scripts de Inicializacao (Linux)"; Directory = "scripts\linux\init"; Files = @("init-minikube-fixed.sh") },
-    @{ Category = "Scripts de Manutencao (Linux)"; Directory = "scripts\linux\maintenance"; Files = @("fix-dashboard.sh", "validate-rabbitmq-config.sh") },
-    @{ Category = "Scripts de Monitoramento (Linux)"; Directory = "scripts\linux\monitoring"; Files = @("open-dashboard.sh", "change-dashboard-port.sh") },
-    @{ Category = "Scripts KEDA (Linux)"; Directory = "scripts\linux\keda"; Files = @("install-helm-fixed.sh", "install-keda.sh", "test-keda.sh") },
-    @{ Category = "Scripts Autostart (Linux)"; Directory = "scripts\linux\autostart"; Files = @("minikube-autostart.sh") },
-    @{ Category = "Script de Teste de Estrutura (Linux)"; Directory = ""; Files = @("linux-test-structure.sh") }
+    @{ Category = "Scripts de Inicializacao (Linux)"; Directory = "scripts\linux\init"; Files = @("start.sh") },
+    @{ Category = "Scripts de Manutencao (Linux)"; Directory = "scripts\linux\maintenance"; Files = @("status.sh", "dashboard.sh", "test-rabbitmq.sh") },
+    @{ Category = "Scripts KEDA (Linux)"; Directory = "scripts\linux\keda"; Files = @("install-helm.sh", "install-keda.sh", "test-keda.sh") },
+    @{ Category = "Atalhos de Inicializacao (Linux)"; Directory = ""; Files = @("init-minikube-linux.sh") }
+)
+
+# --- Teste Especifico para Estrutura macOS ---
+$macOsChecks = @(
+    @{ Category = "Scripts de Inicializacao (macOS)"; Directory = "scripts\macOs\init"; Files = @("start.sh") },
+    @{ Category = "Scripts de Manutencao (macOS)"; Directory = "scripts\macOs\maintenance"; Files = @("status.sh", "dashboard.sh", "test-rabbitmq.sh") },
+    @{ Category = "Scripts KEDA (macOS)"; Directory = "scripts\macOs\keda"; Files = @("install-helm.sh", "install-keda.sh", "test-keda.sh") },
+    @{ Category = "Atalhos de Inicializacao (macOS)"; Directory = ""; Files = @("init-minikube-macos.sh") }
 )
 
 Write-Host "`nTestando estrutura de Scripts Linux..." -ForegroundColor Yellow
-
 foreach ($check in $linuxChecks) {
+    Test-Files -Category $check.Category -Directory $check.Directory -Files $check.Files
+}
+
+Write-Host "`nTestando estrutura de Scripts macOS..." -ForegroundColor Yellow
+foreach ($check in $macOsChecks) {
     Test-Files -Category $check.Category -Directory $check.Directory -Files $check.Files
 }
 
@@ -149,20 +159,20 @@ Write-Host "=====================================" -ForegroundColor Cyan
 
 Write-Host "`nPROXIMOS PASSOS:" -ForegroundColor Yellow
 Write-Host "1. Inicializar (sem KEDA):" -ForegroundColor White
-Write-Host "   $basePath\scripts\windows\init\init-minikube-fixed.ps1" -ForegroundColor Gray
+Write-Host "   $basePath\scripts\windows\init\start.ps1" -ForegroundColor Gray
 Write-Host "2. Inicializar (com KEDA):" -ForegroundColor White  
-Write-Host "   $basePath\scripts\windows\init\init-minikube-fixed.ps1 -InstallKeda" -ForegroundColor Gray
+Write-Host "   $basePath\scripts\windows\init\start.ps1 -InstallKeda" -ForegroundColor Gray
 Write-Host "3. Verificar status:" -ForegroundColor White
-Write-Host "   $basePath\scripts\windows\maintenance\quick-status.ps1" -ForegroundColor Gray
+Write-Host "   $basePath\scripts\windows\maintenance\status.ps1" -ForegroundColor Gray
 Write-Host "4. Dashboard:" -ForegroundColor White
-Write-Host "   $basePath\scripts\windows\monitoring\open-dashboard.ps1" -ForegroundColor Gray
+Write-Host "   $basePath\scripts\windows\monitoring\dashboard-open.ps1" -ForegroundColor Gray
 Write-Host "5. Documentacao:" -ForegroundColor White
 Write-Host "   $basePath\docs\README.md" -ForegroundColor Gray
 Write-Host "6. Documentacao KEDA:" -ForegroundColor White
 Write-Host "   $basePath\docs\KEDA.md" -ForegroundColor Gray
 if ($projectPaths) {
     Write-Host "7. Scripts Linux:" -ForegroundColor White
-    Write-Host "   $($projectPaths.TempLinuxScripts)\README.md" -ForegroundColor Gray
+    Write-Host "   $($projectPaths.Root)\scripts\linux\README.md" -ForegroundColor Gray
 }
 
 Write-Host "`nTESTE CONCLUIDO!" -ForegroundColor Green

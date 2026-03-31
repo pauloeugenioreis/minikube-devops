@@ -10,9 +10,9 @@ Ambiente Minikube com RabbitMQ, MongoDB, Redis e KEDA para desenvolvimento local
 
 | Plataforma | Requisitos |
 |---|---|
-| **Windows** | Windows 10/11, PowerShell 5.1+, Docker Desktop, Minikube ≥ 1.37, kubectl ≥ 1.34 |
-| **Linux** | Ubuntu 18.04+, Bash, Docker, Minikube, kubectl, Helm |
-| **macOS** | macOS 12+, Homebrew, Docker Desktop, Minikube, kubectl, Helm |
+| **Windows** | Windows 10/11, PowerShell 5.1+, Docker Desktop, Minikube ≥ 1.38, kubectl ≥ 1.35 |
+| **Linux** | Ubuntu 18.04+, Bash, Docker, Minikube ≥ 1.38, kubectl ≥ 1.35, Helm |
+| **macOS** | macOS 12+, Homebrew, Docker Desktop, Minikube ≥ 1.38, kubectl ≥ 1.35, Helm |
 
 - Mínimo 8 GB RAM e 30 GB livres recomendados
 - Acesso administrativo para edição de `/etc/hosts` e instalação de dependências
@@ -40,9 +40,9 @@ Instala Docker Desktop, Minikube, kubectl e Helm; inicializa o cluster com KEDA 
 
 ### Inicialização Manual
 ```powershell
-.\scripts\windows\init\init-minikube-fixed.ps1
+.\scripts\windows\init\start.ps1
 # Para pular KEDA:
-.\scripts\windows\init\init-minikube-fixed.ps1 -InstallKeda:$false
+.\scripts\windows\init\start.ps1 -InstallKeda:$false
 ```
 
 ### Instalar Dependências Sem Subir o Cluster
@@ -67,15 +67,16 @@ curl -fsSL https://raw.githubusercontent.com/pauloeugenioreis/minikube-devops/ma
 
 ### Com Projeto Clonado
 ```bash
-cd <CAMINHO-DO-PROJETO>
-bash scripts/linux/autostart/minikube-autostart.sh
+./init-minikube-linux.sh
 ```
 
 ### Ferramentas Úteis
 ```bash
-bash scripts/linux/keda/install-keda.sh
-bash scripts/linux/monitoring/open-dashboard.sh
-bash linux-test-structure.sh
+# Status do ambiente
+bash scripts/linux/maintenance/status.sh
+
+# Corrigir Dashboard
+bash scripts/linux/maintenance/dashboard.sh
 ```
 
 ---
@@ -89,15 +90,16 @@ curl -fsSL https://raw.githubusercontent.com/pauloeugenioreis/minikube-devops/ma
 
 ### Com Projeto Clonado
 ```bash
-cd <CAMINHO-DO-PROJETO>
-bash scripts/macOs/autostart/minikube-autostart.sh
+./init-minikube-macos.sh
 ```
 
 ### Ferramentas Úteis
 ```bash
-bash scripts/macOs/keda/install-keda.sh
-bash scripts/macOs/monitoring/open-dashboard.sh
-bash macos-test-structure.sh
+# Status do ambiente
+bash scripts/macOs/maintenance/status.sh
+
+# Corrigir Dashboard
+bash scripts/macOs/maintenance/dashboard.sh
 ```
 
 ---
@@ -118,7 +120,7 @@ bash macos-test-structure.sh
 
 ## Gerenciamento com Helm
 
-Os serviços são instalados via `helm upgrade --install` a partir de `charts/`. Ajuste valores editando os `values.yaml` de cada chart. O script `init-minikube-fixed` garante que as versões declaradas sejam aplicadas a cada execução.
+Os serviços são instalados via `helm upgrade --install` a partir de `charts/`. Ajuste valores editando os `values.yaml` de cada chart. O script de inicialização (`start.sh` / `start.ps1`) garante que as versões declaradas sejam aplicadas a cada execução.
 
 ---
 
@@ -126,9 +128,8 @@ Os serviços são instalados via `helm upgrade --install` a partir de `charts/`.
 
 | Problema | Solução |
 |---|---|
-| kubectl incompatível | `scripts/windows/maintenance/fix-kubectl-final.ps1` |
-| Dashboard não abre | `scripts/windows/maintenance/fix-dashboard.ps1` |
-| Erro 404 em CronJobs | `scripts/windows/maintenance/fix-dashboard-cronjob.ps1` |
+| kubectl incompatível | `scripts/windows/maintenance/kubectl.ps1` |
+| Dashboard não abre ou Erros 404 em Cronjobs | `scripts/windows/maintenance/dashboard.ps1` |
 | Docker não responde | Scripts verificam e iniciam o serviço automaticamente |
 | Minikube não inicia | `minikube delete --all --purge` e execute o init novamente |
 

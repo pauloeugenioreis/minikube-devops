@@ -1,4 +1,4 @@
-﻿# Script de Inicializacao Completa do Minikube com RabbitMQ, MongoDB e KEDA
+# Script de Inicializacao Completa do Minikube com RabbitMQ, MongoDB e KEDA
 # Script de Inicializacao Completa do Minikube com RabbitMQ, MongoDB e KEDA
 # Este script garante que tudo seja iniciado automaticamente
 
@@ -70,14 +70,14 @@ function Preload-Images {
 }
 
 # Importar funcoes de deteccao de paths
-$getProjectRootScript = Join-Path (Split-Path $PSScriptRoot -Parent) "Get-ProjectRoot.ps1"
-if (Test-Path $getProjectRootScript) {
-    . $getProjectRootScript
-    Write-Host "Detectando pasta raiz do projeto..." -ForegroundColor Yellow
+$commonScript = Join-Path (Split-Path $PSScriptRoot -Parent) "utils\common.ps1"
+if (Test-Path $commonScript) {
+    . $commonScript
+    Write-Status "Detectando pasta raiz do projeto..."
     $projectPaths = Get-ProjectPaths
-    Write-Host "Pasta raiz: $($projectPaths.Root)" -ForegroundColor Green
+    Write-Success "Pasta raiz: $($projectPaths.Root)"
 } else {
-    Write-Warning "Script Get-ProjectRoot.ps1 nao encontrado. Usando paths relativos basicos."
+    Write-Warning "Script utils\common.ps1 nao encontrado. Usando paths relativos basicos."
     $projectPaths = $null
 }
 
@@ -551,7 +551,7 @@ if ($resolvedDriver -eq 'docker') {
 # Verificar kubectl
 Write-Host "Verificando kubectl..." -ForegroundColor Yellow
 
-$requiredVersion = "1.34.0"
+$requiredVersion = "1.35.0"
 $requiredVersionFull = "v$requiredVersion"
 
 if (Test-Command "kubectl") {
@@ -738,12 +738,19 @@ Start-Sleep -Seconds 20
 # Instalar KEDA automaticamente
 if ($InstallKeda) {
     Write-Host "Instalando KEDA..." -ForegroundColor Yellow
-    $kedaInstaller = Join-Path $PSScriptRoot "install-keda.ps1"
+    $kedaInstallerName = "install-keda.ps1"
+    
+    if ($projectPaths) {
+        $kedaInstaller = Join-Path $projectPaths.Scripts.Windows.Keda $kedaInstallerName
+    } else {
+        $kedaInstaller = Join-Path (Split-Path $PSScriptRoot -Parent) "keda\$kedaInstallerName"
+    }
+    
     if (Test-Path $kedaInstaller) {
         & $kedaInstaller -SkipHelmCheck -SkipValidation
-        Write-Host "   KEDA instalado com sucesso!" -ForegroundColor Green
+        Write-Host "   $emoji_success KEDA instalado com sucesso!" -ForegroundColor Green
     } else {
-        Write-Host "   Script install-keda.ps1 nao encontrado!" -ForegroundColor Red
+        Write-Host "   $emoji_error Script $kedaInstallerName nao encontrado em $kedaInstaller!" -ForegroundColor Red
     }
     Write-Host ""
 }

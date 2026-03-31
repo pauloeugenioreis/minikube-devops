@@ -7,15 +7,19 @@
 
 set -euo pipefail
 
-# Definir variaveis de emoji para saida consistente
-emoji_gear=$(printf "\u2699\ufe0f")
-emoji_check=$(printf "\u2713")
-emoji_cross=$(printf "\u274c")
-emoji_arrow=$(printf "\u27a1\ufe0f")
-emoji_package=$(printf "\U1f4e6")
-emoji_rocket=$(printf "\U1f680")
-emoji_warning=$(printf "\u26a0\ufe0f")
-emoji_info=$(printf "\U1f4a1")
+# Sourcing common utilities
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+UTILS_COMMON="$SCRIPT_DIR/utils/common.sh"
+if [[ -f "$UTILS_COMMON" ]]; then
+    source "$UTILS_COMMON"
+else
+    # Fallback caso common.sh não esteja disponível
+    log_info() { echo -e "\e[36m$1\e[0m"; }
+    log_success() { echo -e "\e[32m$1\e[0m"; }
+    log_warning() { echo -e "\e[33m$1\e[0m"; }
+    log_error() { echo -e "\e[31m$1\e[0m"; }
+    command_exists() { command -v "$1" >/dev/null 2>&1; }
+fi
 
 # Parametros do script
 SKIP_DOCKER_INSTALL=false
@@ -24,6 +28,7 @@ SKIP_KUBECTL_INSTALL=false
 SKIP_HELM_INSTALL=false
 SKIP_VALIDATION=false
 RUN_INITIALIZATION=false
+FORCE_UPDATE=false
 
 # Parse argumentos de linha de comando
 while [[ $# -gt 0 ]]; do
@@ -52,6 +57,10 @@ while [[ $# -gt 0 ]]; do
             RUN_INITIALIZATION=true
             shift
             ;;
+        --force-update)
+            FORCE_UPDATE=true
+            shift
+            ;;
         --help|-h)
             echo "Uso: $0 [opcoes]"
             echo ""
@@ -62,6 +71,7 @@ while [[ $# -gt 0 ]]; do
             echo "  --skip-helm         Pular instalacao do Helm"
             echo "  --skip-validation   Pular validacao final"
             echo "  --run-initialization Executar inicializacao apos setup"
+            echo "  --force-update      Forcar atualizacao das ferramentas ja instaladas"
             echo "  --help, -h          Mostrar esta ajuda"
             exit 0
             ;;
@@ -167,10 +177,10 @@ install_docker() {
         return 0
     fi
     
-    echo "$emoji_package Instalando Docker..."
+    log_info "Instalando Docker..."
     
-    if command_exists docker; then
-        echo "$emoji_check Docker ja instalado: $(docker --version)"
+    if [[ "$FORCE_UPDATE" == "false" ]] && command_exists docker; then
+        log_success "Docker ja instalado: $(docker --version)"
         return 0
     fi
     
@@ -202,10 +212,10 @@ install_minikube() {
         return 0
     fi
     
-    echo "$emoji_package Instalando Minikube..."
+    log_info "Instalando/Atualizando Minikube..."
     
-    if command_exists minikube; then
-        echo "$emoji_check Minikube ja instalado: $(minikube version --short)"
+    if [[ "$FORCE_UPDATE" == "false" ]] && command_exists minikube; then
+        log_success "Minikube ja instalado: $(minikube version --short)"
         return 0
     fi
     
@@ -223,10 +233,10 @@ install_kubectl() {
         return 0
     fi
     
-    echo "$emoji_package Instalando kubectl..."
+    log_info "Instalando/Atualizando kubectl..."
     
-    if command_exists kubectl; then
-        echo "$emoji_check kubectl ja instalado: $(kubectl version --client --short 2>/dev/null || kubectl version --client)"
+    if [[ "$FORCE_UPDATE" == "false" ]] && command_exists kubectl; then
+        log_success "kubectl ja instalado: $(kubectl version --client --short 2>/dev/null || kubectl version --client)"
         return 0
     fi
     
@@ -247,10 +257,10 @@ install_helm() {
         return 0
     fi
     
-    echo "$emoji_package Instalando Helm..."
+    log_info "Instalando/Atualizando Helm..."
     
-    if command_exists helm; then
-        echo "$emoji_check Helm ja instalado: $(helm version --short)"
+    if [[ "$FORCE_UPDATE" == "false" ]] && command_exists helm; then
+        log_success "Helm ja instalado: $(helm version --short)"
         return 0
     fi
     
@@ -324,9 +334,9 @@ run_initialization() {
     echo "$emoji_rocket Executando inicializacao do ambiente..."
     
     if [[ -n "$PROJECT_ROOT" ]]; then
-        local init_script="$PROJECT_ROOT/scripts/linux/init/init-minikube-fixed.sh"
+        local init_script="$PROJECT_ROOT/scripts/linux/init/start.sh"
         if [[ ! -f "$init_script" ]]; then
-            init_script="$PROJECT_ROOT/minikube/scripts/linux/init/init-minikube-fixed.sh"
+            init_script="$PROJECT_ROOT/minikube/scripts/linux/init/start.sh"
         fi
         if [[ -f "$init_script" ]]; then
             echo "$emoji_arrow Executando: $init_script"
@@ -340,7 +350,7 @@ run_initialization() {
         echo "$emoji_warning Pasta raiz do projeto nao detectada. Nao e possivel executar inicializacao automatica."
         echo "$emoji_info Para inicializar manualmente:"
         echo "  cd /caminho/para/projeto"
-        echo "  bash ${cmd_prefix}scripts/linux/init/init-minikube-fixed.sh --install-keda"
+        echo "  bash ${cmd_prefix}scripts/linux/init/start.sh --install-keda"
     fi
 }
 
@@ -368,10 +378,10 @@ print_final_instructions() {
     echo "$emoji_gear Para iniciar o ambiente Minikube:"
     if [[ -n "$PROJECT_ROOT" ]]; then
         echo "  cd $PROJECT_ROOT"
-        echo "  bash ${cmd_prefix}scripts/linux/init/init-minikube-fixed.sh --install-keda"
+        echo "  bash ${cmd_prefix}scripts/linux/init/start.sh --install-keda"
     else
         echo "  cd /caminho/para/projeto/DevOps"
-        echo "  bash ${cmd_prefix}scripts/linux/init/init-minikube-fixed.sh --install-keda"
+        echo "  bash ${cmd_prefix}scripts/linux/init/start.sh --install-keda"
     fi
     echo ""
     

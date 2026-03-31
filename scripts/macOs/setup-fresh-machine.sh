@@ -7,15 +7,19 @@
 
 set -euo pipefail
 
-# Definir variaveis de emoji para saida consistente
-emoji_gear=$(printf "\u2699\ufe0f")
-emoji_check=$(printf "\u2713")
-emoji_cross=$(printf "\u274c")
-emoji_arrow=$(printf "\u27a1\ufe0f")
-emoji_package=$(printf "\U1f4e6")
-emoji_rocket=$(printf "\U1f680")
-emoji_warning=$(printf "\u26a0\ufe0f")
-emoji_info=$(printf "\U1f4a1")
+# Sourcing common utilities
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+UTILS_COMMON="$SCRIPT_DIR/utils/common.sh"
+if [[ -f "$UTILS_COMMON" ]]; then
+    source "$UTILS_COMMON"
+else
+    # Fallback caso common.sh não esteja disponível
+    log_info() { echo -e "\e[36m$1\e[0m"; }
+    log_success() { echo -e "\e[32m$1\e[0m"; }
+    log_warning() { echo -e "\e[33m$1\e[0m"; }
+    log_error() { echo -e "\e[31m$1\e[0m"; }
+    command_exists() { command -v "$1" >/dev/null 2>&1; }
+fi
 
 # Parametros do script
 SKIP_DOCKER_INSTALL=false
@@ -24,6 +28,7 @@ SKIP_KUBECTL_INSTALL=false
 SKIP_HELM_INSTALL=false
 SKIP_VALIDATION=false
 RUN_INITIALIZATION=false
+FORCE_UPDATE=false
 
 # Parse argumentos de linha de comando
 while [[ $# -gt 0 ]]; do
@@ -52,6 +57,10 @@ while [[ $# -gt 0 ]]; do
             RUN_INITIALIZATION=true
             shift
             ;;
+        --force-update)
+            FORCE_UPDATE=true
+            shift
+            ;;
         --help|-h)
             echo "Uso: $0 [opcoes]"
             echo ""
@@ -60,8 +69,10 @@ while [[ $# -gt 0 ]]; do
             echo "  --skip-minikube     Pular instalacao do Minikube"
             echo "  --skip-kubectl      Pular instalacao do kubectl"
             echo "  --skip-helm         Pular instalacao do Helm"
-            echo "  --skip-validation   Pular validacao final"
-            echo "  --run-initialization Executar inicializacao apos setup"
+            echo "  --skip-validation   Pular validacao final
+  --run-initialization Executar inicializacao apos setup
+  --force-update      Forcar atualizacao das ferramentas ja instaladas
+"
             echo "  --help, -h          Mostrar esta ajuda"
             exit 0
             ;;
@@ -150,15 +161,13 @@ install_docker() {
         return 0
     fi
 
-    echo "$emoji_package Instalando Docker Desktop..."
-
-    if command_exists docker; then
-        echo "$emoji_check Docker ja instalado: $(docker --version)"
-        return 0
+    if [[ "$FORCE_UPDATE" == "true" ]] && command_exists docker; then
+        log_info "Atualizando Docker Desktop via Homebrew..."
+        brew upgrade --cask docker
+    else
+        log_info "Instalando Docker Desktop via Homebrew..."
+        brew install --cask docker
     fi
-
-    # Instalar Docker Desktop via Homebrew Cask
-    brew install --cask docker
 
     echo "$emoji_arrow Abrindo Docker Desktop para primeira inicializacao..."
     open /Applications/Docker.app
@@ -186,14 +195,13 @@ install_minikube() {
         return 0
     fi
 
-    echo "$emoji_package Instalando Minikube..."
-
-    if command_exists minikube; then
-        echo "$emoji_check Minikube ja instalado: $(minikube version --short)"
-        return 0
+    if [[ "$FORCE_UPDATE" == "true" ]] && command_exists minikube; then
+        log_info "Atualizando Minikube via Homebrew..."
+        brew upgrade minikube
+    else
+        log_info "Instalando Minikube via Homebrew..."
+        brew install minikube
     fi
-
-    brew install minikube
 
     echo "$emoji_check Minikube instalado: $(minikube version --short)"
 }
@@ -204,14 +212,13 @@ install_kubectl() {
         return 0
     fi
 
-    echo "$emoji_package Instalando kubectl..."
-
-    if command_exists kubectl; then
-        echo "$emoji_check kubectl ja instalado: $(kubectl version --client 2>/dev/null | head -1 || echo 'versao desconhecida')"
-        return 0
+    if [[ "$FORCE_UPDATE" == "true" ]] && command_exists kubectl; then
+        log_info "Atualizando kubectl via Homebrew..."
+        brew upgrade kubectl
+    else
+        log_info "Instalando kubectl via Homebrew..."
+        brew install kubectl
     fi
-
-    brew install kubectl
 
     echo "$emoji_check kubectl instalado: $(kubectl version --client 2>/dev/null | head -1 || echo 'ok')"
 }
@@ -222,14 +229,13 @@ install_helm() {
         return 0
     fi
 
-    echo "$emoji_package Instalando Helm..."
-
-    if command_exists helm; then
-        echo "$emoji_check Helm ja instalado: $(helm version --short)"
-        return 0
+    if [[ "$FORCE_UPDATE" == "true" ]] && command_exists helm; then
+        log_info "Atualizando Helm via Homebrew..."
+        brew upgrade helm
+    else
+        log_info "Instalando Helm via Homebrew..."
+        brew install helm
     fi
-
-    brew install helm
 
     echo "$emoji_check Helm instalado: $(helm version --short)"
 }
@@ -298,9 +304,9 @@ run_initialization() {
     echo "$emoji_rocket Executando inicializacao do ambiente..."
 
     if [[ -n "$PROJECT_ROOT" ]]; then
-        local init_script="$PROJECT_ROOT/scripts/macOs/init/init-minikube-fixed.sh"
+        local init_script="$PROJECT_ROOT/scripts/macOs/init/start.sh"
         if [[ ! -f "$init_script" ]]; then
-            init_script="$PROJECT_ROOT/minikube/scripts/macOs/init/init-minikube-fixed.sh"
+            init_script="$PROJECT_ROOT/minikube/scripts/macOs/init/start.sh"
         fi
         if [[ -f "$init_script" ]]; then
             echo "$emoji_arrow Executando: $init_script"
@@ -315,7 +321,7 @@ run_initialization() {
         echo "$emoji_warning Pasta raiz do projeto nao detectada. Nao e possivel executar inicializacao automatica."
         echo "$emoji_info Para inicializar manualmente:"
         echo "  cd /caminho/para/projeto"
-        echo "  bash ${cmd_prefix}scripts/macOs/init/init-minikube-fixed.sh --install-keda"
+        echo "  bash ${cmd_prefix}scripts/macOs/init/start.sh --install-keda"
     fi
 }
 
@@ -333,10 +339,10 @@ print_final_instructions() {
     echo "$emoji_gear Para iniciar o ambiente Minikube:"
     if [[ -n "$PROJECT_ROOT" ]]; then
         echo "  cd $PROJECT_ROOT"
-        echo "  bash ${cmd_prefix}scripts/macOs/init/init-minikube-fixed.sh --install-keda"
+        echo "  bash ${cmd_prefix}scripts/macOs/init/start.sh --install-keda"
     else
         echo "  cd /caminho/para/projeto/DevOps"
-        echo "  bash ${cmd_prefix}scripts/macOs/init/init-minikube-fixed.sh --install-keda"
+        echo "  bash ${cmd_prefix}scripts/macOs/init/start.sh --install-keda"
     fi
     echo ""
 
