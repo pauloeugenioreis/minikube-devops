@@ -22,31 +22,40 @@ Professional environment for local DevOps automation, development, and testing w
 ```
 minikube-devops/
 ├── charts/                      # Helm charts (RabbitMQ, MongoDB, Redis)
-├── configs/                     # Configurações KEDA e exemplos
-├── docs/                        # Documentação completa
-│   ├── README.md                # Este guia principal
-│   └── KEDA.md                  # KEDA: autoscaling orientado a eventos
+├── configs/                     # Configurações KEDA e exemplos de escalonamento
+├── docs/                        # Documentação completa e assets
 ├── scripts/
 │   ├── windows/                 # Scripts PowerShell
 │   │   ├── init/                # Rotinas de inicialização e autostart
+│   │   ├── keda/                # Instaladores e validadores do KEDA
 │   │   ├── maintenance/         # Ferramentas de correção (dashboard, lints)
-│   │   ├── Setup-Fresh-Machine.ps1 # Download e setup inicial de ambiente
+│   │   ├── monitoring/          # Scripts para abrir métricas e dashboard
+│   │   ├── utils/               # Bibliotecas globais DRy
+│   │   ├── Bootstrap-DevOps.ps1 # Instalador all-in-one para Windows
+│   │   ├── Setup-Fresh-Machine.ps1 # Executa o setup das ferramentas
 │   │   ├── test-structure.ps1   # Valida integridade das pastas no Windows
 │   │   └── README.md
 │   ├── linux/                   # Scripts Bash (Ubuntu/Debian)
+│   │   ├── drivers/             # Validadores de virtualização nativa
 │   │   ├── init/                # Configurações interativas (Docker/KVM2) e start
+│   │   ├── keda/                # Instaladores e validadores do KEDA
 │   │   ├── maintenance/         # Fix de dashboard e logs de status
+│   │   ├── utils/               # Bibliotecas globais DRy
+│   │   ├── bootstrap-devops.sh  # Instalador all-in-one para Ubuntu/Debian
 │   │   ├── setup-fresh-machine.sh # Dependencias via apt-get e curl
 │   │   └── README.md
 │   └── macOs/                   # Scripts Bash (macOS via Homebrew)
+│       ├── drivers/             # Validadores de virtualização nativa
 │       ├── init/                # Start focado em Docker nativo e QEMU2
+│       ├── keda/                # Instaladores e validadores do KEDA
 │       ├── maintenance/         # Verificações de portas vitais
+│       ├── utils/               # Bibliotecas globais DRy
+│       ├── bootstrap-devops.sh  # Instalador all-in-one para macOS via curl
 │       ├── setup-fresh-machine.sh # Dependencias via Homebrew
 │       └── README.md
 ├── init-minikube-windows.ps1    # Atalho root para Windows
 ├── init-minikube-linux.sh       # Atalho root para Linux
-├── init-minikube-macos.sh       # Atalho root para macOS
-└── . (demais arquivos e pastas)
+└── init-minikube-macos.sh       # Atalho root para macOS
 ```
 
 ---
