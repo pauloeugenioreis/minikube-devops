@@ -92,12 +92,22 @@ deploy_chart() {
 
 ensure_docker_running() {
     if ! docker info >/dev/null 2>&1; then
-        log_warning "Abrindo Docker Desktop..."
-        open /Applications/Docker.app || true
+        local version=$(sw_vers -productVersion)
+        local major=$(echo "$version" | cut -d. -f1)
+
+        if [[ "$major" -lt 14 ]]; then
+            log_warning "Iniciando Colima (Docker Daemon)..."
+            colima start --cpu 2 --memory 4 || true
+        else
+            log_warning "Abrindo Docker Desktop..."
+            open /Applications/Docker.app || true
+        fi
+
         local elapsed=0
         while ! docker info >/dev/null 2>&1 && (( elapsed < 120 )); do
             sleep 5
             elapsed=$((elapsed + 5))
+            echo -e "   ...aguardando Docker ($elapsed/120s)"
         done
     fi
 }

@@ -161,18 +161,32 @@ install_docker() {
         return 0
     fi
 
-    if [[ "$FORCE_UPDATE" == "true" ]] && command_exists docker; then
-        log_info "Atualizando Docker Desktop via Homebrew..."
-        brew upgrade --cask docker
+    local version=$(sw_vers -productVersion)
+    local major=$(echo "$version" | cut -d. -f1)
+
+    if [[ "$major" -lt 14 ]]; then
+        echo "$emoji_warning macOS < 14 detectado. Instalando Colima + Docker CLI (Alternativa ao Docker Desktop)..."
+        if [[ "$FORCE_UPDATE" == "true" ]] && command_exists colima; then
+            brew upgrade colima docker
+        else
+            brew install colima docker
+        fi
+        echo "$emoji_rocket Iniciando Colima..."
+        colima start --cpu 2 --memory 4
     else
-        log_info "Instalando Docker Desktop via Homebrew..."
-        brew install --cask docker
+        if [[ "$FORCE_UPDATE" == "true" ]] && command_exists docker; then
+            log_info "Atualizando Docker Desktop via Homebrew..."
+            brew upgrade --cask docker
+        else
+            log_info "Instalando Docker Desktop via Homebrew..."
+            brew install --cask docker
+        fi
+
+        echo "$emoji_arrow Abrindo Docker Desktop para primeira inicializacao..."
+        open /Applications/Docker.app
     fi
 
-    echo "$emoji_arrow Abrindo Docker Desktop para primeira inicializacao..."
-    open /Applications/Docker.app
-
-    echo "$emoji_info Aguardando Docker Desktop inicializar (pode demorar ate 60s)..."
+    echo "$emoji_info Aguardando Docker daemon inicializar..."
     local elapsed=0
     local timeout=60
     while ! docker info >/dev/null 2>&1 && (( elapsed < timeout )); do
@@ -184,8 +198,12 @@ install_docker() {
     if docker info >/dev/null 2>&1; then
         echo "$emoji_check Docker instalado e rodando: $(docker --version)"
     else
-        echo "$emoji_warning Docker Desktop instalado mas daemon ainda nao respondeu."
-        echo "$emoji_info Abra Docker Desktop manualmente e aguarde o icone ficar verde antes de continuar."
+        echo "$emoji_warning Docker instalado mas daemon ainda nao respondeu."
+        if [[ "$major" -lt 14 ]]; then
+            echo "$emoji_info Tente rodar 'colima start' manualmente."
+        else
+            echo "$emoji_info Abra Docker Desktop manualmente e aguarde o icone ficar verde."
+        fi
     fi
 }
 
