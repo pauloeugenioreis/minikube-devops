@@ -213,6 +213,14 @@ log_success "Configuracao: driver=${MINIKUBE_DRIVER}, cpus=${MINIKUBE_CPUS}, mem
 
 if [[ "$MINIKUBE_DRIVER" == "docker" ]]; then
     ensure_docker_running
+    
+    # Resolve conflicting stale network issue after reboot
+    if docker network ls --format '{{.Name}}' 2>/dev/null | grep -q '^minikube$'; then
+        if ! docker ps -a --format '{{.Names}}' 2>/dev/null | grep -q '^minikube$'; then
+            log_warning "Limpando rede docker 'minikube' orfã para evitar erro na inicializacao..."
+            docker network rm minikube >/dev/null 2>&1 || true
+        fi
+    fi
 fi
 
 log_info "Iniciando Minikube cluster..."
