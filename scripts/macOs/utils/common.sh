@@ -4,23 +4,24 @@
 # Utilidades compartilhadas para scripts macOS
 
 # Emojis
-export emoji_success=$(printf "\u2705")
-export emoji_check=$(printf "\u2705")
-export emoji_error=$(printf "\u274c")
-export emoji_cross=$(printf "\u274c")
-export emoji_warning=$(printf "\u26a0\ufe0f")
-export emoji_info=$(printf "\U1f4a1")
-export emoji_arrow=$(printf "\u27a1\ufe0f")
-export emoji_gear=$(printf "\u2699\ufe0f")
-export emoji_rocket=$(printf "\U1f680")
-export emoji_package=$(printf "\U1f4e6")
-export emoji_wrench=$(printf "\U1f527")
-export emoji_chart=$(printf "\U1f4ca")
-export emoji_clipboard=$(printf "\U1f4cb")
-export emoji_scroll=$(printf "\U1f4dc")
-export emoji_book=$(printf "\U1f4da")
-export emoji_party=$(printf "\U1f389")
-export emoji_globe=$(printf "\U1f310")
+# Emojis
+export emoji_success="✅"
+export emoji_check="✅"
+export emoji_error="❌"
+export emoji_cross="❌"
+export emoji_warning="⚠️"
+export emoji_info="💡"
+export emoji_arrow="➡️"
+export emoji_gear="⚙️"
+export emoji_rocket="🚀"
+export emoji_package="📦"
+export emoji_wrench="🔧"
+export emoji_chart="📊"
+export emoji_clipboard="📋"
+export emoji_scroll="📜"
+export emoji_book="📚"
+export emoji_party="🎉"
+export emoji_globe="🌐"
 
 # Funções de Log
 log_info() {
