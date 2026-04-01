@@ -25,19 +25,19 @@ export emoji_globe="🌐"
 
 # Funções de Log
 log_info() {
-    echo -e "${emoji_info} \e[36m$1\e[0m"
+    echo -e "${emoji_info} \033[36m$1\033[0m"
 }
 
 log_success() {
-    echo -e "${emoji_success} \e[32m$1\e[0m"
+    echo -e "${emoji_success} \033[32m$1\033[0m"
 }
 
 log_warning() {
-    echo -e "${emoji_warning} \e[33m$1\e[0m"
+    echo -e "${emoji_warning} \033[33m$1\033[0m"
 }
 
 log_error() {
-    echo -e "${emoji_error} \e[31m$1\e[0m"
+    echo -e "${emoji_error} \033[31m$1\033[0m"
 }
 
 # Verificar se comando existe
