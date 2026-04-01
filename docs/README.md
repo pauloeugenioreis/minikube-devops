@@ -22,8 +22,8 @@ Ambiente Minikube com RabbitMQ, MongoDB, Redis e KEDA para desenvolvimento local
 ## Estrutura Principal
 
 - **[scripts/windows/](../scripts/windows/README.md)** — Bootstrap, inicialização, KEDA, manutenção e monitoramento (PowerShell)
-- **[scripts/linux/](../scripts/linux/README.md)** — Equivalente em Bash com autostart, drivers (Docker/KVM) e validação
-- **[scripts/macOs/](../scripts/macOs/README.md)** — Equivalente em Bash para macOS via Homebrew (Docker Desktop, Hyperkit)
+- **[scripts/linux/](../scripts/linux/README.md)** — Equivalente em Bash com autostart, drivers interativos (Docker/KVM2) e validação
+- **[scripts/macOs/](../scripts/macOs/README.md)** — Equivalente em Bash para macOS via Homebrew (Docker/QEMU2)
 - **[charts/](../charts/)** — Helm charts para RabbitMQ, MongoDB e Redis (valores padrão versionados)
 - **[configs/](../configs/)** — Exemplos KEDA: CPU, memória, RabbitMQ
 
@@ -69,6 +69,8 @@ curl -fsSL https://raw.githubusercontent.com/pauloeugenioreis/minikube-devops/ma
 ```bash
 ./init-minikube-linux.sh
 ```
+> O script apresentará um menu para escolha de driver (`docker` ou `kvm2`) e quantidade de `CPU / Memória`.
+> Para executar sem pausas interativas, defina variáveis de ambiente antes da chamada, ex: `MINIKUBE_DRIVER=docker MINIKUBE_CPUS=4 MINIKUBE_MEMORY=8g ./init-minikube-linux.sh`
 
 ### Ferramentas Úteis
 ```bash
@@ -92,6 +94,8 @@ curl -fsSL https://raw.githubusercontent.com/pauloeugenioreis/minikube-devops/ma
 ```bash
 ./init-minikube-macos.sh
 ```
+> O script apresentará um menu interativo para recursos e driver oficial (`docker` ou `qemu2`).
+> Para automação (fallback silencioso), proceda de forma injetada: `MINIKUBE_DRIVER=qemu2 ./init-minikube-macos.sh`
 
 ### Ferramentas Úteis
 ```bash

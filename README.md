@@ -9,9 +9,10 @@ Professional environment for local DevOps automation, development, and testing w
 ## Visão Geral | Overview
 
 - Automação completa do setup Kubernetes local com Minikube
+- Menu interativo unificado (Windows, Linux, macOS) para escolha de driver virtualizador, CPU e Memória
 - RabbitMQ, MongoDB e Redis configurados automaticamente com persistência de dados
 - KEDA para autoscaling baseado em eventos (RabbitMQ, CPU, memória, etc.)
-- Scripts PowerShell, Bash (Linux e macOS) para inicialização, manutenção e monitoramento
+- Scripts PowerShell e Bash para inicialização, manutenção e monitoramento
 - Workloads entregues como Helm charts para instalações reproduzíveis
 
 ---
