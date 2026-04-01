@@ -28,16 +28,24 @@ minikube-devops/
 │   └── KEDA.md                  # KEDA: autoscaling orientado a eventos
 ├── scripts/
 │   ├── windows/                 # Scripts PowerShell
-│   │   ├── utils/               # Bibliotecas globais DRy
-│   │   ├── test-structure.ps1   # Valida estrutura no Windows
+│   │   ├── init/                # Rotinas de inicialização e autostart
+│   │   ├── maintenance/         # Ferramentas de correção (dashboard, lints)
+│   │   ├── Setup-Fresh-Machine.ps1 # Download e setup inicial de ambiente
+│   │   ├── test-structure.ps1   # Valida integridade das pastas no Windows
 │   │   └── README.md
 │   ├── linux/                   # Scripts Bash (Ubuntu/Debian)
+│   │   ├── init/                # Configurações interativas (Docker/KVM2) e start
+│   │   ├── maintenance/         # Fix de dashboard e logs de status
+│   │   ├── setup-fresh-machine.sh # Dependencias via apt-get e curl
 │   │   └── README.md
 │   └── macOs/                   # Scripts Bash (macOS via Homebrew)
+│       ├── init/                # Start focado em Docker nativo e QEMU2
+│       ├── maintenance/         # Verificações de portas vitais
+│       ├── setup-fresh-machine.sh # Dependencias via Homebrew
 │       └── README.md
-├── init-minikube-windows.ps1    # Atalho para inicializar no Windows
-├── init-minikube-linux.sh      # Atalho para inicializar no Linux
-├── init-minikube-macos.sh      # Atalho para inicializar no macOS
+├── init-minikube-windows.ps1    # Atalho root para Windows
+├── init-minikube-linux.sh       # Atalho root para Linux
+├── init-minikube-macos.sh       # Atalho root para macOS
 └── . (demais arquivos e pastas)
 ```
 
@@ -89,14 +97,8 @@ cd minikube-devops
 ---
 
 ## Verificar estrutura | Validate structure
+ *(Ferramenta diagnostica nativa do Windows)*
 
-```bash
-# Linux
-bash linux-test-structure.sh
-
-# macOS
-bash macos-test-structure.sh
-```
 ```powershell
 # Windows
 .\scripts\windows\test-structure.ps1
