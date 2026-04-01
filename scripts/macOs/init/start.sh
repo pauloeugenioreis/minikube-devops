@@ -172,12 +172,18 @@ if [[ "$MISSING_DEPS" == "true" ]]; then
     fi
 fi
 
-# Menu interativo para configuracao do Minikube
+# --- Menu interativo para configuracao do Minikube ---
+if [[ -z "${MINIKUBE_DRIVER:-}" || -z "${MINIKUBE_CPUS:-}" || -z "${MINIKUBE_MEMORY:-}" ]]; then
+    echo -e "\033[36m=====================================================\033[0m"
+    echo -e "\033[32m     CONFIGURACAO INTERATIVA DO MINIKUBE             \033[0m"
+    echo -e "\033[36m=====================================================\033[0m"
+fi
+
 if [[ -z "${MINIKUBE_DRIVER:-}" ]]; then
-    echo -e "\e[36mEscolha o driver do Minikube:\e[0m"
-    echo -e "  1) docker (padrao)"
-    echo -e "  2) qemu2"
-    read -p "Selecao [1/2]: " driver_choice
+    echo -e "\033[33mEscolha o driver do Minikube:\033[0m"
+    echo -e "  1) docker (Recomendado - Colima/Docker Desktop)"
+    echo -e "  2) qemu2  (Nativo do QEMU)"
+    read -p "Selecao [1/2, padrao: 1]: " driver_choice
     case "$driver_choice" in
         2) MINIKUBE_DRIVER="qemu2" ;;
         *) MINIKUBE_DRIVER="docker" ;;
@@ -185,10 +191,10 @@ if [[ -z "${MINIKUBE_DRIVER:-}" ]]; then
 fi
 
 if [[ -z "${MINIKUBE_CPUS:-}" || -z "${MINIKUBE_MEMORY:-}" ]]; then
-    echo -e "\e[36mConfiguracao de recursos para o Minikube:\e[0m"
-    echo -e "  CPUs padrao : 4"
+    echo -e "\033[33mConfiguracao de recursos para o Minikube:\033[0m"
+    echo -e "  CPUs padrao   : 4"
     echo -e "  Memoria padrao: 8g"
-    read -p "Deseja alterar? [y/N]: " res_choice
+    read -p "Deseja alterar os valores padrao? [y/N]: " res_choice
     if [[ "$res_choice" =~ ^[YySs]$ ]]; then
         read -p "Informe o numero de CPUs [4]: " cpu_input
         MINIKUBE_CPUS=${cpu_input:-4}
@@ -206,8 +212,10 @@ else
     MINIKUBE_CPUS=${MINIKUBE_CPUS:-4}
     MINIKUBE_MEMORY=${MINIKUBE_MEMORY:-8g}
 fi
+echo -e "\033[36m-----------------------------------------------------\033[0m"
+log_success "Configuracao finalizada: driver=${MINIKUBE_DRIVER}, cpus=${MINIKUBE_CPUS}, memory=${MINIKUBE_MEMORY}"
+echo -e "\033[36m-----------------------------------------------------\033[0m"
 
-log_success "Configuracao: driver=${MINIKUBE_DRIVER}, cpus=${MINIKUBE_CPUS}, memory=${MINIKUBE_MEMORY}"
 
 if [[ "$MINIKUBE_DRIVER" == "docker" ]]; then
     ensure_docker_running
