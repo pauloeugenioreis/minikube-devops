@@ -18,10 +18,7 @@ else
 fi
 
 # Configurações do Cluster
-MINIKUBE_DRIVER=${MINIKUBE_DRIVER:-docker}
 MINIKUBE_CONTAINER_RUNTIME=${MINIKUBE_CONTAINER_RUNTIME:-containerd}
-MINIKUBE_CPUS=${MINIKUBE_CPUS:-4}
-MINIKUBE_MEMORY=${MINIKUBE_MEMORY:-8g}
 REQUIRED_KUBECTL_VERSION="1.35.0"
 
 # --- Funcoes utilitarias locais ---
@@ -109,13 +106,103 @@ ensure_docker_running() {
 
 log_info "Verificando dependencias..."
 log_versions() {
-    local kv=$(kubectl version --client --short 2>/dev/null || echo "v0.0.0")
+    local kv=$(kubectl version --client 2>/dev/null | head -1 || echo "0.0.0")
     local mv=$(minikube version --short 2>/dev/null || echo "v0.0.0")
     log_info "Versoes: kubectl $kv, minikube $mv"
 }
 log_versions
 
-ensure_docker_running
+# Check required dependencies
+MISSING_DEPS=false
+SETUP_ARGS=()
+
+CURRENT_KUBECTL=$(kubectl version --client 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1 || echo "0.0.0")
+if [[ "$CURRENT_KUBECTL" < "$REQUIRED_KUBECTL_VERSION" ]]; then
+    log_error "kubectl versao $CURRENT_KUBECTL detectada. Minimo requerido: $REQUIRED_KUBECTL_VERSION"
+    MISSING_DEPS=true
+else
+    SETUP_ARGS+=("--skip-kubectl")
+fi
+
+if ! command_exists minikube; then
+    log_error "minikube nao encontrado."
+    MISSING_DEPS=true
+else
+    SETUP_ARGS+=("--skip-minikube")
+fi
+
+if ! command_exists helm; then
+    log_error "helm nao encontrado."
+    MISSING_DEPS=true
+else
+    SETUP_ARGS+=("--skip-helm")
+fi
+
+if ! command_exists docker; then
+    log_error "docker nao encontrado."
+    MISSING_DEPS=true
+else
+    SETUP_ARGS+=("--skip-docker")
+fi
+
+if [[ "$MISSING_DEPS" == "true" ]]; then
+    log_warning "Dependencias ausentes ou desatualizadas detectadas."
+    log_info "Iniciando instalacao automatica via setup-fresh-machine.sh..."
+    
+    SETUP_SCRIPT="$SCRIPT_DIR/../setup-fresh-machine.sh"
+    if [[ -f "$SETUP_SCRIPT" ]]; then
+        SETUP_ARGS+=("--force-update")
+        bash "$SETUP_SCRIPT" "${SETUP_ARGS[@]}"
+        
+        # Reavaliar kubectl apos instalacao caso ainda nao esteja no PATH do script
+        CURRENT_KUBECTL=$(kubectl version --client 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1 || echo "0.0.0")
+    else
+        log_error "Script de re-setup nao encontrado em: $SETUP_SCRIPT"
+        exit 1
+    fi
+fi
+
+# Menu interativo para configuracao do Minikube
+if [[ -z "${MINIKUBE_DRIVER:-}" ]]; then
+    echo -e "\e[36mEscolha o driver do Minikube:\e[0m"
+    echo -e "  1) docker (padrao)"
+    echo -e "  2) qemu2"
+    read -p "Selecao [1/2]: " driver_choice
+    case "$driver_choice" in
+        2) MINIKUBE_DRIVER="qemu2" ;;
+        *) MINIKUBE_DRIVER="docker" ;;
+    esac
+fi
+
+if [[ -z "${MINIKUBE_CPUS:-}" || -z "${MINIKUBE_MEMORY:-}" ]]; then
+    echo -e "\e[36mConfiguracao de recursos para o Minikube:\e[0m"
+    echo -e "  CPUs padrao : 4"
+    echo -e "  Memoria padrao: 8g"
+    read -p "Deseja alterar? [y/N]: " res_choice
+    if [[ "$res_choice" =~ ^[YySs]$ ]]; then
+        read -p "Informe o numero de CPUs [4]: " cpu_input
+        MINIKUBE_CPUS=${cpu_input:-4}
+        read -p "Informe a memoria (em GB, ex.: 8) [8g]: " mem_input
+        if [[ "$mem_input" =~ ^[0-9]+$ ]]; then
+            MINIKUBE_MEMORY="${mem_input}g"
+        else
+            MINIKUBE_MEMORY=${mem_input:-8g}
+        fi
+    else
+        MINIKUBE_CPUS=${MINIKUBE_CPUS:-4}
+        MINIKUBE_MEMORY=${MINIKUBE_MEMORY:-8g}
+    fi
+else
+    MINIKUBE_CPUS=${MINIKUBE_CPUS:-4}
+    MINIKUBE_MEMORY=${MINIKUBE_MEMORY:-8g}
+fi
+
+log_success "Configuracao: driver=${MINIKUBE_DRIVER}, cpus=${MINIKUBE_CPUS}, memory=${MINIKUBE_MEMORY}"
+
+if [[ "$MINIKUBE_DRIVER" == "docker" ]]; then
+    ensure_docker_running
+fi
+
 log_info "Iniciando Minikube cluster..."
 minikube start --driver="${MINIKUBE_DRIVER}" --container-runtime="${MINIKUBE_CONTAINER_RUNTIME}" --cpus="${MINIKUBE_CPUS}" --memory="${MINIKUBE_MEMORY}"
 

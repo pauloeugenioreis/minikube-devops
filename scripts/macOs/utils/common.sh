@@ -5,9 +5,12 @@
 
 # Emojis
 export emoji_success=$(printf "\u2705")
+export emoji_check=$(printf "\u2705")
 export emoji_error=$(printf "\u274c")
+export emoji_cross=$(printf "\u274c")
 export emoji_warning=$(printf "\u26a0\ufe0f")
 export emoji_info=$(printf "\U1f4a1")
+export emoji_arrow=$(printf "\u27a1\ufe0f")
 export emoji_gear=$(printf "\u2699\ufe0f")
 export emoji_rocket=$(printf "\U1f680")
 export emoji_package=$(printf "\U1f4e6")

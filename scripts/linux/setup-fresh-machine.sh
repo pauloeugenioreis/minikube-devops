@@ -188,7 +188,7 @@ install_docker() {
     sudo apt-get remove -y docker docker-engine docker.io containerd runc 2>/dev/null || true
     
     # Adicionar repositorio oficial do Docker
-    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --yes --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
     echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
     
     # Instalar Docker
@@ -236,7 +236,7 @@ install_kubectl() {
     log_info "Instalando/Atualizando kubectl..."
     
     if [[ "$FORCE_UPDATE" == "false" ]] && command_exists kubectl; then
-        log_success "kubectl ja instalado: $(kubectl version --client --short 2>/dev/null || kubectl version --client)"
+        log_success "kubectl ja instalado: $(kubectl version --client 2>/dev/null | head -1 || echo 'ok')"
         return 0
     fi
     
@@ -248,7 +248,7 @@ install_kubectl() {
     chmod +x kubectl
     sudo mv kubectl /usr/local/bin/
     
-    echo "$emoji_check kubectl instalado: $(kubectl version --client --short 2>/dev/null || kubectl version --client)"
+    echo "$emoji_check kubectl instalado: $(kubectl version --client 2>/dev/null | head -1 || echo 'ok')"
 }
 
 install_helm() {
@@ -303,7 +303,7 @@ validate_installation() {
     
     # Validar kubectl
     if command_exists kubectl; then
-        echo "$emoji_check kubectl: $(kubectl version --client --short 2>/dev/null || kubectl version --client)"
+        echo "$emoji_check kubectl: $(kubectl version --client 2>/dev/null | head -1 || echo 'ok')"
     else
         echo "$emoji_cross kubectl nao encontrado"
         ((errors++))

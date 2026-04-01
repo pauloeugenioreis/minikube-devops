@@ -6,7 +6,7 @@ Write-Host "============================================" -ForegroundColor Cyan
 # Versoes
 Write-Host "`nVERSOES:" -ForegroundColor Yellow
 Write-Host "kubectl: " -NoNewline -ForegroundColor White
-kubectl version --client --short 2>$null
+kubectl version --client 2>$null | Select-Object -First 1
 Write-Host "Minikube: " -NoNewline -ForegroundColor White  
 minikube version --short 2>$null
 

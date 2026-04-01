@@ -308,7 +308,7 @@ if ($SkipKubectlInstall) {
     Write-Host "Pulando instalacao do kubectl (parametro -SkipKubectlInstall)" -ForegroundColor Yellow
 } elseif (-not $ForceUpdate -and (Test-Command "kubectl")) {
     Write-Host " kubectl ja esta instalado" -ForegroundColor Green
-    $kubectlVersion = kubectl version --client --short 2>$null
+    $kubectlVersion = kubectl version --client 2>$null | Select-Object -First 1
     Write-Host "Versao: $kubectlVersion" -ForegroundColor White
 } else {
     Write-Host "Instalando/Atualizando kubectl..." -ForegroundColor Yellow
