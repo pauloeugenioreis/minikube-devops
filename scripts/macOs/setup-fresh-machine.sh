@@ -213,15 +213,29 @@ install_minikube() {
         return 0
     fi
 
-    if [[ "$FORCE_UPDATE" == "true" ]] && command_exists minikube; then
-        log_info "Atualizando Minikube e QEMU via Homebrew..."
-        brew upgrade minikube qemu
+    # Instalar Minikube individualmente
+    if command_exists minikube; then
+        if [[ "$FORCE_UPDATE" == "true" ]]; then
+            log_info "Atualizando Minikube via Homebrew..."
+            brew upgrade minikube || true
+        fi
     else
-        log_info "Instalando Minikube e QEMU (Necessario para driver qemu2)..."
-        brew install minikube qemu
+        log_info "Instalando Minikube via Homebrew..."
+        brew install minikube
     fi
 
-    echo "$emoji_check Minikube instalado: $(minikube version --short)"
+    # Instalar QEMU individualmente
+    if command_exists qemu-system-x86_64; then
+        if [[ "$FORCE_UPDATE" == "true" ]]; then
+            log_info "Atualizando QEMU via Homebrew..."
+            brew upgrade qemu || true
+        fi
+    else
+        log_info "Instalando QEMU (Necessario para driver qemu2)..."
+        brew install qemu
+    fi
+
+    echo "$emoji_check Minikube e QEMU verificados."
 }
 
 install_kubectl() {
