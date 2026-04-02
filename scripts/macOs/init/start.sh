@@ -114,68 +114,7 @@ ensure_docker_running() {
 
 # --- Main Logic ---
 
-log_info "Verificando dependencias..."
-log_versions() {
-    local kv=$(kubectl version --client 2>/dev/null | head -1 || echo "0.0.0")
-    local mv=$(minikube version --short 2>/dev/null || echo "v0.0.0")
-    log_info "Versoes: kubectl $kv, minikube $mv"
-}
-log_versions
-
-# Check required dependencies
-MISSING_DEPS=false
-SETUP_ARGS=()
-
-CURRENT_KUBECTL=$(kubectl version --client 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1 || echo "0.0.0")
-if [[ "$CURRENT_KUBECTL" < "$REQUIRED_KUBECTL_VERSION" ]]; then
-    log_error "kubectl versao $CURRENT_KUBECTL detectada. Minimo requerido: $REQUIRED_KUBECTL_VERSION"
-    MISSING_DEPS=true
-else
-    SETUP_ARGS+=("--skip-kubectl")
-fi
-
-if command_exists minikube && command_exists qemu-system-x86_64; then
-    SETUP_ARGS+=("--skip-minikube")
-else
-    if ! command_exists minikube; then
-        log_error "minikube nao encontrado."
-    fi
-    if ! command_exists qemu-system-x86_64; then
-        log_error "qemu-system-x86_64 nao encontrado (Necessario para driver qemu2)."
-    fi
-    MISSING_DEPS=true
-fi
-
-if ! command_exists helm; then
-    log_error "helm nao encontrado."
-    MISSING_DEPS=true
-else
-    SETUP_ARGS+=("--skip-helm")
-fi
-
-if ! command_exists docker; then
-    log_error "docker nao encontrado."
-    MISSING_DEPS=true
-else
-    SETUP_ARGS+=("--skip-docker")
-fi
-
-if [[ "$MISSING_DEPS" == "true" ]]; then
-    log_warning "Dependencias ausentes ou desatualizadas detectadas."
-    log_info "Iniciando instalacao automatica via setup-fresh-machine.sh..."
-    
-    SETUP_SCRIPT="$SCRIPT_DIR/../setup-fresh-machine.sh"
-    if [[ -f "$SETUP_SCRIPT" ]]; then
-        SETUP_ARGS+=("--force-update")
-        bash "$SETUP_SCRIPT" "${SETUP_ARGS[@]}"
-        
-        # Reavaliar kubectl apos instalacao caso ainda nao esteja no PATH do script
-        CURRENT_KUBECTL=$(kubectl version --client 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1 || echo "0.0.0")
-    else
-        log_error "Script de re-setup nao encontrado em: $SETUP_SCRIPT"
-        exit 1
-    fi
-fi
+# (Dependency check moved after interactive menu)
 
 # --- Menu interativo para configuracao do Minikube ---
 if [[ -z "${MINIKUBE_DRIVER:-}" || -z "${MINIKUBE_CPUS:-}" || -z "${MINIKUBE_MEMORY:-}" ]]; then
@@ -220,6 +159,69 @@ fi
 echo -e "\033[36m-----------------------------------------------------\033[0m"
 log_success "Configuracao finalizada: driver=${MINIKUBE_DRIVER}, cpus=${MINIKUBE_CPUS}, memory=${MINIKUBE_MEMORY}"
 echo -e "\033[36m-----------------------------------------------------\033[0m"
+
+# --- Verificacao de dependencias baseada no driver escolhido ---
+log_info "Verificando dependencias para driver: $MINIKUBE_DRIVER..."
+
+MISSING_DEPS=false
+SETUP_ARGS=()
+
+# Check kubectl
+CURRENT_KUBECTL=$(kubectl version --client 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1 || echo "0.0.0")
+if [[ "$CURRENT_KUBECTL" < "$REQUIRED_KUBECTL_VERSION" ]]; then
+    log_error "kubectl versao $CURRENT_KUBECTL detectada. Minimo requerido: $REQUIRED_KUBECTL_VERSION"
+    MISSING_DEPS=true
+else
+    SETUP_ARGS+=("--skip-kubectl")
+fi
+
+# Check minikube
+if ! command_exists minikube; then
+    log_error "minikube nao encontrado."
+    MISSING_DEPS=true
+else
+    SETUP_ARGS+=("--skip-minikube")
+fi
+
+# Check helm
+if ! command_exists helm; then
+    log_error "helm nao encontrado."
+    MISSING_DEPS=true
+else
+    SETUP_ARGS+=("--skip-helm")
+fi
+
+# Check driver-specific dependencies
+if [[ "$MINIKUBE_DRIVER" == "docker" ]]; then
+    if ! command_exists docker; then
+        log_error "docker (CLI) nao encontrado. Necessario para driver docker."
+        MISSING_DEPS=true
+    else
+        SETUP_ARGS+=("--skip-docker")
+    fi
+elif [[ "$MINIKUBE_DRIVER" == "qemu2" ]]; then
+    if ! command_exists qemu-system-x86_64; then
+        log_error "QEMU nao encontrado. Necessario para driver qemu2."
+        MISSING_DEPS=true
+    else
+        # Se escolhermos qemu, nao precisamos necessariamente do docker daemon rodando pra instalar
+        SETUP_ARGS+=("--skip-docker")
+    fi
+fi
+
+if [[ "$MISSING_DEPS" == "true" ]]; then
+    log_warning "Dependencias ausentes detectadas."
+    log_info "Iniciando instalacao automatica..."
+    
+    SETUP_SCRIPT="$SCRIPT_DIR/../setup-fresh-machine.sh"
+    if [[ -f "$SETUP_SCRIPT" ]]; then
+        # Nao passamos force-update aqui para ser mais rapido
+        bash "$SETUP_SCRIPT" "${SETUP_ARGS[@]}"
+    else
+        log_error "Script de instalacao nao encontrado."
+        exit 1
+    fi
+fi
 
 
 if [[ "$MINIKUBE_DRIVER" == "docker" ]]; then
