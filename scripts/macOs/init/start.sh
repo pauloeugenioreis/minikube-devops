@@ -228,7 +228,7 @@ if [[ "$MINIKUBE_DRIVER" == "docker" ]]; then
     ensure_docker_running
 
     # Fix: Aggressively link Colima socket to standard location
-    local COLIMA_SOCKET=""
+    COLIMA_SOCKET=""
     if [[ -S "$HOME/.colima/default/docker.sock" ]]; then
         COLIMA_SOCKET="$HOME/.colima/default/docker.sock"
     elif [[ -S "$HOME/.colima/docker.sock" ]]; then
