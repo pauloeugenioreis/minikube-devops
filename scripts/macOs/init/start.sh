@@ -160,8 +160,8 @@ echo -e "\033[36m-----------------------------------------------------\033[0m"
 log_success "Configuracao finalizada: driver=${MINIKUBE_DRIVER}, cpus=${MINIKUBE_CPUS}, memory=${MINIKUBE_MEMORY}"
 echo -e "\033[36m-----------------------------------------------------\033[0m"
 
-# --- Verificacao de dependencias baseada no driver escolhido ---
-log_info "Verificando dependencias para driver: $MINIKUBE_DRIVER..."
+# --- Verificacao de dependencias ---
+log_info "Verificando dependencias..."
 
 MISSING_DEPS=false
 SETUP_ARGS=()
@@ -191,22 +191,20 @@ else
     SETUP_ARGS+=("--skip-helm")
 fi
 
-# Check driver-specific dependencies
-if [[ "$MINIKUBE_DRIVER" == "docker" ]]; then
-    if ! command_exists docker; then
-        log_error "docker (CLI) nao encontrado. Necessario para driver docker."
-        MISSING_DEPS=true
-    else
-        SETUP_ARGS+=("--skip-docker")
-    fi
-elif [[ "$MINIKUBE_DRIVER" == "qemu2" ]]; then
-    if ! command_exists qemu-system-x86_64; then
-        log_error "QEMU nao encontrado. Necessario para driver qemu2."
-        MISSING_DEPS=true
-    else
-        # Se escolhermos qemu, nao precisamos necessariamente do docker daemon rodando pra instalar
-        SETUP_ARGS+=("--skip-docker")
-    fi
+# Check QEMU (Mandatory for Ventura/Intel Colima and QEMU drivers)
+if ! command_exists qemu-system-x86_64; then
+    log_error "QEMU nao encontrado. Necessario para virtualizacao no macOS Ventura/Intel."
+    MISSING_DEPS=true
+    # Se minikube ja foi pulado, precisamos tirar da lista de pulo pra ele instalar o QEMU no mesmo bloco
+    SETUP_ARGS=("${SETUP_ARGS[@]/--skip-minikube/}")
+fi
+
+# Check Docker CLI
+if ! command_exists docker; then
+    log_error "docker (CLI) nao encontrado."
+    MISSING_DEPS=true
+else
+    SETUP_ARGS+=("--skip-docker")
 fi
 
 if [[ "$MISSING_DEPS" == "true" ]]; then
@@ -215,7 +213,6 @@ if [[ "$MISSING_DEPS" == "true" ]]; then
     
     SETUP_SCRIPT="$SCRIPT_DIR/../setup-fresh-machine.sh"
     if [[ -f "$SETUP_SCRIPT" ]]; then
-        # Nao passamos force-update aqui para ser mais rapido
         bash "$SETUP_SCRIPT" "${SETUP_ARGS[@]}"
     else
         log_error "Script de instalacao nao encontrado."
