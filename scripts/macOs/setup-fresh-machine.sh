@@ -171,8 +171,8 @@ install_docker() {
         else
             brew install colima docker
         fi
-        echo "$emoji_rocket Iniciando Colima..."
-        colima start --cpu 2 --memory 4
+        echo "$emoji_rocket Iniciando Colima no modo QEMU (Compatibilidade)..."
+        colima start --cpu 2 --memory 4 --vm-type qemu
     else
         if [[ "$FORCE_UPDATE" == "true" ]] && command_exists docker; then
             log_info "Atualizando Docker Desktop via Homebrew..."

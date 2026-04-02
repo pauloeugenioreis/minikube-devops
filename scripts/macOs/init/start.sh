@@ -96,8 +96,8 @@ ensure_docker_running() {
         local major=$(echo "$version" | cut -d. -f1)
 
         if [[ "$major" -lt 14 ]]; then
-            log_warning "Iniciando Colima (Docker Daemon)..."
-            colima start --cpu 2 --memory 4 || true
+            log_warning "Iniciando Colima (Docker Daemon) no modo QEMU (Compatibilidade)..."
+            colima start --cpu 2 --memory 4 --vm-type qemu || true
         else
             log_warning "Abrindo Docker Desktop..."
             open /Applications/Docker.app || true
