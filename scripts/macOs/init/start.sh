@@ -155,6 +155,11 @@ else
     SETUP_ARGS+=("--skip-docker")
 fi
 
+if ! command_exists qemu-system-x86_64; then
+    log_error "qemu-system-x86_64 nao encontrado (Necessario para driver qemu2)."
+    MISSING_DEPS=true
+fi
+
 if [[ "$MISSING_DEPS" == "true" ]]; then
     log_warning "Dependencias ausentes ou desatualizadas detectadas."
     log_info "Iniciando instalacao automatica via setup-fresh-machine.sh..."
@@ -221,13 +226,22 @@ if [[ "$MINIKUBE_DRIVER" == "docker" ]]; then
     ensure_docker_running
 
     # Fix: Aggressively link Colima socket to standard location
-    local COLIMA_SOCKET="$HOME/.colima/default/docker.sock"
-    if [[ -S "$COLIMA_SOCKET" ]]; then
+    local COLIMA_SOCKET=""
+    if [[ -S "$HOME/.colima/default/docker.sock" ]]; then
+        COLIMA_SOCKET="$HOME/.colima/default/docker.sock"
+    elif [[ -S "$HOME/.colima/docker.sock" ]]; then
+        COLIMA_SOCKET="$HOME/.colima/docker.sock"
+    else
+        # Try to find it if common paths fail
+        COLIMA_SOCKET=$(find "$HOME/.colima" -name "docker.sock" -type s 2>/dev/null | head -n 1 || echo "")
+    fi
+
+    if [[ -n "$COLIMA_SOCKET" ]]; then
         log_warning "Configurando acesso ao Docker via Colima..."
         # Remove existing if it's not pointing to colima or is a stale file/socket
         sudo rm -f /var/run/docker.sock >/dev/null 2>&1 || true
         sudo ln -sf "$COLIMA_SOCKET" /var/run/docker.sock
-        log_success "Socket do Docker vinculado com sucesso."
+        log_success "Socket do Docker vinculado com sucesso: $COLIMA_SOCKET"
     fi
 
     # Resolve conflicting stale network issue after reboot
