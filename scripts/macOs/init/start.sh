@@ -228,7 +228,7 @@ if [[ "$MINIKUBE_DRIVER" == "docker" ]]; then
     ensure_docker_running
 
     # Fix: Use 'colima status' to find the actual socket path (Detective Mode)
-    local COLIMA_SOCKET=""
+    COLIMA_SOCKET=""
     if command_exists colima; then
         COLIMA_SOCKET=$(colima status 2>/dev/null | grep -i "socket:" | awk '{print $NF}' | sed 's/\x1B\[[0-9;]*[JKmsu]//g' || echo "")
     fi
