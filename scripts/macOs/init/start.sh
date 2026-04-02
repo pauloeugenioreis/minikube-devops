@@ -227,15 +227,21 @@ fi
 if [[ "$MINIKUBE_DRIVER" == "docker" ]]; then
     ensure_docker_running
 
-    # Fix: Aggressively link Colima socket to standard location
-    COLIMA_SOCKET=""
-    if [[ -S "$HOME/.colima/default/docker.sock" ]]; then
-        COLIMA_SOCKET="$HOME/.colima/default/docker.sock"
-    elif [[ -S "$HOME/.colima/docker.sock" ]]; then
-        COLIMA_SOCKET="$HOME/.colima/docker.sock"
-    else
-        # Try to find it if common paths fail
-        COLIMA_SOCKET=$(find "$HOME/.colima" -name "docker.sock" -type s 2>/dev/null | head -n 1 || echo "")
+    # Fix: Use 'colima status' to find the actual socket path (Detective Mode)
+    local COLIMA_SOCKET=""
+    if command_exists colima; then
+        COLIMA_SOCKET=$(colima status 2>/dev/null | grep -i "socket:" | awk '{print $NF}' | sed 's/\x1B\[[0-9;]*[JKmsu]//g' || echo "")
+    fi
+
+    # Fallback to common paths if colima status failed
+    if [[ -z "$COLIMA_SOCKET" ]]; then
+        if [[ -S "$HOME/.colima/default/docker.sock" ]]; then
+            COLIMA_SOCKET="$HOME/.colima/default/docker.sock"
+        elif [[ -S "$HOME/.colima/docker.sock" ]]; then
+            COLIMA_SOCKET="$HOME/.colima/docker.sock"
+        else
+            COLIMA_SOCKET=$(find "$HOME/.colima" -name "docker.sock" -type s 2>/dev/null | head -n 1 || echo "")
+        fi
     fi
 
     if [[ -n "$COLIMA_SOCKET" ]]; then
