@@ -214,11 +214,11 @@ install_minikube() {
     fi
 
     if [[ "$FORCE_UPDATE" == "true" ]] && command_exists minikube; then
-        log_info "Atualizando Minikube via Homebrew..."
-        brew upgrade minikube
+        log_info "Atualizando Minikube e QEMU via Homebrew..."
+        brew upgrade minikube qemu
     else
-        log_info "Instalando Minikube via Homebrew..."
-        brew install minikube
+        log_info "Instalando Minikube e QEMU (Necessario para driver qemu2)..."
+        brew install minikube qemu
     fi
 
     echo "$emoji_check Minikube instalado: $(minikube version --short)"
