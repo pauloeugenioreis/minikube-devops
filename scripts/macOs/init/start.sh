@@ -220,6 +220,12 @@ echo -e "\033[36m-----------------------------------------------------\033[0m"
 if [[ "$MINIKUBE_DRIVER" == "docker" ]]; then
     ensure_docker_running
 
+    # Fix: Link Colima socket to standard location if Docker Desktop is missing
+    if ! [[ -S /var/run/docker.sock ]] && [[ -S "$HOME/.colima/default/docker.sock" ]]; then
+        log_warning "Vinculando socket do Colima ao caminho padrao..."
+        sudo ln -sf "$HOME/.colima/default/docker.sock" /var/run/docker.sock
+    fi
+
     # Resolve conflicting stale network issue after reboot
     if docker network ls --format '{{.Name}}' 2>/dev/null | grep -q '^minikube$'; then
         if ! docker ps -a --format '{{.Names}}' 2>/dev/null | grep -q '^minikube$'; then
