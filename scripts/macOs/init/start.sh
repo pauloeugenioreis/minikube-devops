@@ -134,11 +134,16 @@ else
     SETUP_ARGS+=("--skip-kubectl")
 fi
 
-if ! command_exists minikube; then
-    log_error "minikube nao encontrado."
-    MISSING_DEPS=true
-else
+if command_exists minikube && command_exists qemu-system-x86_64; then
     SETUP_ARGS+=("--skip-minikube")
+else
+    if ! command_exists minikube; then
+        log_error "minikube nao encontrado."
+    fi
+    if ! command_exists qemu-system-x86_64; then
+        log_error "qemu-system-x86_64 nao encontrado (Necessario para driver qemu2)."
+    fi
+    MISSING_DEPS=true
 fi
 
 if ! command_exists helm; then
@@ -153,11 +158,6 @@ if ! command_exists docker; then
     MISSING_DEPS=true
 else
     SETUP_ARGS+=("--skip-docker")
-fi
-
-if ! command_exists qemu-system-x86_64; then
-    log_error "qemu-system-x86_64 nao encontrado (Necessario para driver qemu2)."
-    MISSING_DEPS=true
 fi
 
 if [[ "$MISSING_DEPS" == "true" ]]; then
