@@ -5,39 +5,39 @@
 
 # Emojis
 # Emojis
-export emoji_success="✅"
-export emoji_check="✅"
-export emoji_error="❌"
-export emoji_cross="❌"
-export emoji_warning="⚠️"
-export emoji_info="💡"
-export emoji_arrow="➡️"
-export emoji_gear="⚙️"
-export emoji_rocket="🚀"
-export emoji_package="📦"
-export emoji_wrench="🔧"
-export emoji_chart="📊"
-export emoji_clipboard="📋"
-export emoji_scroll="📜"
-export emoji_book="📚"
-export emoji_party="🎉"
-export emoji_globe="🌐"
+export EMOJI_SUCCESS="✅"
+export EMOJI_CHECK="✅"
+export EMOJI_ERROR="❌"
+export EMOJI_CROSS="❌"
+export EMOJI_WARNING="⚠️"
+export EMOJI_INFO="💡"
+export EMOJI_ARROW="➡️"
+export EMOJI_GEAR="⚙️"
+export EMOJI_ROCKET="🚀"
+export EMOJI_PACKAGE="📦"
+export EMOJI_WRENCH="🔧"
+export EMOJI_CHART="📊"
+export EMOJI_CLIPBOARD="📋"
+export EMOJI_SCROLL="📜"
+export EMOJI_BOOK="📚"
+export EMOJI_PARTY="🎉"
+export EMOJI_GLOBE="🌐"
 
 # Funções de Log
 log_info() {
-    echo -e "${emoji_info} \033[36m$1\033[0m"
+    echo -e "${EMOJI_INFO} \033[36m$1\033[0m"
 }
 
 log_success() {
-    echo -e "${emoji_success} \033[32m$1\033[0m"
+    echo -e "${EMOJI_SUCCESS} \033[32m$1\033[0m"
 }
 
 log_warning() {
-    echo -e "${emoji_warning} \033[33m$1\033[0m"
+    echo -e "${EMOJI_WARNING} \033[33m$1\033[0m"
 }
 
 log_error() {
-    echo -e "${emoji_error} \033[31m$1\033[0m"
+    echo -e "${EMOJI_ERROR} \033[31m$1\033[0m"
 }
 
 # Verificar se comando existe

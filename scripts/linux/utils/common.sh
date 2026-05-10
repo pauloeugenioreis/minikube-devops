@@ -4,39 +4,39 @@
 # Utilidades compartilhadas para scripts Linux
 
 # Emojis
-emoji_success=$(printf "\u2705");    export emoji_success
-emoji_check=$(printf "\u2705");      export emoji_check
-emoji_error=$(printf "\u274c");      export emoji_error
-emoji_cross=$(printf "\u274c");      export emoji_cross
-emoji_warning=$(printf "\u26a0\ufe0f"); export emoji_warning
-emoji_info=$(printf "\U1f4a1");      export emoji_info
-emoji_arrow=$(printf "\u27a1\ufe0f"); export emoji_arrow
-emoji_gear=$(printf "\u2699\ufe0f"); export emoji_gear
-emoji_rocket=$(printf "\U1f680");    export emoji_rocket
-emoji_package=$(printf "\U1f4e6");   export emoji_package
-emoji_wrench=$(printf "\U1f527");    export emoji_wrench
-emoji_chart=$(printf "\U1f4ca");     export emoji_chart
-emoji_clipboard=$(printf "\U1f4cb"); export emoji_clipboard
-emoji_scroll=$(printf "\U1f4dc");    export emoji_scroll
-emoji_book=$(printf "\U1f4da");      export emoji_book
-emoji_party=$(printf "\U1f389");     export emoji_party
-emoji_globe=$(printf "\U1f310");     export emoji_globe
+EMOJI_SUCCESS=$(printf "\u2705");    export EMOJI_SUCCESS
+EMOJI_CHECK=$(printf "\u2705");      export EMOJI_CHECK
+EMOJI_ERROR=$(printf "\u274c");      export EMOJI_ERROR
+EMOJI_CROSS=$(printf "\u274c");      export EMOJI_CROSS
+EMOJI_WARNING=$(printf "\u26a0\ufe0f"); export EMOJI_WARNING
+EMOJI_INFO=$(printf "\U1f4a1");      export EMOJI_INFO
+EMOJI_ARROW=$(printf "\u27a1\ufe0f"); export EMOJI_ARROW
+EMOJI_GEAR=$(printf "\u2699\ufe0f"); export EMOJI_GEAR
+EMOJI_ROCKET=$(printf "\U1f680");    export EMOJI_ROCKET
+EMOJI_PACKAGE=$(printf "\U1f4e6");   export EMOJI_PACKAGE
+EMOJI_WRENCH=$(printf "\U1f527");    export EMOJI_WRENCH
+EMOJI_CHART=$(printf "\U1f4ca");     export EMOJI_CHART
+EMOJI_CLIPBOARD=$(printf "\U1f4cb"); export EMOJI_CLIPBOARD
+EMOJI_SCROLL=$(printf "\U1f4dc");    export EMOJI_SCROLL
+EMOJI_BOOK=$(printf "\U1f4da");      export EMOJI_BOOK
+EMOJI_PARTY=$(printf "\U1f389");     export EMOJI_PARTY
+EMOJI_GLOBE=$(printf "\U1f310");     export EMOJI_GLOBE
 
 # Funções de Log
 log_info() {
-    echo -e "${emoji_info} \e[36m$1\e[0m"
+    echo -e "${EMOJI_INFO} \e[36m$1\e[0m"
 }
 
 log_success() {
-    echo -e "${emoji_success} \e[32m$1\e[0m"
+    echo -e "${EMOJI_SUCCESS} \e[32m$1\e[0m"
 }
 
 log_warning() {
-    echo -e "${emoji_warning} \e[33m$1\e[0m"
+    echo -e "${EMOJI_WARNING} \e[33m$1\e[0m"
 }
 
 log_error() {
-    echo -e "${emoji_error} \e[31m$1\e[0m"
+    echo -e "${EMOJI_ERROR} \e[31m$1\e[0m"
 }
 
 # Verificar se comando existe

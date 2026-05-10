@@ -86,20 +86,20 @@ detect_project_root() {
     while [[ "$current_dir" != "/" ]]; do
         if [[ ( -f "$current_dir/minikube/docs/README.md" && -d "$current_dir/minikube/scripts" ) || ( -f "$current_dir/docs/README.md" && -d "$current_dir/scripts" ) ]]; then
             PROJECT_ROOT="$current_dir"
-            echo "$emoji_check Pasta raiz do projeto detectada: $PROJECT_ROOT"
+            echo "$EMOJI_CHECK Pasta raiz do projeto detectada: $PROJECT_ROOT"
             return 0
         fi
         current_dir="$(dirname "$current_dir")"
     done
 
-    echo "$emoji_warning Pasta raiz do projeto nao detectada. Setup independente."
+    echo "$EMOJI_WARNING Pasta raiz do projeto nao detectada. Setup independente."
     return 1
 }
 
 # Cabecalho
 echo "====================================================="
-echo "$emoji_rocket SETUP COMPLETO - MAQUINA NOVA macOS"
-echo "$emoji_gear Minikube DevOps Environment - Instalacao Automatica"
+echo "$EMOJI_ROCKET SETUP COMPLETO - MAQUINA NOVA macOS"
+echo "$EMOJI_GEAR Minikube DevOps Environment - Instalacao Automatica"
 echo "====================================================="
 
 # Funcoes utilitarias
@@ -122,21 +122,21 @@ check_macos_version() {
     local major
     major=$(echo "$version" | cut -d. -f1)
 
-    echo "$emoji_check Sistema operacional: macOS $version"
+    echo "$EMOJI_CHECK Sistema operacional: macOS $version"
 
     if [[ "$major" -lt 12 ]]; then
-        echo "$emoji_cross macOS $version detectado. Versao minima requerida: 12 (Monterey)"
+        echo "$EMOJI_CROSS macOS $version detectado. Versao minima requerida: 12 (Monterey)"
         exit 1
     fi
 }
 
 install_homebrew() {
     if command_exists brew; then
-        echo "$emoji_check Homebrew ja instalado: $(brew --version | head -1)"
+        echo "$EMOJI_CHECK Homebrew ja instalado: $(brew --version | head -1)"
         return 0
     fi
 
-    echo "$emoji_package Instalando Homebrew..."
+    echo "$EMOJI_PACKAGE Instalando Homebrew..."
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
     # Adicionar brew ao PATH para Apple Silicon
@@ -144,12 +144,12 @@ install_homebrew() {
         eval "$(/opt/homebrew/bin/brew shellenv)"
     fi
 
-    echo "$emoji_check Homebrew instalado: $(brew --version | head -1)"
+    echo "$EMOJI_CHECK Homebrew instalado: $(brew --version | head -1)"
 }
 
 install_docker() {
     if [[ "$SKIP_DOCKER_INSTALL" == "true" ]]; then
-        echo "$emoji_arrow Pulando instalacao do Docker (--skip-docker)"
+        echo "$EMOJI_ARROW Pulando instalacao do Docker (--skip-docker)"
         return 0
     fi
 
@@ -158,13 +158,13 @@ install_docker() {
     major=$(echo "$version" | cut -d. -f1)
 
     if [[ "$major" -lt 14 ]]; then
-        echo "$emoji_warning macOS < 14 detectado. Instalando Colima + Docker CLI (Alternativa ao Docker Desktop)..."
+        echo "$EMOJI_WARNING macOS < 14 detectado. Instalando Colima + Docker CLI (Alternativa ao Docker Desktop)..."
         if [[ "$FORCE_UPDATE" == "true" ]] && command_exists colima; then
             brew upgrade colima docker
         else
             brew install colima docker
         fi
-        echo "$emoji_rocket Iniciando Colima no modo QEMU (Compatibilidade)..."
+        echo "$EMOJI_ROCKET Iniciando Colima no modo QEMU (Compatibilidade)..."
         colima start --cpu 2 --memory 4 --vm-type qemu
     else
         if [[ "$FORCE_UPDATE" == "true" ]] && command_exists docker; then
@@ -175,34 +175,34 @@ install_docker() {
             brew install --cask docker
         fi
 
-        echo "$emoji_arrow Abrindo Docker Desktop para primeira inicializacao..."
+        echo "$EMOJI_ARROW Abrindo Docker Desktop para primeira inicializacao..."
         open /Applications/Docker.app
     fi
 
-    echo "$emoji_info Aguardando Docker daemon inicializar..."
+    echo "$EMOJI_INFO Aguardando Docker daemon inicializar..."
     local elapsed=0
     local timeout=60
     while ! docker info >/dev/null 2>&1 && (( elapsed < timeout )); do
         sleep 5
         elapsed=$((elapsed + 5))
-        echo "$emoji_info   ...aguardando Docker ($elapsed/${timeout}s)..."
+        echo "$EMOJI_INFO   ...aguardando Docker ($elapsed/${timeout}s)..."
     done
 
     if docker info >/dev/null 2>&1; then
-        echo "$emoji_check Docker instalado e rodando: $(docker --version)"
+        echo "$EMOJI_CHECK Docker instalado e rodando: $(docker --version)"
     else
-        echo "$emoji_warning Docker instalado mas daemon ainda nao respondeu."
+        echo "$EMOJI_WARNING Docker instalado mas daemon ainda nao respondeu."
         if [[ "$major" -lt 14 ]]; then
-            echo "$emoji_info Tente rodar 'colima start' manualmente."
+            echo "$EMOJI_INFO Tente rodar 'colima start' manualmente."
         else
-            echo "$emoji_info Abra Docker Desktop manualmente e aguarde o icone ficar verde."
+            echo "$EMOJI_INFO Abra Docker Desktop manualmente e aguarde o icone ficar verde."
         fi
     fi
 }
 
 install_minikube() {
     if [[ "$SKIP_MINIKUBE_INSTALL" == "true" ]]; then
-        echo "$emoji_arrow Pulando instalacao do Minikube (--skip-minikube)"
+        echo "$EMOJI_ARROW Pulando instalacao do Minikube (--skip-minikube)"
         return 0
     fi
 
@@ -228,12 +228,12 @@ install_minikube() {
         brew install qemu
     fi
 
-    echo "$emoji_check Minikube e QEMU verificados."
+    echo "$EMOJI_CHECK Minikube e QEMU verificados."
 }
 
 install_kubectl() {
     if [[ "$SKIP_KUBECTL_INSTALL" == "true" ]]; then
-        echo "$emoji_arrow Pulando instalacao do kubectl (--skip-kubectl)"
+        echo "$EMOJI_ARROW Pulando instalacao do kubectl (--skip-kubectl)"
         return 0
     fi
 
@@ -245,12 +245,12 @@ install_kubectl() {
         brew install kubectl
     fi
 
-    echo "$emoji_check kubectl instalado: $(kubectl version --client 2>/dev/null | head -1 || echo 'ok')"
+    echo "$EMOJI_CHECK kubectl instalado: $(kubectl version --client 2>/dev/null | head -1 || echo 'ok')"
 }
 
 install_helm() {
     if [[ "$SKIP_HELM_INSTALL" == "true" ]]; then
-        echo "$emoji_arrow Pulando instalacao do Helm (--skip-helm)"
+        echo "$EMOJI_ARROW Pulando instalacao do Helm (--skip-helm)"
         return 0
     fi
 
@@ -262,61 +262,61 @@ install_helm() {
         brew install helm
     fi
 
-    echo "$emoji_check Helm instalado: $(helm version --short)"
+    echo "$EMOJI_CHECK Helm instalado: $(helm version --short)"
 }
 
 validate_installation() {
     if [[ "$SKIP_VALIDATION" == "true" ]]; then
-        echo "$emoji_arrow Pulando validacao final (--skip-validation)"
+        echo "$EMOJI_ARROW Pulando validacao final (--skip-validation)"
         return 0
     fi
 
-    echo "$emoji_gear Validando instalacao..."
+    echo "$EMOJI_GEAR Validando instalacao..."
 
     local errors=0
 
     # Validar Docker
     if command_exists docker; then
         if docker info >/dev/null 2>&1; then
-            echo "$emoji_check Docker: $(docker --version)"
+            echo "$EMOJI_CHECK Docker: $(docker --version)"
         else
-            echo "$emoji_warning Docker instalado mas daemon nao acessivel (abra o Docker Desktop)"
+            echo "$EMOJI_WARNING Docker instalado mas daemon nao acessivel (abra o Docker Desktop)"
             ((errors++))
         fi
     else
-        echo "$emoji_cross Docker nao encontrado"
+        echo "$EMOJI_CROSS Docker nao encontrado"
         ((errors++))
     fi
 
     # Validar Minikube
     if command_exists minikube; then
-        echo "$emoji_check Minikube: $(minikube version --short)"
+        echo "$EMOJI_CHECK Minikube: $(minikube version --short)"
     else
-        echo "$emoji_cross Minikube nao encontrado"
+        echo "$EMOJI_CROSS Minikube nao encontrado"
         ((errors++))
     fi
 
     # Validar kubectl
     if command_exists kubectl; then
-        echo "$emoji_check kubectl: $(kubectl version --client 2>/dev/null | head -1 || echo 'ok')"
+        echo "$EMOJI_CHECK kubectl: $(kubectl version --client 2>/dev/null | head -1 || echo 'ok')"
     else
-        echo "$emoji_cross kubectl nao encontrado"
+        echo "$EMOJI_CROSS kubectl nao encontrado"
         ((errors++))
     fi
 
     # Validar Helm
     if command_exists helm; then
-        echo "$emoji_check Helm: $(helm version --short)"
+        echo "$EMOJI_CHECK Helm: $(helm version --short)"
     else
-        echo "$emoji_cross Helm nao encontrado"
+        echo "$EMOJI_CROSS Helm nao encontrado"
         ((errors++))
     fi
 
     if [[ $errors -eq 0 ]]; then
-        echo "$emoji_check Todas as dependencias instaladas com sucesso!"
+        echo "$EMOJI_CHECK Todas as dependencias instaladas com sucesso!"
         return 0
     else
-        echo "$emoji_cross $errors erro(s) encontrado(s) na validacao"
+        echo "$EMOJI_CROSS $errors erro(s) encontrado(s) na validacao"
         return 1
     fi
 }
@@ -326,7 +326,7 @@ run_initialization() {
         return 0
     fi
 
-    echo "$emoji_rocket Executando inicializacao do ambiente..."
+    echo "$EMOJI_ROCKET Executando inicializacao do ambiente..."
 
     if [[ -n "$PROJECT_ROOT" ]]; then
         local init_script="$PROJECT_ROOT/scripts/macOs/init/start.sh"
@@ -334,17 +334,17 @@ run_initialization() {
             init_script="$PROJECT_ROOT/minikube/scripts/macOs/init/start.sh"
         fi
         if [[ -f "$init_script" ]]; then
-            echo "$emoji_arrow Executando: $init_script"
+            echo "$EMOJI_ARROW Executando: $init_script"
             chmod +x "$init_script"
             bash "$init_script" --install-keda
         else
-            echo "$emoji_warning Script de inicializacao nao encontrado: $init_script"
+            echo "$EMOJI_WARNING Script de inicializacao nao encontrado: $init_script"
         fi
     else
         local cmd_prefix
         cmd_prefix=$(get_layout_prefix "$PROJECT_ROOT")
-        echo "$emoji_warning Pasta raiz do projeto nao detectada. Nao e possivel executar inicializacao automatica."
-        echo "$emoji_info Para inicializar manualmente:"
+        echo "$EMOJI_WARNING Pasta raiz do projeto nao detectada. Nao e possivel executar inicializacao automatica."
+        echo "$EMOJI_INFO Para inicializar manualmente:"
         echo "  cd /caminho/para/projeto"
         echo "  bash ${cmd_prefix}scripts/macOs/init/start.sh --install-keda"
     fi
@@ -356,12 +356,12 @@ print_final_instructions() {
 
     echo ""
     echo "====================================================="
-    echo "$emoji_rocket INSTALACAO COMPLETA!"
+    echo "$EMOJI_ROCKET INSTALACAO COMPLETA!"
     echo "====================================================="
     echo ""
-    echo "$emoji_info Proximos passos:"
+    echo "$EMOJI_INFO Proximos passos:"
     echo ""
-    echo "$emoji_gear Para iniciar o ambiente Minikube:"
+    echo "$EMOJI_GEAR Para iniciar o ambiente Minikube:"
     if [[ -n "$PROJECT_ROOT" ]]; then
         echo "  cd $PROJECT_ROOT"
         echo "  bash ${cmd_prefix}scripts/macOs/init/start.sh --install-keda"
@@ -371,13 +371,13 @@ print_final_instructions() {
     fi
     echo ""
 
-    echo "$emoji_info Comandos uteis apos inicializacao:"
+    echo "$EMOJI_INFO Comandos uteis apos inicializacao:"
     echo "  - RabbitMQ Management: http://localhost:15672 (guest/guest)"
     echo "  - Kubernetes Dashboard: http://localhost:15671"
     echo "  - MongoDB: localhost:27017 (admin/admin)"
     echo ""
 
-    echo "$emoji_info Comandos uteis:"
+    echo "$EMOJI_INFO Comandos uteis:"
     echo "  minikube status          # Status do cluster"
     echo "  kubectl get pods         # Listar pods"
     echo "  minikube dashboard       # Abrir dashboard"
@@ -399,9 +399,9 @@ main() {
     if validate_installation; then
         run_initialization
         print_final_instructions
-        echo "$emoji_check Setup completo! Sistema pronto para uso."
+        echo "$EMOJI_CHECK Setup completo! Sistema pronto para uso."
     else
-        echo "$emoji_cross Setup completado com erros. Verifique as mensagens acima."
+        echo "$EMOJI_CROSS Setup completado com erros. Verifique as mensagens acima."
         exit 1
     fi
 }

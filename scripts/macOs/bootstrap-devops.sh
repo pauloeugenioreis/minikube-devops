@@ -8,14 +8,14 @@
 set -euo pipefail
 
 # Definir variaveis de emoji para saida consistente
-emoji_rocket=$(printf "\U1f680")
-emoji_package=$(printf "\U1f4e6")
-emoji_gear=$(printf "\u2699\ufe0f")
-emoji_check=$(printf "\u2713")
-emoji_cross=$(printf "\u274c")
-emoji_arrow=$(printf "\u27a1\ufe0f")
-emoji_warning=$(printf "\u26a0\ufe0f")
-emoji_info=$(printf "\U1f4a1")
+EMOJI_ROCKET=$(printf "\U1f680")
+EMOJI_PACKAGE=$(printf "\U1f4e6")
+EMOJI_GEAR=$(printf "\u2699\ufe0f")
+EMOJI_CHECK=$(printf "\u2713")
+EMOJI_CROSS=$(printf "\u274c")
+EMOJI_ARROW=$(printf "\u27a1\ufe0f")
+EMOJI_WARNING=$(printf "\u26a0\ufe0f")
+EMOJI_INFO=$(printf "\U1f4a1")
 emoji_folder=$(printf "\U1f4c1")
 
 # Parametros padrao
@@ -70,11 +70,11 @@ fi
 
 # Cabecalho
 echo "====================================================="
-echo "$emoji_rocket BOOTSTRAP DEVOPS - macOS"
-echo "$emoji_package Zero to Running - Setup Automatizado Completo"
+echo "$EMOJI_ROCKET BOOTSTRAP DEVOPS - macOS"
+echo "$EMOJI_PACKAGE Zero to Running - Setup Automatizado Completo"
 echo "====================================================="
 echo ""
-echo "$emoji_info Configuracao:"
+echo "$EMOJI_INFO Configuracao:"
 echo "  Pasta do projeto: $PROJECT_PATH"
 echo "  Skip setup: $SKIP_SETUP"
 echo "  Skip init: $SKIP_INIT"
@@ -95,7 +95,7 @@ get_layout_prefix() {
 }
 
 download_project() {
-    echo "$emoji_package Baixando projeto DevOps..."
+    echo "$EMOJI_PACKAGE Baixando projeto DevOps..."
 
     # Criar diretorio pai se necessario
     local parent_dir
@@ -104,15 +104,15 @@ download_project() {
 
     # Tentar clone Git primeiro
     if command_exists git; then
-        echo "$emoji_arrow Tentando clone Git..."
+        echo "$EMOJI_ARROW Tentando clone Git..."
         if git clone "$GITHUB_REPO" "$PROJECT_PATH"; then
-            echo "$emoji_check Projeto clonado via Git"
+            echo "$EMOJI_CHECK Projeto clonado via Git"
             return 0
         else
-            echo "$emoji_warning Clone Git falhou, tentando download ZIP..."
+            echo "$EMOJI_WARNING Clone Git falhou, tentando download ZIP..."
         fi
     else
-        echo "$emoji_info Git nao encontrado, usando download ZIP..."
+        echo "$EMOJI_INFO Git nao encontrado, usando download ZIP..."
     fi
 
     # Fallback: download ZIP
@@ -120,16 +120,16 @@ download_project() {
     temp_dir=$(mktemp -d)
     local zip_file="$temp_dir/project.zip"
 
-    echo "$emoji_arrow Baixando ZIP do GitHub..."
+    echo "$EMOJI_ARROW Baixando ZIP do GitHub..."
     if curl -L -o "$zip_file" "https://github.com/pauloeugenioreis/minikube-devops/archive/refs/heads/main.zip"; then
-        echo "$emoji_arrow Extraindo projeto..."
+        echo "$EMOJI_ARROW Extraindo projeto..."
         unzip -q "$zip_file" -d "$temp_dir"
         mv "$temp_dir/minikube-devops-main" "$PROJECT_PATH"
         rm -rf "$temp_dir"
-        echo "$emoji_check Projeto baixado via ZIP"
+        echo "$EMOJI_CHECK Projeto baixado via ZIP"
         return 0
     else
-        echo "$emoji_cross Falha no download do projeto"
+        echo "$EMOJI_CROSS Falha no download do projeto"
         rm -rf "$temp_dir"
         return 1
     fi
@@ -138,39 +138,39 @@ download_project() {
 check_project_exists() {
     if [[ -d "$PROJECT_PATH" ]]; then
         if [[ -f "$PROJECT_PATH/minikube/docs/README.md" || -f "$PROJECT_PATH/docs/README.md" ]]; then
-            echo "$emoji_check Projeto ja existe e parece valido: $PROJECT_PATH"
+            echo "$EMOJI_CHECK Projeto ja existe e parece valido: $PROJECT_PATH"
             return 0
         else
-            echo "$emoji_warning Pasta existe mas nao parece ser o projeto DevOps: $PROJECT_PATH"
-            echo "$emoji_info Verificando conteudo..."
+            echo "$EMOJI_WARNING Pasta existe mas nao parece ser o projeto DevOps: $PROJECT_PATH"
+            echo "$EMOJI_INFO Verificando conteudo..."
             if [[ -n "$(ls -A "$PROJECT_PATH")" ]]; then
-                echo "$emoji_cross Pasta nao vazia e nao e o projeto esperado"
+                echo "$EMOJI_CROSS Pasta nao vazia e nao e o projeto esperado"
                 return 1
             else
-                echo "$emoji_info Pasta vazia, pode ser usada para download"
+                echo "$EMOJI_INFO Pasta vazia, pode ser usada para download"
                 return 2
             fi
         fi
     else
-        echo "$emoji_info Projeto nao existe, sera baixado: $PROJECT_PATH"
+        echo "$EMOJI_INFO Projeto nao existe, sera baixado: $PROJECT_PATH"
         return 2
     fi
 }
 
 run_setup() {
     if [[ "$SKIP_SETUP" == "true" ]]; then
-        echo "$emoji_arrow Pulando instalacao de dependencias (--skip-setup)"
+        echo "$EMOJI_ARROW Pulando instalacao de dependencias (--skip-setup)"
         return 0
     fi
 
-    echo "$emoji_gear Executando setup de dependencias..."
+    echo "$EMOJI_GEAR Executando setup de dependencias..."
 
     local setup_script="$PROJECT_PATH/scripts/macOs/setup-fresh-machine.sh"
     if [[ ! -f "$setup_script" ]]; then
         setup_script="$PROJECT_PATH/minikube/scripts/macOs/setup-fresh-machine.sh"
     fi
     if [[ -f "$setup_script" ]]; then
-        echo "$emoji_arrow Executando: $setup_script"
+        echo "$EMOJI_ARROW Executando: $setup_script"
         chmod +x "$setup_script"
 
         local setup_args=""
@@ -180,8 +180,8 @@ run_setup() {
 
         bash "$setup_script" $setup_args
     else
-        echo "$emoji_cross Script de setup nao encontrado: $setup_script"
-        echo "$emoji_info Execute manualmente:"
+        echo "$EMOJI_CROSS Script de setup nao encontrado: $setup_script"
+        echo "$EMOJI_INFO Execute manualmente:"
         echo "  cd $PROJECT_PATH"
         echo "  bash scripts/macOs/setup-fresh-machine.sh --run-initialization"
         return 1
@@ -194,29 +194,29 @@ print_final_status() {
 
     echo ""
     echo "====================================================="
-    echo "$emoji_rocket BOOTSTRAP COMPLETO!"
+    echo "$EMOJI_ROCKET BOOTSTRAP COMPLETO!"
     echo "====================================================="
     echo ""
     echo "$emoji_folder Projeto localizado em: $PROJECT_PATH"
     echo ""
 
     if [[ "$SKIP_SETUP" == "true" ]]; then
-        echo "$emoji_info Dependencias nao instaladas (--skip-setup usado)"
-        echo "$emoji_gear Para instalar dependencias:"
+        echo "$EMOJI_INFO Dependencias nao instaladas (--skip-setup usado)"
+        echo "$EMOJI_GEAR Para instalar dependencias:"
         echo "  cd $PROJECT_PATH"
         echo "  bash ${cmd_prefix}scripts/macOs/setup-fresh-machine.sh --run-initialization"
         echo ""
     fi
 
     if [[ "$SKIP_INIT" == "true" ]]; then
-        echo "$emoji_info Ambiente nao inicializado (--skip-init usado)"
-        echo "$emoji_gear Para inicializar ambiente:"
+        echo "$EMOJI_INFO Ambiente nao inicializado (--skip-init usado)"
+        echo "$EMOJI_GEAR Para inicializar ambiente:"
         echo "  cd $PROJECT_PATH"
         echo "  bash ${cmd_prefix}scripts/macOs/init/start.sh --install-keda"
         echo ""
     fi
 
-    echo "$emoji_info Proximos passos:"
+    echo "$EMOJI_INFO Proximos passos:"
     echo "  cd $PROJECT_PATH"
     echo "  # Ver documentacao:"
     echo "  cat ${cmd_prefix}docs/README.md"
@@ -225,7 +225,7 @@ print_final_status() {
     echo "  kubectl get pods"
     echo ""
 
-    echo "$emoji_info Endpoints apos inicializacao:"
+    echo "$EMOJI_INFO Endpoints apos inicializacao:"
     echo "  - RabbitMQ Management: http://localhost:15672 (guest/guest)"
     echo "  - Kubernetes Dashboard: http://localhost:15671"
     echo "  - MongoDB: localhost:27017 (admin/admin)"
@@ -240,29 +240,29 @@ main() {
 
     case $project_status in
         0)
-            echo "$emoji_check Usando projeto existente"
+            echo "$EMOJI_CHECK Usando projeto existente"
             ;;
         1)
-            echo "$emoji_cross Nao e possivel continuar. Pasta existe mas nao e o projeto DevOps."
-            echo "$emoji_info Solucoes:"
+            echo "$EMOJI_CROSS Nao e possivel continuar. Pasta existe mas nao e o projeto DevOps."
+            echo "$EMOJI_INFO Solucoes:"
             echo "  1. Use --project-path para especificar outra pasta"
             echo "  2. Remova ou mova a pasta existente: $PROJECT_PATH"
             exit 1
             ;;
         2)
             if ! download_project; then
-                echo "$emoji_cross Falha no download do projeto"
+                echo "$EMOJI_CROSS Falha no download do projeto"
                 exit 1
             fi
             ;;
     esac
 
     if ! run_setup; then
-        echo "$emoji_warning Setup completado com avisos. Verifique mensagens acima."
+        echo "$EMOJI_WARNING Setup completado com avisos. Verifique mensagens acima."
     fi
 
     print_final_status
-    echo "$emoji_check Bootstrap completo! Projeto pronto para uso."
+    echo "$EMOJI_CHECK Bootstrap completo! Projeto pronto para uso."
 }
 
 # Executar funcao principal
