@@ -12,6 +12,9 @@ spec:
     - ReadWriteOnce
   persistentVolumeReclaimPolicy: Retain
   storageClassName: {{ .Values.persistence.storageClassName }}
+  # hostPath aponta para o filesystem do nó minikube (dentro da VM), não do host.
+  # Funciona em Linux, macOS e Windows com qualquer driver minikube (docker, qemu2, kvm2).
+  # Para mudar o caminho: ajuste persistence.hostPath em values.yaml.
   hostPath:
     path: {{ .Values.persistence.hostPath }}
 {{- end }}

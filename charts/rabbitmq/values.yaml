@@ -27,14 +27,17 @@ persistence:
   storageClassName: standard
   hostPath: /mnt/data/rabbitmq
 
+# AVISO DE SEGURANÇA: Troque as credenciais padrão antes de usar.
+# Para alterar: edite os campos abaixo e rode `helm upgrade rabbitmq charts/rabbitmq`
+# Nunca use guest/guest em ambientes compartilhados.
 credentials:
   username: guest
   password: guest
   erlangCookie: "SWQOKODSQALRPCLNMEQG"
 
+# As credenciais são injetadas via variáveis de ambiente no Deployment.
+# Não use sintaxe {{ }} aqui — este arquivo não é um template Helm.
 config: |
-  default_user = {{ .Values.credentials.username }}
-  default_pass = {{ .Values.credentials.password }}
   default_vhost = /
   default_permissions.configure = .*
   default_permissions.read = .*
