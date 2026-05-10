@@ -6,6 +6,8 @@
 # Configurado para usar paths dinamicos e ambiente completo Minikube DevOps
 
 set -euo pipefail
+# shellcheck source-path=SCRIPTDIR
+# shellcheck disable=SC2154  # emoji_* vars are exported by utils/common.sh
 
 # Sourcing common utilities
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
