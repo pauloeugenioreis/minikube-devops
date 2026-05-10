@@ -62,7 +62,8 @@ wait_for_port() {
 
 # Detectar raiz do projeto
 detect_project_root() {
-    local current_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    local current_dir
+    current_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
     
     while [[ "$current_dir" != "/" ]]; do
         if [[ -f "$current_dir/README.md" && -d "$current_dir/scripts" && -d "$current_dir/docs" ]]; then

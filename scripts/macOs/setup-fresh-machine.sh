@@ -11,6 +11,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 UTILS_COMMON="$SCRIPT_DIR/utils/common.sh"
 if [[ -f "$UTILS_COMMON" ]]; then
+    # shellcheck source=utils/common.sh
     source "$UTILS_COMMON"
 else
     # Fallback caso common.sh não esteja disponível
@@ -161,8 +162,9 @@ install_docker() {
         return 0
     fi
 
-    local version=$(sw_vers -productVersion)
-    local major=$(echo "$version" | cut -d. -f1)
+    local version major
+    version=$(sw_vers -productVersion)
+    major=$(echo "$version" | cut -d. -f1)
 
     if [[ "$major" -lt 14 ]]; then
         echo "$emoji_warning macOS < 14 detectado. Instalando Colima + Docker CLI (Alternativa ao Docker Desktop)..."

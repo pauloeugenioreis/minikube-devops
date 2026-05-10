@@ -9,6 +9,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 UTILS_COMMON="$SCRIPT_DIR/../utils/common.sh"
 if [[ -f "$UTILS_COMMON" ]]; then
+    # shellcheck source=../utils/common.sh
     source "$UTILS_COMMON"
 else
     # Fallback
@@ -125,8 +126,9 @@ ensure_docker_running() {
 
 log_info "Verificando dependencias..."
 log_versions() {
-    local kv=$(kubectl version --client 2>/dev/null | head -1 || echo "0.0.0")
-    local mv=$(minikube version --short 2>/dev/null || echo "v0.0.0")
+    local kv mv
+    kv=$(kubectl version --client 2>/dev/null | head -1 || echo "0.0.0")
+    mv=$(minikube version --short 2>/dev/null || echo "v0.0.0")
     log_info "Versoes: kubectl $kv, minikube $mv"
 }
 log_versions

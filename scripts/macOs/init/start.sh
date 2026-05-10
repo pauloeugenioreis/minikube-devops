@@ -8,6 +8,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 UTILS_COMMON="$SCRIPT_DIR/../utils/common.sh"
 if [[ -f "$UTILS_COMMON" ]]; then
+    # shellcheck source=../utils/common.sh
     source "$UTILS_COMMON"
 else
     log_info() { echo -e "\e[36m$1\e[0m"; }
@@ -103,8 +104,9 @@ deploy_chart() {
 
 ensure_docker_running() {
     if ! docker info >/dev/null 2>&1; then
-        local version=$(sw_vers -productVersion)
-        local major=$(echo "$version" | cut -d. -f1)
+        local version major
+        version=$(sw_vers -productVersion)
+        major=$(echo "$version" | cut -d. -f1)
 
         if [[ "$major" -lt 14 ]]; then
             log_warning "Iniciando Colima (Docker Daemon) no modo QEMU (Compatibilidade)..."

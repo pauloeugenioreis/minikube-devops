@@ -4,23 +4,23 @@
 # Utilidades compartilhadas para scripts Linux
 
 # Emojis
-export emoji_success=$(printf "\u2705")
-export emoji_check=$(printf "\u2705")
-export emoji_error=$(printf "\u274c")
-export emoji_cross=$(printf "\u274c")
-export emoji_warning=$(printf "\u26a0\ufe0f")
-export emoji_info=$(printf "\U1f4a1")
-export emoji_arrow=$(printf "\u27a1\ufe0f")
-export emoji_gear=$(printf "\u2699\ufe0f")
-export emoji_rocket=$(printf "\U1f680")
-export emoji_package=$(printf "\U1f4e6")
-export emoji_wrench=$(printf "\U1f527")
-export emoji_chart=$(printf "\U1f4ca")
-export emoji_clipboard=$(printf "\U1f4cb")
-export emoji_scroll=$(printf "\U1f4dc")
-export emoji_book=$(printf "\U1f4da")
-export emoji_party=$(printf "\U1f389")
-export emoji_globe=$(printf "\U1f310")
+emoji_success=$(printf "\u2705");    export emoji_success
+emoji_check=$(printf "\u2705");      export emoji_check
+emoji_error=$(printf "\u274c");      export emoji_error
+emoji_cross=$(printf "\u274c");      export emoji_cross
+emoji_warning=$(printf "\u26a0\ufe0f"); export emoji_warning
+emoji_info=$(printf "\U1f4a1");      export emoji_info
+emoji_arrow=$(printf "\u27a1\ufe0f"); export emoji_arrow
+emoji_gear=$(printf "\u2699\ufe0f"); export emoji_gear
+emoji_rocket=$(printf "\U1f680");    export emoji_rocket
+emoji_package=$(printf "\U1f4e6");   export emoji_package
+emoji_wrench=$(printf "\U1f527");    export emoji_wrench
+emoji_chart=$(printf "\U1f4ca");     export emoji_chart
+emoji_clipboard=$(printf "\U1f4cb"); export emoji_clipboard
+emoji_scroll=$(printf "\U1f4dc");    export emoji_scroll
+emoji_book=$(printf "\U1f4da");      export emoji_book
+emoji_party=$(printf "\U1f389");     export emoji_party
+emoji_globe=$(printf "\U1f310");     export emoji_globe
 
 # Funções de Log
 log_info() {
@@ -63,7 +63,8 @@ wait_for_port() {
 # Sobe níveis a partir do script atual até achar o README.md e a pasta scripts
 detect_project_root() {
     # Pegar o diretório do script common.sh (esta na scripts/linux/utils)
-    local current_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    local current_dir
+    current_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
     
     # Subir ate achar a raiz
     while [[ "$current_dir" != "/" ]]; do

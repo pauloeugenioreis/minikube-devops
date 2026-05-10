@@ -11,6 +11,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 UTILS_COMMON="$SCRIPT_DIR/utils/common.sh"
 if [[ -f "$UTILS_COMMON" ]]; then
+    # shellcheck source=utils/common.sh
     source "$UTILS_COMMON"
 else
     # Fallback caso common.sh não esteja disponível
@@ -157,7 +158,8 @@ check_ubuntu_version() {
     fi
     
     # Verificar versao minima (18.04+)
-    local version_id_numeric=$(echo "$VERSION_ID" | cut -d. -f1)
+    local version_id_numeric
+    version_id_numeric=$(echo "$VERSION_ID" | cut -d. -f1)
     if [[ $version_id_numeric -lt 18 ]]; then
         echo "$emoji_cross Ubuntu $VERSION_ID detectado. Versao minima requerida: 18.04"
         exit 1
@@ -241,7 +243,8 @@ install_kubectl() {
     fi
     
     # Detectar versao estavel
-    local kubectl_version=$(curl -L -s https://dl.k8s.io/release/stable.txt)
+    local kubectl_version
+    kubectl_version=$(curl -L -s https://dl.k8s.io/release/stable.txt)
     
     # Download e instalacao
     curl -LO "https://dl.k8s.io/release/${kubectl_version}/bin/linux/amd64/kubectl"
