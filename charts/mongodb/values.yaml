@@ -16,6 +16,8 @@ persistence:
   storageClassName: standard
   hostPath: /mnt/data/mongodb
 
+# AVISO DE SEGURANÇA: Troque as credenciais padrão antes de usar.
+# Para alterar: edite os campos abaixo e rode `helm upgrade mongodb charts/mongodb`
 credentials:
   username: admin
   password: admin

@@ -26,7 +26,7 @@ KEDA (Kubernetes Event-driven Autoscaling) permite escalar workloads Kubernetes 
 ### 🐧 Linux
 ```bash
 # Junto com a inicialização completa (padrão)
-bash scripts/linux/autostart/minikube-autostart.sh
+bash scripts/linux/init/start.sh
 
 # Apenas o KEDA em ambiente já configurado
 bash scripts/linux/keda/install-keda.sh
@@ -35,7 +35,7 @@ bash scripts/linux/keda/install-keda.sh
 ### 🍎 macOS
 ```bash
 # Junto com a inicialização completa (padrão)
-bash scripts/macOs/autostart/minikube-autostart.sh
+bash scripts/macOs/init/start.sh
 
 # Apenas o KEDA em ambiente já configurado
 bash scripts/macOs/keda/install-keda.sh

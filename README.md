@@ -103,6 +103,31 @@ cd minikube-devops
 | Redis | redis://localhost:30679 | — |
 | Kubernetes Dashboard | http://localhost:15671 | — |
 
+> **Segurança:** As credenciais acima são padrões para desenvolvimento local. Consulte [docs/README.md](docs/README.md#segurança-e-credenciais) para instruções de como alterá-las antes de usar em ambientes compartilhados.
+
+---
+
+## Makefile (Linux / macOS)
+
+Atalho para os comandos mais usados. Rode `make help` para ver tudo disponível.
+
+```bash
+make start-linux        # inicia o ambiente no Linux
+make start-macos        # inicia o ambiente no macOS
+make status             # status do cluster e pods
+make stop               # para o Minikube
+make clean              # deleta o cluster (irreversível)
+
+make install-linux      # instala dependências no Linux
+make install-macos      # instala dependências no macOS
+
+make keda-linux         # instala KEDA (Linux)
+make keda-macos         # instala KEDA (macOS)
+
+make shellcheck         # roda ShellCheck em todos os scripts .sh
+make pre-commit-install # instala hook de validação pré-commit
+```
+
 ---
 
 ## Verificar estrutura | Validate structure

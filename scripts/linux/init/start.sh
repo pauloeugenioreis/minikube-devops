@@ -58,8 +58,11 @@ start_port_forward() {
     local namespace="$1"
     local resource="$2"
     local mapping="$3"
+    local local_port="${mapping%%:*}"
     kubectl port-forward -n "$namespace" "$resource" "$mapping" >/dev/null 2>&1 &
-    sleep 3
+    if ! wait_for_port "$local_port" 30; then
+        log_warning "Port-forward ${mapping} pode não estar ouvindo após 30s."
+    fi
 }
 
 wait_for_resource() {
@@ -94,6 +97,10 @@ deploy_chart() {
     local release="$1"
     local chart_path="$2"
     local namespace="$3"
+    if [[ ! -d "$chart_path" ]]; then
+        log_error "Chart não encontrado: ${chart_path}"
+        return 1
+    fi
     log_info "Instalando/atualizando ${release} (Helm)..."
     if ! helm upgrade --install "$release" "$chart_path" --namespace "$namespace" --create-namespace; then
         log_warning "Falha ao instalar o chart '${release}'."
@@ -257,7 +264,7 @@ if [[ -f "$KEDA_INSTALLER" ]]; then
     bash "$KEDA_INSTALLER" --skip-helm
 fi
 
-RABBITMQ_IP=$(kubectl get svc rabbitmq -o jsonpath='{.spec.clusterIP}' 2>/dev/null || echo "10.106.8.239")
+RABBITMQ_IP=$(kubectl get svc rabbitmq -o jsonpath='{.spec.clusterIP}' 2>/dev/null || echo "<cluster-ip>")
 
 echo ""
 echo -e "\e[36m=====================================================\e[0m"

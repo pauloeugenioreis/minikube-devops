@@ -44,6 +44,21 @@ command_exists() {
     command -v "$1" >/dev/null 2>&1
 }
 
+# Aguarda uma porta local estar ouvindo (para verificar port-forwards)
+wait_for_port() {
+    local port="$1"
+    local timeout="${2:-30}"
+    local elapsed=0
+    while (( elapsed < timeout )); do
+        if (echo >/dev/tcp/127.0.0.1/"$port") 2>/dev/null; then
+            return 0
+        fi
+        sleep 1
+        elapsed=$((elapsed + 1))
+    done
+    return 1
+}
+
 # Detectar raiz do projeto
 # Sobe níveis a partir do script atual até achar o README.md e a pasta scripts
 detect_project_root() {

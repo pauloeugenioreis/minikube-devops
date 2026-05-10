@@ -20,6 +20,9 @@ ingress:
 persistence:
   enabled: false
 
+# AVISO DE SEGURANÇA: Redis está sem autenticação por padrão (apenas para dev local).
+# Para habilitar: defina auth.enabled=true e auth.password com uma senha forte,
+# depois rode `helm upgrade redis charts/redis`
 auth:
   enabled: false
   password: ""

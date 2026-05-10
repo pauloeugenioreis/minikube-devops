@@ -122,6 +122,79 @@ bash scripts/macOs/maintenance/dashboard.sh
 
 ---
 
+## Segurança e Credenciais
+
+> **Atenção:** As credenciais abaixo são padrões para desenvolvimento local. **Nunca as use em ambientes compartilhados ou produção sem alterá-las.**
+
+| Serviço | Usuário | Senha padrão | Arquivo de configuração |
+|---|---|---|---|
+| RabbitMQ | `guest` | `guest` | `charts/rabbitmq/values.yaml` → `credentials` |
+| MongoDB | `admin` | `admin` | `charts/mongodb/values.yaml` → `credentials` |
+| Redis | — | sem senha | `charts/redis/values.yaml` → `auth.enabled` |
+
+### Como trocar as credenciais
+
+**RabbitMQ:**
+```bash
+# Edite charts/rabbitmq/values.yaml e altere credentials.username / credentials.password
+helm upgrade rabbitmq charts/rabbitmq
+```
+
+**MongoDB:**
+```bash
+# Edite charts/mongodb/values.yaml e altere credentials.username / credentials.password
+helm upgrade mongodb charts/mongodb
+```
+
+**Redis (habilitar autenticação):**
+```bash
+# Edite charts/redis/values.yaml:
+#   auth.enabled: true
+#   auth.password: "sua-senha-forte"
+helm upgrade redis charts/redis
+```
+
+> **Nota:** Alterar credenciais após o primeiro deploy requer deletar o PersistentVolumeClaim e recriar o serviço, pois os dados já foram inicializados com a senha antiga.
+
+---
+
+## Makefile — Comandos Rápidos
+
+Para Linux e macOS, todos os fluxos principais estão disponíveis via `make`. Rode `make help` para ver a lista completa.
+
+```bash
+# Inicialização
+make start-linux          # inicia o ambiente completo no Linux
+make start-macos          # inicia o ambiente completo no macOS
+
+# Manutenção
+make status               # exibe status do cluster, pods e port-forwards
+make stop                 # para o Minikube
+make clean                # deleta o cluster e limpa dados (irreversível)
+make dashboard-linux      # corrige RBAC e abre o Dashboard (Linux)
+make dashboard-macos      # corrige RBAC e abre o Dashboard (macOS)
+
+# Dependências
+make install-linux        # instala Docker, Minikube, kubectl, Helm no Linux
+make install-macos        # instala dependências via Homebrew no macOS
+
+# KEDA
+make keda-linux           # instala KEDA (Linux)
+make keda-macos           # instala KEDA (macOS)
+make keda-uninstall-linux # desinstala KEDA (Linux)
+make keda-uninstall-macos # desinstala KEDA (macOS)
+
+# Testes
+make rabbitmq-test-linux  # valida configuração do RabbitMQ (Linux)
+make rabbitmq-test-macos  # valida configuração do RabbitMQ (macOS)
+
+# Qualidade de código
+make shellcheck           # roda ShellCheck em todos os .sh
+make pre-commit-install   # instala hook pré-commit de shellcheck
+```
+
+---
+
 ## Gerenciamento com Helm
 
 Os serviços são instalados via `helm upgrade --install` a partir de `charts/`. Ajuste valores editando os `values.yaml` de cada chart. O script de inicialização (`start.sh` / `start.ps1`) garante que as versões declaradas sejam aplicadas a cada execução.
@@ -161,6 +234,100 @@ minikube delete
 | [scripts/windows/README.md](../scripts/windows/README.md) | Referência dos scripts Windows |
 | [scripts/linux/README.md](../scripts/linux/README.md) | Referência dos scripts Linux |
 | [scripts/macOs/README.md](../scripts/macOs/README.md) | Referência dos scripts macOS |
+
+---
+
+## Backup e Restore dos Volumes
+
+Os dados persistem em volumes dentro do nó minikube. Use os comandos abaixo para fazer backup e restauração.
+
+### Backup
+
+```bash
+# MongoDB — dump completo
+kubectl exec -n default deploy/mongodb -- \
+  mongodump --uri="mongodb://admin:admin@localhost:27017/admin" \
+  --out=/tmp/mongodump
+kubectl cp default/$(kubectl get pod -l app=mongodb -o jsonpath='{.items[0].metadata.name}'):/tmp/mongodump ./backup-mongodb
+
+# RabbitMQ — exportar definições (filas, exchanges, bindings)
+kubectl port-forward svc/rabbitmq 15672:15672 &
+curl -s -u guest:guest http://localhost:15672/api/definitions > backup-rabbitmq-definitions.json
+kill %1
+
+# Redis — dump RDB (precisa do redis-cli)
+kubectl exec -n default deploy/redis -- redis-cli BGSAVE
+kubectl cp default/$(kubectl get pod -l app=redis -o jsonpath='{.items[0].metadata.name}'):/data/dump.rdb ./backup-redis.rdb
+```
+
+### Restore
+
+```bash
+# MongoDB
+kubectl cp ./backup-mongodb \
+  default/$(kubectl get pod -l app=mongodb -o jsonpath='{.items[0].metadata.name}'):/tmp/mongodump
+kubectl exec -n default deploy/mongodb -- \
+  mongorestore --uri="mongodb://admin:admin@localhost:27017/admin" /tmp/mongodump
+
+# RabbitMQ — importar definições
+kubectl port-forward svc/rabbitmq 15672:15672 &
+curl -s -u guest:guest -X POST -H "Content-Type: application/json" \
+  -d @backup-rabbitmq-definitions.json \
+  http://localhost:15672/api/definitions
+kill %1
+
+# Redis — restaurar RDB
+kubectl cp ./backup-redis.rdb \
+  default/$(kubectl get pod -l app=redis -o jsonpath='{.items[0].metadata.name}'):/data/dump.rdb
+kubectl rollout restart deployment/redis
+```
+
+> **Atenção:** Troque as credenciais nos comandos acima se você as alterou em `values.yaml`.
+
+---
+
+## Upgrade e Downgrade de Charts
+
+Os serviços são gerenciados com Helm, o que torna upgrades e downgrades simples e reproduzíveis.
+
+### Upgrade de versão de imagem
+
+1. Edite o campo `image.tag` no `values.yaml` do chart desejado:
+   ```yaml
+   # charts/rabbitmq/values.yaml
+   image:
+     tag: "4.2-management"   # era "4.1-management"
+   ```
+
+2. Aplique com Helm:
+   ```bash
+   helm upgrade rabbitmq charts/rabbitmq
+   # ou via Makefile:
+   # helm upgrade mongodb charts/mongodb
+   # helm upgrade redis charts/redis
+   ```
+
+3. Acompanhe o rollout:
+   ```bash
+   kubectl rollout status deployment/rabbitmq
+   ```
+
+### Downgrade (rollback)
+
+```bash
+# Ver histórico de releases
+helm history rabbitmq
+
+# Voltar para a revisão anterior
+helm rollback rabbitmq
+
+# Ou voltar para uma revisão específica
+helm rollback rabbitmq 2
+```
+
+### Upgrade de recursos (CPU/memória)
+
+Edite a seção `resources` no `values.yaml` e rode `helm upgrade`. Não há perda de dados, pois os PVCs são mantidos.
 
 ---
 
