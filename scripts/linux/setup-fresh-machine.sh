@@ -6,23 +6,12 @@
 # Configurado para usar paths dinamicos e ambiente completo Minikube DevOps
 
 set -euo pipefail
-# shellcheck source-path=SCRIPTDIR
-# shellcheck disable=SC2154  # emoji_* vars are exported by utils/common.sh
 
 # Sourcing common utilities
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 UTILS_COMMON="$SCRIPT_DIR/utils/common.sh"
-if [[ -f "$UTILS_COMMON" ]]; then
-    # shellcheck source=utils/common.sh
-    source "$UTILS_COMMON"
-else
-    # Fallback caso common.sh não esteja disponível
-    log_info() { echo -e "\e[36m$1\e[0m"; }
-    log_success() { echo -e "\e[32m$1\e[0m"; }
-    log_warning() { echo -e "\e[33m$1\e[0m"; }
-    log_error() { echo -e "\e[31m$1\e[0m"; }
-    command_exists() { command -v "$1" >/dev/null 2>&1; }
-fi
+# shellcheck source=utils/common.sh
+source "$UTILS_COMMON"
 
 # Parametros do script
 SKIP_DOCKER_INSTALL=false
