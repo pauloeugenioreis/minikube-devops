@@ -293,7 +293,9 @@ wait_for_resource "Redis" "pod -l app=redis" "default"
 
 log_info "Configurando port-forwards..."
 kill_port_forward "rabbitmq.*15672"
+kill_port_forward "rabbitmq.*5672"
 start_port_forward "default" "service/rabbitmq" "15672:15672"
+start_port_forward "default" "service/rabbitmq" "5672:5672"
 kill_port_forward "mongodb.*27017"
 start_port_forward "default" "service/mongodb" "27017:27017"
 kill_port_forward "kubernetes-dashboard"
@@ -304,8 +306,6 @@ KEDA_INSTALLER="$SCRIPTS_MACOS_DIR/keda/install-keda.sh"
 if [[ -f "$KEDA_INSTALLER" ]]; then
     bash "$KEDA_INSTALLER" --skip-helm
 fi
-
-RABBITMQ_IP=$(kubectl get svc rabbitmq -o jsonpath='{.spec.clusterIP}' 2>/dev/null || echo "<cluster-ip>")
 
 echo ""
 echo -e "\e[36m=====================================================\e[0m"
@@ -322,7 +322,7 @@ echo -e "\e[36mRabbitMQ:\e[0m"
 echo -e "   Management UI: http://localhost:15672"
 echo -e "   Usuario/Senha: guest/guest"
 echo -e "   AMQP: localhost:5672"
-echo -e "   Connection String: amqp://guest:guest@${RABBITMQ_IP}:5672"
+echo -e "   Connection String: amqp://guest:guest@localhost:5672"
 echo ""
 echo -e "\e[36mMongoDB:\e[0m"
 echo -e "   Connection String: mongodb://admin:admin@localhost:27017/admin"
